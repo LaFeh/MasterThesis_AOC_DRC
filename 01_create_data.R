@@ -8,13 +8,27 @@ library(sf)
 ### --
 
 trimmed_lakes = read_sf("./data/Congo_relevant_lakes.shp")
-relevant_regions = read_sf("./data/Congo_relevant_provinces.shp")
+relevant_regions_all = read_sf("./data/Congo_relevant_provinces.shp")
+national_parks =read_sf("./data/WDPA_WDOECM_May2026_Public_COD_nationalparks/WDPA_WDOECM_May2026_Public_COD.gdb",layer ="WDPA_WDOECM_poly_May2026_COD")
 
 
 ####### interstection create whole picture:
 
-relevant_regions = unique(relevant_regions[which(relevant_regions$name %in% c("Ituri","Sud-Kivu","Nord-Kivu")),])
+relevant_regions = unique(relevant_regions_all[which(relevant_regions_all$name %in% c("Ituri","Sud-Kivu","Nord-Kivu")),])
 
+
+
+leaflet() %>%
+  addTiles() %>%  # OpenStreetMap
+  addPolygons(
+    data = st_transform(relevant_regions_all,4326),
+    fillColor = "black",
+    fillOpacity = 0.4,
+    color = "black",
+    weight = 1
+  )
+
+# relevant regions & lakes
 mat_intersection = st_intersects(relevant_regions,trimmed_lakes,sparse = FALSE)
 
 for (x in 1:nrow(mat_intersection)){
@@ -23,6 +37,7 @@ for (x in 1:nrow(mat_intersection)){
 }
 
 rm(mat_intersection)
+
 
 relevant_regions$surface = "land"
 
@@ -80,7 +95,9 @@ admin = st_transform(admin, crs = st_crs(drc_sf))
 
 grid_wth_names = st_join(drc_sf,admin, by =st_intersection, largest = T, left =T)
 
+plot(grid_wth_names$geometry)
 
+write_sf(grid_wth_names,"./data/grid_with_names.geojson")
 ##### add waterways
 
 
@@ -97,8 +114,6 @@ water_crop <- st_crop(
 )
 
 water_crop = water_crop[,c("name","natural","water","osm_type","osm_id")]
-
-
 
 grid_contain_water = st_contains(grid_wth_names,water_crop,sparse =F)
 water_is_contained = apply(grid_contain_water,2,function(x) {any(x)})

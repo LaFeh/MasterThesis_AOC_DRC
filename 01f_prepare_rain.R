@@ -1,6 +1,105 @@
 # prepare rain data
 # 02 combine data
+
+library(sf)
+library(dplyr)
+library(terra)
+library(exactextractr)
+
 setwd("D:/DRC/gaussian_process_AOC")
+
+library("raster")
+
+
+grid = read_sf("./data/grid_surface.shp")
+# thsi is much faster than the other way
+
+
+# Base URL
+
+
+years <- 2020:2025
+months <- sprintf("%02d", 1:12)
+# Years and months
+# Loop through files, to download the data
+# Create output folder
+# dir.create("./data/chirps_monthly", showWarnings = FALSE)
+# base_url <- "https://data.chc.ucsb.edu/products/CHIRPS/v3.0/monthly/africa/tifs/"
+# for (y in years) {
+#   for (m in months) {
+# 
+#     file_name <- paste0(
+#       "chirps-v3.0.",
+#       y, ".",m,
+#       ".tif"
+#     )
+# 
+#     url <- paste0(base_url, file_name)
+# 
+#     file_name_dest <- paste0(
+#       "chirps_",
+#       y, "_", m,
+#       ".tif.gz"
+#     )
+# 
+#     dest <- file.path("./data/chirps_monthly/", file_name_dest)
+# 
+#     try(
+#       download.file(url, destfile = dest, mode = "wb"),
+#       silent = TRUE
+#     )
+# 
+#     cat("Downloaded:", file_name, "\n")
+#   }
+# }
+
+
+rain_per_mnth = data.frame()
+for(y in years){
+  for (m in months){
+    
+    file_name_dest <- paste0(
+      "chirps_",
+      y, "_", m,
+      ".tif.gz"
+    )
+    
+    dest <- file.path("./data/chirps_monthly/", file_name_dest)
+    
+    tryCatch({rain = raster(dest)},error = function(e){next()})
+      if (st_crs(grid)!=st_crs(rain)){
+        grid=st_transform(grid,st_crs(rain))
+      }
+    
+    
+    # crop raster to grid bounding box
+    rain_crop <- raster::crop(
+      rain,
+      grid,
+      #filename = "./data/rain_crop.tif",
+      #overwrite = TRUE
+    )
+    st_crs(grid) == st_crs(rain_crop)
+    
+    summary <- exact_extract(rain_crop, grid, 'mean')
+    
+    grid$rain_mean <- summary
+    grid$lg_rain_mean <- log(summary)
+    
+    #plot(grid[,"rain_mean"])
+    
+    grid_wo_geom = st_drop_geometry(grid)
+    grid_wo_geom$date = paste0(y,"-",m)
+    rain_per_mnth = rbind(rain_per_mnth,grid_wo_geom)
+    
+  }
+  
+}
+
+data.table::fwrite(rain_per_mnth, "./data/rain_per_month.csv")
+
+
+
 
 # rain data
 #https://data.humdata.org/dataset/cod-rainfall-subnational
@@ -14,7 +113,9 @@ acled_territory_mnth = cleaned_gdf_territory
 rain = rain[which(rain$adm_level==2 & rain$date >= min(min(acled_territory_mnth$event_date))),c("date","adm_level","PCODE","r1h","version")]
 rain$year = format(rain$date,"%Y")
 rain$month = format(rain$date,"%m")
-rain = rain%>%group_by(PCODE,year,month)%>%slice_max(date, n = 1, with_ties = FALSE)%>%select(!date)
+rain = rain%>%group_by(PCODE,year,month)%>%
+  slice_max(date, n = 1, with_ties = FALSE)
+rain$date = NULL
 
 
 # rain = left_join(rain,admin, by=c("PCODE" = "adm2_pcode"))

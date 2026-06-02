@@ -22,9 +22,6 @@ walk_time_crop <- crop(
   #filename = "./data/walk_crop.tif",
   #overwrite = TRUE
 )
-rm(walk_time)
-
-
 
 
 library(exactextractr)
@@ -37,31 +34,12 @@ grid$walk_time_mean <- exact_extract(
 
 grid$lg_walk_time_mean = log(grid$walk_time_mean)
 
-##########################
-bbox = st_as_sf(st_as_sfc(st_bbox(grid[440:443,])))
-walk_time_crop <- crop(
-  walk_time,
-  bbox,
-  #filename = "./data/walk_crop.tif",
-  #overwrite = TRUE
-)
-plot(walk_time_crop)
-# 
-# plot(grid[435:445,]$geometry,add =T)
-# tile = tiles[2419]
-# grid$mean_walk_time <- sapply(tiles, function(tile) {
-#   walk_time_tile=rast(tile)
-#   mean_walk_time = mean(values(walk_time_tile),na.rm=T)
-#   return(mean_walk_time)
-# })
-
-##################
 grid = st_drop_geometry(grid)
 
 
 data.table::fwrite(grid[,c("cell_id","walk_time_mean","lg_walk_time_mean")],"./data/grid_walk_time.csv")
 
-
+##################
 #write_sf(grid,"./data/grid_walk_time.shp",overwrite = T)
 
 ## start with mixed travel speed
@@ -90,13 +68,14 @@ mix_time_crop <- crop(
   filename = "./data/mix_crop.tif",
   overwrite = TRUE
 )
+
 ####
 # bbox = st_as_sf(st_as_sfc(st_bbox(grid[440:443,])))
 # mix_time_crop_plot <- crop(
 #   walk_time,
 #   bbox,
 # )
-# plot(mix_time_crop_plot)
+#plot(log(mix_time_crop))
 
 ####
 
@@ -104,15 +83,30 @@ summary <- exactextractr::exact_extract(mix_time_crop, grid, 'mean')
 
 grid$mix_time_mean <- summary
 
+#####################################################
+# missing mix_time mean is always in water (in the big lakes). therefore fille it up with the value for water, of the lake 
+# we have data for.
+
+trimmed_lakes = read_sf("./data/Congo_relevant_lakes.shp")
+trimmed_lakes = st_transform(trimmed_lakes,st_crs(grid))
+
+# this is the lake with values for mixed_time
+trimmed_lakes = trimmed_lakes[which(trimmed_lakes$name =="Lac Kivu"),]
+lac_kivu_mixed_time <- exactextractr::exact_extract(mix_time_crop, trimmed_lakes, 'mean')
+lac_kivu_mixed_time = mean(lac_kivu_mixed_time)
+grid[which(is.na(grid$mix_time_mean)),]$mix_time_mean = lac_kivu_mixed_time
+
 grid$lg_mix_time_mean  = log(grid$mix_time_mean)
 plot(grid[,c("lg_mix_time_mean")])
+#####################################################
+
 
 grid = st_drop_geometry(grid)
 
 
 data.table::fwrite(grid[,c("cell_id","mix_time_mean","lg_mix_time_mean")],"./data/grid_mix_time.csv")
 
-
+##############################
 
 plot(grid[,c("mix_time_mean")])
 grid$lg_bldng_r = log(grid$bldng_r)
