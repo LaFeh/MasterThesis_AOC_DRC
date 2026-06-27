@@ -69,6 +69,13 @@ Type objective_function<Type>::operator()() {
   nll += Type(0.5) * sum_to_zero_kappa * weighted_phi_sum * weighted_phi_sum;
 
   // ── Likelihood (observed areas only) ─────────────────────────────────────
+  
+  // Weakly informative prior on beta
+  for (int j = 0; j < beta.size(); j++) {
+    nll -= dnorm(beta(j), Type(0), Type(2.5), true);
+  }
+  
+  
   vector<Type> eta = X * beta + phi;
   for (int k = 0; k < obs_idx.size(); k++) {
     int i = obs_idx(k);
@@ -78,6 +85,8 @@ Type objective_function<Type>::operator()() {
   // ── Report ────────────────────────────────────────────────────────────────
   ADREPORT(tau);
   ADREPORT(rho);
+  ADREPORT(eta);                     // raw linear predictor -- used for post-hoc calibration
+
   vector<Type> p = invlogit(eta);   // predicted probability all N areas
   ADREPORT(p);
 

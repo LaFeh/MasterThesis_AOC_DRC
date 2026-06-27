@@ -19,7 +19,7 @@ test_w[1:1500,2] = 1
 
 # inla besagpropers
 
-formula = controle_binom~1
+formula = control_binom~1
 
 id_besagproper2_matw = update(formula, . ~. +f(ID, model = "besagproper2", graph = data_mat_w))
 

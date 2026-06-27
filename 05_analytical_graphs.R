@@ -64,6 +64,64 @@ grid.arrange(p_landcover,p_mix_time,p_walk_time,p_building_area,
 ################# plots for presentation
 
 library(sf)
+library(dplyr)
+
+
+setwd("D:/DRC/gaussian_process_AOC")
+load("./data/frontline_data_all_previous_mnths_controle_num.RData")
+grid = read_sf("./data/grid_surface.shp")
+grid = grid%>%filter(name =="Nord-Kivu")
+
+tm = zoo::as.yearmon(as.Date("2025-02-01"),format = "%Y%M")
+data = frontline_data_controle_num_all_previous_time%>%
+  filter(time == tm)
+
+
+data$control_binom = data$control
+data[which(data$control_binom ==0.5),]$control_binom = 0
+data = data[which(!is.na(data$control_binom)),]
+data = data[which(data$control_binom==1),]
+center = st_transform(st_centroid(st_combine(grid)),4326)
+coords <- st_coordinates(center)
+
+rm(frontline_data_controle_num_all_previous_time)
+gc()
+
+library(leaflet)
+
+leaflet(options = leafletOptions(zoomControl = FALSE)) %>%
+  addTiles() %>%
+  addPolygons(
+    data = st_transform(grid,4326),
+    fillColor = "purple",
+    fillOpacity = 0.4,
+    color = "black",
+    weight = 1
+  )%>%
+  addPolygons(data = st_transform(data,4326),
+              fillColor = "yellow",
+              fillOpacity = 1,
+              color = "black",
+              weight = 1) %>%
+  setView(
+    lng = coords[1],
+    lat = coords[2],
+    zoom = 8
+  )
+
+
+
+
+
+
+
+
+
+
+
+
+
+library(sf)
 library(leaflet)
 
 
@@ -86,9 +144,8 @@ water_crop <- st_crop(
   #filename = "./data/water_crop.tif",
   overwrite = TRUE
 )
-polygons <- st_transform(water_crop, 4326)
 
-polygons <- st_transform(grid, 4326)
+
 
 
 
@@ -147,3 +204,26 @@ leaflet(options = leafletOptions(zoomControl = TRUE)) %>%
     color = "black",
     weight = 1
   )
+
+
+
+################# comparison of rho and tau values
+setwd("D:/DRC/gaussian_process_AOC")
+
+load("./tmb_try/leroux_fit_inla_mean_adjusted_matw.RData")
+fixed_w = fixed
+
+load("./tmb_try/leroux_fit_inla_mean_adjusted_matb.RData")
+fixed_b = fixed
+
+hist(rep[names(rep$value)=="rho"])
+hist(,add =T )
+summary(rep,"random")
+unique(names(rep$value))
+k = rep[names(rep$value)=="rho"]
+mean(k)
+
+k = rep$value
+k[ which(names(k)=="rho")
+k[c(1,2,3,4,5,6)]
+###########

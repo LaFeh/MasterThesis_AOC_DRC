@@ -51,9 +51,9 @@ X <- model.matrix(~ 1 , data)   # intercept only -- replace with your formula
 lower_bounds_beta = rep(-Inf, ncol(X))
 upper_bounds_beta = c(Inf,1,Inf,Inf)
 
-X[,"total_events"] <- scale(X[,"total_events"], center=TRUE, scale=FALSE)
-X[,"total_fatalities"] <- scale(X[,"total_fatalities"], center=TRUE, scale=FALSE)
-X[,"lg_rain_mean"] <- scale(X[,"lg_rain_mean"], center=TRUE, scale=FALSE)
+# X[,"total_events"] <- scale(X[,"total_events"], center=TRUE, scale=FALSE)
+# X[,"total_fatalities"] <- scale(X[,"total_fatalities"], center=TRUE, scale=FALSE)
+# X[,"lg_rain_mean"] <- scale(X[,"lg_rain_mean"], center=TRUE, scale=FALSE)
 #X[,"lg_landcover_mean"] <- scale(X[,"lg_landcover_mean"], center=TRUE, scale=FALSE)
 stopifnot(nrow(X) == N)
 
@@ -109,8 +109,8 @@ fit <- nlminb(
   start     = obj$par,
   objective = obj$fn,
   gradient  = obj$gr,
-  lower     = c(lower_bounds_beta, -Inf, -0.5),  # bound logit_rho
-  upper     = c(upper_bounds_beta,  5,  6),
+  lower     = c(-Inf, -Inf, -0.5),  # bound logit_rho
+  upper     = c(Inf,  5,  6),
   control   = list(iter.max = 5000, eval.max = 2000)
 )
 cat("Convergence:", fit$convergence, "\n")

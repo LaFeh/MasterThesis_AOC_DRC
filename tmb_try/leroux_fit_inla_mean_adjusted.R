@@ -14,13 +14,13 @@ dyn.load(dynlib("./tmb_try/leroux_inla_mean_adjusted"))
 # ── 2. Load data ──────────────────────────────────────────────────────────────
 
 data_mat_w <- readRDS("./data/inla_data/data_mat_w_mixed_time_decay.RData")
-#data_mat_b <- readRDS("./data/inla_data/data_mat_b.RData")
+data_mat_b <- readRDS("./data/inla_data/data_mat_b.RData")
 
 data       <- readRDS("./data/inla_data/data_prepared_for_inla.RData")
 
 
 # ── 3. Build W over ALL areas (including NA areas) ───────────────────────────
-W <- as.matrix(data_mat_w)
+W <- as.matrix(data_mat_b)
 W <- (W + t(W)) / 2    # enforce symmetry
 diag(W) <- 0           # no self-loops
 W_sp <- as(W, "dgCMatrix")
@@ -123,7 +123,8 @@ rep <- sdreport(obj)
 fixed = summary(rep, "fixed")    # beta, log_tau, logit_rho with SEs
   
 
-
+#save(rep,file = "./tmb_try/leroux_fit_inla_mean_adjusted_matw.RData")
+#save(rep,file = "./tmb_try/leroux_fit_inla_mean_adjusted_matb.RData")
 
 # ── 12. Extract predictions for all ar eas (observed + missing) ────────────────
 rep_full <- summary(rep, "report")  # tau, rho on natural scale
@@ -146,14 +147,92 @@ data$observed <- !is.na(data$controle_binom)
 cat("\nPredicted probabilities at missing locations:\n")
 print(head(data[!data$observed, c("p_mean", "p_se", "phi_mean")]))
 
+# INLA-like centered spatial surface: relative spatial risk
+data$p_spatial_centered <- plogis(data$phi_mean)
+
 library(ggplot2)
 p <- ggplot2::ggplot(data) +
-  geom_sf(aes(fill =  p_mean)) +
+  geom_sf(aes(fill =  p_spatial_centered)) +
   scale_fill_viridis_c() +
   theme_minimal()
 
-
 p
+# i added prior on betaexp()
+print(fixed)
+
+library(leaflet)
+center = st_transform(st_centroid(st_combine(data)),4326)
+coords <- st_coordinates(center)
+
+pal <- leaflet::colorNumeric(
+  palette = "viridis",
+  domain = data$p_spatial_centered,
+  na.color = "transparent"
+)
+pal_rev <- leaflet::colorNumeric(
+  palette = "viridis",
+  domain = data$p_spatial_centered,
+  na.color = "transparent",
+  reverse = T
+)
+
+leaflet(options = leafletOptions(zoomControl = FALSE)) %>%
+  addTiles() %>%  # OpenStreetMap
+  addPolygons(
+    data = st_transform(data,4326),
+    fillColor = ~pal(data$p_spatial_centered),
+    fillOpacity = 1,
+    color = "black",
+    weight = 1
+  ) %>%
+  addLegend(
+    pal = pal_rev,
+    values = data$p_spatial_centered,
+    title = "Spatial Deviations",
+    position = "topleft",
+    opacity = 1,
+    labFormat = labelFormat(transform = function(x) sort(x, decreasing = TRUE))
+  )%>%setView(
+         lng = coords[1],
+         lat = coords[2],
+         zoom = 8
+       )
+
+
+
+plot(data[1300:1307,]$geometry)
+# 
+# library(leaflet)
+# center = st_transform(st_centroid(st_combine(data)),4326)
+# coords <- st_coordinates(center)
+# 
+# leaflet(options = leafletOptions(zoomControl = FALSE)) %>%
+#   addTiles() %>%  # OpenStreetMap
+#   addPolygons(
+#     data = st_transform(data,4326),
+#     fillColor = "grey",
+#     fillOpacity = 0.4,
+#     color = "black",
+#     weight = 1
+#   )%>%  # OpenStreetMap
+#   addPolygons(
+#     data = st_transform(data[which(data$controle_binom ==1),],4326),
+#     fillColor = "yellow",
+#     fillOpacity = 1,
+#     color = "black",
+#     weight = 1
+#   )%>%  # OpenStreetMap
+#   addPolygons(
+#     data = st_transform(data[which(data$controle_binom ==0),],4326),
+#     fillColor = "darkblue",
+#     fillOpacity = 1,
+#     color = "black",
+#     weight = 1
+#   )%>%setView(
+#          lng = coords[1],
+#          lat = coords[2],
+#          zoom = 8
+#        )
 
 
 #data$p_mean_binary = data$p_mean

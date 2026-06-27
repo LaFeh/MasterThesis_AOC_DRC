@@ -5,6 +5,7 @@ library(sf)
 library(dplyr)
 library(units)
 
+library(smoothr)
 # ============================================================
 # 1. LOAD AND PROJECT STUDY AREA
 # ============================================================
@@ -227,7 +228,9 @@ grid_final$cell_id   <- seq_len(nrow(grid_final))
 grid_final$name      <- grid_final$adm1_name
 grid_final$adm1_name <- NULL
 
-plot(grid_final[,"surface"])
+grid_final = smoothr::drop_crumbs(grid_final,threshold = units::set_units((30*30)/2,"m^2"))
+
+#plot(grid_final[,"surface"])
 # ============================================================
 # 10. SAVE
 # ============================================================
@@ -236,3 +239,6 @@ write_sf(grid_final, "./data/grid_surface.shp")
 message("Done! Grid saved to ./data/grid_surface.shp")
 message(paste("Total features:", nrow(grid_final)))
 message(paste("Surface types:", paste(unique(grid_final$surface), collapse = ", ")))
+
+
+

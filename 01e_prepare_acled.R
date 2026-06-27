@@ -34,6 +34,54 @@ gdf_territory <- gdf %>%
     "Non-violent transfer of territory"
   ))
 
+non_violent_transfers = gdf_territory[which(gdf_territory$sub_event=="Non-violent transfer of territory"),]
+non_violent_transfers = non_violent_transfers[order(non_violent_transfers$event_date),]
+
+for(row_idx in 1:nrow(non_violent_transfers)){
+  instance = non_violent_transfers[row_idx,]
+  max_date = instance$event_date
+
+  past_instance = gdf_territory%>%filter((event_date<max_date) & (geometry ==instance$geometry))%>%
+    slice_max(order_by = event_date, with_ties =FALSE)
+  
+  if (nrow(past_instance)==0){
+    
+    non_violent_transfers[row_idx,]$sub_event ="Non-state actor overtakes territory"
+    
+  }else if (past_instance$sub_event =="Government regains territory"){# territory war before under gov controle
+    
+    non_violent_transfers[row_idx,]$sub_event ="Non-state actor overtakes territory"
+ 
+  } else if (past_instance$sub_event =="Non-state actor overtakes territory"){
+    
+    non_violent_transfers[row_idx,]$sub_event ="Government regains territory"
+    
+  } else {
+    
+    past_instance = non_violent_transfers%>%filter((event_date<max_date) & (geometry ==instance$geometry))%>%
+      slice_max(order_by = event_date, with_ties =FALSE)
+      
+    if (past_instance$sub_event =="Government regains territory"){# territory war before under gov controle
+      
+      non_violent_transfers[row_idx,]$sub_event ="Non-state actor overtakes territory"
+      
+    } else if (past_instance$sub_event =="Non-state actor overtakes territory"){
+      
+      non_violent_transfers[row_idx,]$sub_event ="Government regains territory"}
+    
+    else{
+      warning(paste0(row_idx,": we need a double loop, two times after each other peaceful transition"))
+      
+    }
+
+
+  }
+  
+}
+
+gdf_territory <-  gdf_territory%>%filter(sub_event != "Non-violent transfer of territory")
+gdf_territory <- rbind(gdf_territory,non_violent_transfers)
+
 acled_territory_mnth <- gdf_territory %>%
   group_by(year_mnth, latitude, longitude) %>%
   slice_max(event_date, n = 1, with_ties = FALSE) %>%
@@ -57,6 +105,7 @@ acled_conflict <- gdf %>%
     "Non-state actor overtakes territory",
     "Non-violent transfer of territory"
   ))%>%mutate(controle = NA)
+
 
 acled_conflict_wide_sum = as.data.frame(acled_conflict)%>%
   mutate(events = 1)%>%

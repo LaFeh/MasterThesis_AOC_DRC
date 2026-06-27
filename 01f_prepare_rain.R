@@ -12,46 +12,9 @@ library("raster")
 
 
 grid = read_sf("./data/grid_surface.shp")
-# thsi is much faster than the other way
-
-
-# Base URL
-
 
 years <- 2020:2025
 months <- sprintf("%02d", 1:12)
-# Years and months
-# Loop through files, to download the data
-# Create output folder
-# dir.create("./data/chirps_monthly", showWarnings = FALSE)
-# base_url <- "https://data.chc.ucsb.edu/products/CHIRPS/v3.0/monthly/africa/tifs/"
-# for (y in years) {
-#   for (m in months) {
-# 
-#     file_name <- paste0(
-#       "chirps-v3.0.",
-#       y, ".",m,
-#       ".tif"
-#     )
-# 
-#     url <- paste0(base_url, file_name)
-# 
-#     file_name_dest <- paste0(
-#       "chirps_",
-#       y, "_", m,
-#       ".tif.gz"
-#     )
-# 
-#     dest <- file.path("./data/chirps_monthly/", file_name_dest)
-# 
-#     try(
-#       download.file(url, destfile = dest, mode = "wb"),
-#       silent = TRUE
-#     )
-# 
-#     cat("Downloaded:", file_name, "\n")
-#   }
-# }
 
 
 rain_per_mnth = data.frame()
@@ -104,28 +67,28 @@ data.table::fwrite(rain_per_mnth, "./data/rain_per_month.csv")
 # rain data
 #https://data.humdata.org/dataset/cod-rainfall-subnational
 #rainfall 1-month rolling aggregation [mm] (r1h)
-rain = data.table::fread("./data/cod-rainfall-subnat-full.csv")
-admin = read_sf("./data/cod_admin_boundaries.shp",layer = "cod_admin2")[,c("adm2_name","adm2_pcode","adm1_name","adm1_pcode")]
-
-load("./data/cleaned_gdf_territory.RData")
-acled_territory_mnth = cleaned_gdf_territory
-
-rain = rain[which(rain$adm_level==2 & rain$date >= min(min(acled_territory_mnth$event_date))),c("date","adm_level","PCODE","r1h","version")]
-rain$year = format(rain$date,"%Y")
-rain$month = format(rain$date,"%m")
-rain = rain%>%group_by(PCODE,year,month)%>%
-  slice_max(date, n = 1, with_ties = FALSE)
-rain$date = NULL
-
-
-# rain = left_join(rain,admin, by=c("PCODE" = "adm2_pcode"))
-rain$year_mnth = as.numeric(paste0(rain$year,rain$month))
-
-# rain = rain%>%filter(adm1_pcode %in% c("CD54","CD61","CD62"))
-# rain_sf = st_as_sf(rain)
-
-
-#rain=rain[,c("adm_level","PCODE","r1h","year_mnth","geometry")]
-rain=rain[,c("adm_level","PCODE","r1h","year_mnth")]
-
-data.table::fwrite(rain, "./data/rain.csv")
+# rain = data.table::fread("./data/cod-rainfall-subnat-full.csv")
+# admin = read_sf("./data/cod_admin_boundaries.shp",layer = "cod_admin2")[,c("adm2_name","adm2_pcode","adm1_name","adm1_pcode")]
+# 
+# load("./data/cleaned_gdf_territory.RData")
+# acled_territory_mnth = cleaned_gdf_territory
+# 
+# rain = rain[which(rain$adm_level==2 & rain$date >= min(min(acled_territory_mnth$event_date))),c("date","adm_level","PCODE","r1h","version")]
+# rain$year = format(rain$date,"%Y")
+# rain$month = format(rain$date,"%m")
+# rain = rain%>%group_by(PCODE,year,month)%>%
+#   slice_max(date, n = 1, with_ties = FALSE)
+# rain$date = NULL
+# 
+# 
+# # rain = left_join(rain,admin, by=c("PCODE" = "adm2_pcode"))
+# rain$year_mnth = as.numeric(paste0(rain$year,rain$month))
+# 
+# # rain = rain%>%filter(adm1_pcode %in% c("CD54","CD61","CD62"))
+# # rain_sf = st_as_sf(rain)
+# 
+# 
+# #rain=rain[,c("adm_level","PCODE","r1h","year_mnth","geometry")]
+# rain=rain[,c("adm_level","PCODE","r1h","year_mnth")]
+# 
+# data.table::fwrite(rain, "./data/rain.csv")

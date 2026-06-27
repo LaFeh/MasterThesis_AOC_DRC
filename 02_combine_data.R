@@ -26,7 +26,7 @@ rm(grid_settlements)
 grid_mix_time = data.table::fread("./data/grid_mix_time.csv",sep =",")
 grid = left_join(grid,grid_mix_time,by ="cell_id")
 rm(grid_mix_time)
-
+plot(grid[,c("mix_time_mean")])
 
 grid_walk_time = data.table::fread("./data/grid_walk_time.csv",sep =",")
 grid = left_join(grid,grid_walk_time,by ="cell_id")
@@ -47,8 +47,8 @@ rm(grid_walk_time)
 # plot(grid_test[,c("walk_time_mean")])
 
 
-# controle _bol
-acled_territory_mnth$controle_bol = 1
+# control_bol
+#acled_territory_mnth$control_bol = 1
 
 
 # year mnth #######################
@@ -93,10 +93,9 @@ aoc_per_cell = acled_territory_grid%>%
                    #unknown = sum (controle == "unknown")
                    controle_num = mean(controle_num)
                    )%>%
-  mutate(controle = if_else((non_state_actor+government)!=0, non_state_actor/(non_state_actor+government), 0.5))
+  mutate(control = if_else((non_state_actor+government)!=0, non_state_actor/(non_state_actor+government), 0.5))
 
 aoc_per_cell = aoc_per_cell[,!colnames(aoc_per_cell) %in% c("non_state_actor","government")]
-
 aoc_per_cell = st_drop_geometry(aoc_per_cell)
 
 grid_cntrl_mnth = full_join(grid_yr_mnth,aoc_per_cell, by =c("cell_id","year_mnth"))
@@ -178,7 +177,8 @@ date_combinations$year_mnth_date = as.yearmon(as.character(date_combinations$yea
 ## create time series data ##
 #############################
 
-save(grid_cntrl_mnth,file = "./data/grid_timeseries.RData")
+# saving takes ages stopped for now
+#save(grid_cntrl_mnth,file = "./data/grid_timeseries.RData")
 
 ##################################################################
 # create the data frontline - fortschreibung des Gebiete
@@ -194,25 +194,25 @@ for (d in 1:nrow(date_combinations)){
   tm = date_combinations$year_mnth_date[d]
   print(tm)
   
-  frnt_data = grid_cntrl_mnth%>%filter(year_mnth_date <= tm & year_mnth_date >= (tm-2/12) & name =="Nord-Kivu") %>%  
-    group_by(geometry)%>%
-    
-    filter(!(is.na(controle) & any(!is.na(controle)))) %>%
-    slice_max(year_mnth_date, n = 1, with_ties = FALSE) %>%
-    ungroup()%>%mutate(time = tm)
+  # frnt_data = grid_cntrl_mnth%>%filter(year_mnth_date <= tm & year_mnth_date >= (tm-2/12) & name =="Nord-Kivu") %>%  
+  #   group_by(geometry)%>%
+  #   
+  #   filter(!(is.na(controle) & any(!is.na(controle)))) %>%
+  #   slice_max(year_mnth_date, n = 1, with_ties = FALSE) %>%
+  #   ungroup()%>%mutate(time = tm)
+  # 
+  # frontline_data = rbind(frontline_data,frnt_data)
   
-  frontline_data = rbind(frontline_data,frnt_data)
+  # frnt_data_controle_num = grid_cntrl_mnth%>%filter(year_mnth_date <= tm & year_mnth_date >= (tm-2/12) & 
+  #                                                     name =="Nord-Kivu") %>%  
+  #   group_by(geometry)%>%
+  #   filter(!(is.na(controle_num) & any(!is.na(controle_num)))) %>%
+  #   slice_max(year_mnth_date, n = 1, with_ties = FALSE) %>%
+  #   ungroup()%>%mutate(time = tm)
+  # 
+  # frontline_data_controle_num = rbind(frontline_data_controle_num,frnt_data_controle_num)
   
-  frnt_data_controle_num = grid_cntrl_mnth%>%filter(year_mnth_date <= tm & year_mnth_date >= (tm-2/12) & 
-                                                      name =="Nord-Kivu") %>%  
-    group_by(geometry)%>%
-    filter(!(is.na(controle_num) & any(!is.na(controle_num)))) %>%
-    slice_max(year_mnth_date, n = 1, with_ties = FALSE) %>%
-    ungroup()%>%mutate(time = tm)
-  
-  frontline_data_controle_num = rbind(frontline_data_controle_num,frnt_data_controle_num)
-  
-  frnt_data_controle_num_all_previous_time = grid_cntrl_mnth%>%filter(name =="Nord-Kivu") %>%  
+  frnt_data_controle_num_all_previous_time = grid_cntrl_mnth%>%filter(year_mnth_date <= tm & name =="Nord-Kivu") %>%  
     group_by(geometry)%>%
     filter(!(is.na(controle_num) & any(!is.na(controle_num)))) %>%
     slice_max(year_mnth_date, n = 1, with_ties = FALSE) %>%
@@ -224,11 +224,12 @@ for (d in 1:nrow(date_combinations)){
   
 }
 
-save(frontline_data,file = "./data/frontline_data_2_mnths.RData")
-save(frontline_data_controle_num,file = "./data/frontline_data_2_mnths_controle_num.RData")
+#save(frontline_data,file = "./data/frontline_data_2_mnths.RData")
+#save(frontline_data_controle_num,file = "./data/frontline_data_2_mnths_controle_num.RData")
+
 save(frontline_data_controle_num_all_previous_time,file = "./data/frontline_data_all_previous_mnths_controle_num.RData")
 
-
+message("frontline_data_controle_num_all_previous_time is saved!")
 
 
 

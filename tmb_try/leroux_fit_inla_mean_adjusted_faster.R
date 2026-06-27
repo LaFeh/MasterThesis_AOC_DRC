@@ -18,7 +18,7 @@ data_mat_w <- readRDS("./data/inla_data/data_mat_w_mixed_time_decay.RData")
 data       <- readRDS("./data/inla_data/data_prepared_for_inla.RData")
 
 # ── 3. Build W ────────────────────────────────────────────────────────────────
-W <- as.matrix(data_mat_b)
+W <- as.matrix(data_mat_w)
 W <- (W + t(W)) / 2
 diag(W) <- 0
 W <- W / mean(W[W > 0])    # rescale to mean edge weight = 1
