@@ -14,6 +14,7 @@ Type objective_function<Type>::operator()() {
   DATA_SCALAR(beta_prior_sd);
   DATA_SCALAR(tau_prior_shape);
   DATA_SCALAR(tau_prior_scale);
+  //Type rho = Type(rho);
   //DATA_SCALAR(logit_rho_prior_mean);
   //DATA_SCALAR(logit_rho_prior_sd);
   
@@ -26,6 +27,7 @@ Type objective_function<Type>::operator()() {
   // ── Derived ───────────────────────────────────────────────────────────────
   Type tau = exp(log_tau);
   Type rho = Type(0.99);
+
   //Type rho = invlogit(logit_rho);
    
   int  N   = y.size();

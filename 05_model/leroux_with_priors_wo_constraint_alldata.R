@@ -13,9 +13,7 @@ dyn.load(dynlib("./tmb_try/leroux_with_priors_wo_constraint_alldata"))
 
 # ── 2. Load data ──────────────────────────────────────────────────────────────
 
-data_mat_w <- readRDS("./data/inla_data/data_mat_w_mixed_time_decay.RData")
-#data_mat_b <- readRDS("./data/inla_data/data_mat_b.RData")
-data       <- readRDS("./data/inla_data/data_prepared_for_inla.RData")
+data_mat_w <- readRDS("./data/data_to_predict/data_mat_w_mixed_time_decay.RData")
 
 # ── 3. Build W over ALL areas (including NA areas) ───────────────────────────
 W <- as.matrix(data_mat_w)
@@ -33,12 +31,16 @@ L       <- D - W_sp
 
 
 eig_DmW <- eigen(as.matrix(L), symmetric = TRUE, only.values = TRUE)$values
-#save(eig_DmW,file = "./tmb_try/eigvalues_data_mat_w_mixed_time_decay.RData")
-#load(file = "./tmb_try/eigvalues_data_mat_w_mixed_time_decay.RData")
-
+save(eig_DmW,file = "./05_model/eigvalues_data_mat_w_mixed_time_decay.RData")
+#load(file = "./05_model/eigvalues_data_mat_w_mixed_time_decay.RData")
 cat("N areas:", N, "\n")
 cat("Min eigenvalue of (D-W):", min(eig_DmW), "\n")  # expect >= 0 (or tiny negative)
 cat("Negative eigenvalues (> -1e-8 is fine):", sum(eig_DmW < -1e-8), "\n")
+
+
+
+data       <- readRDS(paste0("./data/data_to_predict/",date,"_events.RData"))
+
 
 # ── 5. Design matrix (all N rows, no NA dropping) ────────────────────────────
 # If you have covariates with NAs, either impute them or use only intercept here

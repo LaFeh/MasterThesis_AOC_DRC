@@ -50,7 +50,7 @@ national_parks <- read_sf(
   layer = "WDPA_WDOECM_poly_May2026_COD"
 ) |>
   dplyr::select(DESIG_ENG) |>
-  filter(DESIG_ENG == "National Park") |>
+  filter(DESIG_ENG %in% c("National Park","Wetland of International Importance (Ramsar Site)","Nature reserve")) |>
   st_transform(st_crs(grid)) |>
   st_crop(st_bbox(grid)) |>
   st_make_valid() |>
@@ -114,18 +114,37 @@ water2 <- st_read(gpkg_path, layer = "gis_osm_waterways_free") |>
   filter(fclass !="drain" & fclass != "stream")
 
 water3 <- st_read(gpkg_path, layer = "gis_osm_water_a_free") |>
-  st_transform(st_crs(grid)) |>
-  st_crop(st_bbox(grid))
+  st_transform(st_crs(grid)) |>  st_crop(st_bbox(grid))
+
+
+
+water2$id_w2 =1:nrow(water2)
+water3$id_w3 =1:nrow(water3)
+
+# Start with df1
+result <- water3
+
+# Remove any overlap from df2
+df2_no_overlap <- st_difference(water2, st_union(water3))
+
+# Remove empty geometries
+df2_no_overlap <- df2_no_overlap[!st_is_empty(df2_no_overlap), ]
+df2_no_overlap = st_buffer(df2_no_overlap, units::set_units(1, "m"))
+# Combine
+water <- rbind(result[,c("osm_id","code","fclass","name")], df2_no_overlap[,c("osm_id","code","fclass","name")])
+
 
 # Remove waterways already contained within water polygons
-contained_in_water3 <- unlist(st_contains(water3, water2))
-if (length(contained_in_water3) > 0) water2 <- water2[-contained_in_water3, ]
+# contained_in_water3 <- unlist(st_contains(st_union(water3), water2))
+# if (length(contained_in_water3) > 0) water2 <- water2[-contained_in_water3, ]
+# contained_in_water2 <- unlist(st_contains(st_union(water2),water3))
+# if (length(contained_in_water2) > 0) water3 <- water3[-contained_in_water2, ]
 
 # Buffer waterways by their width (minimum 1m)
-water2$width_buf <- ifelse(is.na(water2$width) | water2$width == 0, 1, water2$width)
-water2 <- st_buffer(water2, units::set_units(water2$width_buf, "m"))
-water2$width     <- NULL
-water2$width_buf <- NULL
+# water2$width_buf <- ifelse(is.na(water2$width) | water2$width == 0, 1, water2$width)
+# water2 <- st_buffer(water2, units::set_units(water2$width_buf, "m"))
+# water2$width     <- NULL
+# water2$width_buf <- NULL
 
 # Remove water features fully contained within a single grid cell (negligible for masking)
 # w2_contained <- unlist(st_contains(grid, water2, sparse = TRUE))
@@ -137,27 +156,49 @@ water2$width_buf <- NULL
 # 6. ERASE WATERWAYS (water2) FROM GRID — via terra for speed
 # ============================================================
 
-# Only process cells that actually touch water2
-intersects2_idx  <- unique(unlist(st_intersects(water2, grid)))
+intersects2_idx  <- unique(unlist(st_intersects(water, grid)))
 grid2_touches    <- grid[intersects2_idx, ]
 grid2_no_touch   <- grid[-intersects2_idx, ]
 
 # Convert to terra, make valid, erase
 grid2_touches_terra <- makeValid(vect(grid2_touches))
-water2_terra        <- makeValid(vect(water2))
-water2_terra        <- disagg(water2_terra)
-water2_terra        <- aggregate(water2_terra, dissolve = TRUE)
-water2_terra        <- makeValid(water2_terra)
+water_terra        <- makeValid(vect(water))
+water_terra        <- disagg(water_terra)
+water_terra        <- aggregate(water_terra, dissolve = TRUE)
+water_terra        <- makeValid(water_terra)
 
-grid_without_water2_terra <- erase(grid2_touches_terra, water2_terra)
-grid_without_water2_terra <- disagg(grid_without_water2_terra)
+grid_without_water_terra <- erase(grid2_touches_terra, water_terra)
+grid_without_water_terra <- disagg(grid_without_water_terra)
 # Convert back and recombine
-grid_without_water2 <- st_as_sf(grid_without_water2_terra)
-grid_without_water2 <- rbind(grid2_no_touch, grid_without_water2)
-grid_without_water2 <- grid_without_water2[!st_is_empty(grid_without_water2), ]
+grid_without_water <- st_as_sf(grid_without_water_terra)
+grid_without_water <- rbind(grid2_no_touch, grid_without_water2)
+grid_without_water <- grid_without_water2[!st_is_empty(grid_without_water2), ]
 
 rm(grid2_touches, grid2_no_touch, grid2_touches_terra,
    water2_terra, grid_without_water2_terra)
+
+
+# Only process cells that actually touch water2
+# intersects2_idx  <- unique(unlist(st_intersects(water2, grid)))
+# grid2_touches    <- grid[intersects2_idx, ]
+# grid2_no_touch   <- grid[-intersects2_idx, ]
+# 
+# # Convert to terra, make valid, erase
+# grid2_touches_terra <- makeValid(vect(grid2_touches))
+# water2_terra        <- makeValid(vect(water2))
+# water2_terra        <- disagg(water2_terra)
+# water2_terra        <- aggregate(water2_terra, dissolve = TRUE)
+# water2_terra        <- makeValid(water2_terra)
+# 
+# grid_without_water2_terra <- erase(grid2_touches_terra, water2_terra)
+# grid_without_water2_terra <- disagg(grid_without_water2_terra)
+# # Convert back and recombine
+# grid_without_water2 <- st_as_sf(grid_without_water2_terra)
+# grid_without_water2 <- rbind(grid2_no_touch, grid_without_water2)
+# grid_without_water2 <- grid_without_water2[!st_is_empty(grid_without_water2), ]
+# 
+# rm(grid2_touches, grid2_no_touch, grid2_touches_terra,
+#    water2_terra, grid_without_water2_terra)
 
 # ============================================================
 # 7. ERASE WATER POLYGONS (water3) FROM GRID
@@ -195,7 +236,7 @@ water_all <- rbind(
   st_make_valid()
 
 # Clip water to grid boundary
-water_all_try     <- st_intersection(water_all, grid)
+#water_all_try     <- st_intersection(water_all, grid)
 
 grid_boundary <- st_union(grid) |> st_make_valid()
 water_all     <- st_intersection(water_all, grid_boundary) |>
@@ -220,20 +261,74 @@ align_cols2 <- function(a, b) {
 res2                 <- align_cols2(grid_without_water, water_all)
 grid_without_water   <- res2[[1]]
 water_all            <- res2[[2]]
+water_self_contained = st_contains(water_all,remove_self =T)
+list_water_contains = unlist(lapply(water_self_contained, function(x){if(rlang::is_empty(x)){FALSE}else{TRUE}}))
+water_all = water_all[-unlist(water_self_contained[list_water_contains]),]
 water_all$surface = "water"
 
 grid_final           <- rbind(grid_without_water, water_all)
 grid_final           <- grid_final[!st_is_empty(grid_final), ]
-grid_final$cell_id   <- seq_len(nrow(grid_final))
 grid_final$name      <- grid_final$adm1_name
 grid_final$adm1_name <- NULL
 
-grid_final = smoothr::drop_crumbs(grid_final,threshold = units::set_units((30*30)/2,"m^2"))
+grid_final_clean <- grid_final %>%
+  st_cast("MULTIPOLYGON") %>%
+  st_cast("POLYGON")
+
+grid_final = smoothr::drop_crumbs(grid_final_clean,threshold = units::set_units((30*30),"m^2"))
+
+grid_final$cell_id   <- seq_len(nrow(grid_final))
 
 #plot(grid_final[,"surface"])
 # ============================================================
 # 10. SAVE
 # ============================================================
+# overlap_final = st_overlaps(grid_final,grid_final)
+# distance_final = st_distance(grid_final[bol_overlap,],grid_final[bol_overlap,])
+# 
+# bol_overlap = unlist(lapply(overlap_final, function(x){if(length(x)>0){TRUE}else{FALSE}}))
+# which(!bol_overlap)
+# overlap_final[bol_overlap][1]
+# plot(grid_final[c(which(bol_overlap)[2],overlap_final[bol_overlap][2][[1]]),"cell_id"])
+
+data_adj = spdep::poly2nb(grid_final,queen =T,snap = 5)
+# data_adj_s10 = spdep::poly2nb(grid_final,queen =T,snap = 10)
+bol_nghbr = unlist(lapply(data_adj, function(x){if(x[[1]]!=0){TRUE}else{FALSE}}))
+# which(!bol_nghbr)
+plot(grid_final[which(!bol_nghbr),])
+bbox =st_as_sfc(st_bbox(grid_final[which(!bol_nghbr)[1],]))
+gf = st_intersects(grid_final,bbox)
+bol_gf = unlist(lapply(gf, function(x){if(length(x)!=0){TRUE}else{FALSE}}))
+
+
+plot(grid_final[which(!bol_nghbr)[1],]$geometry, col ="red")
+plot(grid_final[which(bol_gf)[4],]$geometry,add =T)
+st_touches(grid_final[which(!bol_nghbr)[1],],grid_final[bol_gf,])
+st_contains(grid_final[which(bol_gf)[4],],grid_final[which(!bol_nghbr)[1],])
+#st_area(grid_final[which(!bol_nghbr),])
+
+# k = st_distance(grid_final[which(!bol_nghbr),],grid_final)
+# dist_k_1 = k[1,]
+# dist_k_1 = data.frame(dist = dist_k_1, id = 1:length(dist_k_1))
+# dist_k_1 = dist_k_1[order(dist_k_1$dist),]
+# 
+# st_contains(grid_final[dist_k_1$id[c(1:3)],])
+# 
+# plot(grid_final[dist_k_1$id[1],"cell_id"],add =T)
+# plot(grid_final[dist_k_1$id[c(1:3)],"cell_id"])
+# plot(grid_final[dist_k_1$id[c(1,3)],"cell_id"],add = T)
+# plot(grid_final[which(!bol_nghbr)[1],]$geometry,col ="red",add =T)
+
+# st_equals(grid_final_clean[c(1721,28231),])
+# 
+# plot(grid_final[which(grid_final$name=="Nord-Kivu"),]$geometry)
+# plot(grid_final[which(!bol_nghbr),]$geometry,col = "red",add = T)
+# plot(grid_final[ which(is.na(grid_final$name)),]$geometry)
+# plot(grid_final[ which(!bol_nghbr)[1],]$geometry)
+# st_area(grid_final[ which(!bol_nghbr)[1],])
+# my_polygons <- st_cast(grid_final[ which(!bol_nghbr)[1],]$geometry, "POLYGON")
+# all_multipolygons <- grid_final[st_is(grid_final, "MULTIPOLYGON"), ]
+
 
 write_sf(grid_final, "./data/grid_surface.shp")
 message("Done! Grid saved to ./data/grid_surface.shp")
