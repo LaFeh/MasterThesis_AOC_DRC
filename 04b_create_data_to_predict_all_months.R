@@ -35,4 +35,4 @@ for(date in all_dates){
 
 
 # needs to be done only once because grid stays the same for the whole time span
-prepare_adj_matrix_for_prediction(frontline_data,N)
+prepare_adj_matrix_for_prediction(frontline_data,N,snap = 3,second_degree_neighbours = TRUE)

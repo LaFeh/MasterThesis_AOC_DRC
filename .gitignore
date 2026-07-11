@@ -3,3 +3,4 @@ plots/*
 stan_modelling/cmdstand/*
 MTC_shiny_app/MTC_Maps/data/*
 *.RData
+05_model/plots/*

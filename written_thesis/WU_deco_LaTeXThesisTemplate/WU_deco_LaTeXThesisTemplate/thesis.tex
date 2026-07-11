@@ -1,0 +1,368 @@
+\documentclass{thesisclass}
+
+%% -------------------------------
+%% |    IM Thesis Template       |
+%% -------------------------------
+%% Further additions by: Julian Huber, 2019
+%% julian.huber "at" kit.edu
+%% Further additions by: Kenneth Qua, 2021
+%% kenneth.qua "at" wu.ac.at
+
+%% Notes:
+%% Language switch after \begin{document}
+
+% Based on thesisclass.cls of Timo Rohrberg, 2009
+% ----------------------------------------------------------------
+% Thesis - Main document
+% ----------------------------------------------------------------
+
+% Select your thesis language here:
+\usepackage[english]{babel}
+%\usepackage[german]{babel}
+
+
+%% ---------------------------------
+%% |      Additional packages      |
+%% ---------------------------------
+%% 
+
+\usepackage{graphicx}
+%http://en.wikibooks.org/wiki/LaTeX/Importing_Graphics#Graphics_storage
+\DeclareGraphicsExtensions{.pdf,.png,.jpg}
+\graphicspath{{./figures/}} %Use curly braces for each path to add and don't
+% forget trailing slash '/'
+% \usepackage{epstopdf} %Nice to automatically convert eps figures to pdf
+% format  (from inkscape, etc)
+\usepackage[natbibapa]{apacite}
+\usepackage{booktabs}
+
+%% ---------------------------------
+%% | Needed for the List of Abbreviations |
+%% ---------------------------------
+\usepackage{nomencl}
+\renewcommand{\nomname}{List of Abbreviations}
+% Punkte zw. Abkürzung und Erklärung
+\setlength{\nomlabelwidth}{.32\hsize}%.32\hsize bezieht sich auf die Punkte zwischen Abkürzung und Erklärung -> je größer die Zahl, desto mehr %Punkte
+\renewcommand{\nomlabel}[1]{#1 \dotfill}
+% Zeilenabstände verkleinern
+\setlength{\nomitemsep}{-\parsep}
+\makenomenclature
+\usepackage[normalem]{ulem}
+\newcommand{\markup}[1]{\uline{#1}}
+
+\usepackage{xspace}
+
+\newcommand\ie{i.\,e.\xspace}
+\newcommand\eg{e.\,g.\xspace}
+\newcommand\Eg{E.\,g.\xspace}
+\newcommand{\Latex}{\LaTeX\xspace}
+
+
+
+%% ---------------------------------
+%% | Information about the thesis  |
+%% ---------------------------------
+
+% uncomment one of the following, according to your thesis
+%\newcommand{\mytype}{\iflanguage{english}{Bachelor Thesis}{Bachelorarbeit}} 
+%\newcommand{\mytype}{\iflanguage{english}{Master's Thesis}{Masterarbeit}} 
+\newcommand{\mytype}{\iflanguage{english}{Seminar Thesis}{Seminararbeit}} 
+
+\newcommand{\myname}{Full Name}
+\newcommand{\matricle}{Student ID Number}
+\newcommand{\mytitle}{\iflanguage{english}{Title}{Titel der Arbeit}}
+\newcommand{\myinstitute}{\iflanguage{english}
+{Institute for Digital Ecosystems}
+{Institut für Digital Ecosystems}}
+
+\newcommand{\reviewerone}{Title. Full Name}
+\newcommand{\reviewertwo}{Full Name}
+\newcommand{\advisor}{Full Name}
+\newcommand{\advisortwo}{}
+
+\newcommand{\timestart}{\iflanguage{english}{XX. Month 20XX}{XX. Monat 20XX}}
+\newcommand{\timeend}{\iflanguage{english}{XXth of Month 20XX}{XX. Monat 20XX}}
+\newcommand{\submissiontime}{DD. MM. 20XX}
+
+%% -------------------------------
+%% |  Information for PDF file   |
+%% -------------------------------
+%% IM: Auto-Fill this information
+\hypersetup{
+ pdfauthor={\myname},
+ pdftitle={\mytitle},
+ pdfsubject={\mytype},
+ pdfkeywords={\mytype}
+}
+
+%% ---------------------------------
+%% | ToDo Marker - only for draft! |
+%% ---------------------------------
+% Remove this section for final version!
+%\setlength{\marginparwidth}{20mm}
+
+%\newcommand{\margtodo}
+%{\marginpar{\textbf{\textcolor{red}{ToDo}}}{}}
+
+%\newcommand{\todo}[1]
+%{{\textbf{\textcolor{red}{(\margtodo{}#1)}}}{}}
+
+
+%% --------------------------------
+%% | Old Marker - only for draft! |
+%% --------------------------------
+% Remove this section for final version!
+%\newenvironment{deprecated}
+%{\begin{color}{gray}}
+%{\end{color}}
+
+
+%% --------------------------------
+%% | Settings for word separation |
+%% --------------------------------
+% Help for separation:
+% In german package the following hints are additionally available:
+% "- = Additional separation
+% "| = Suppress ligation and possible separation (e.g. Schaf"|fell)
+% "~ = Hyphenation without separation (e.g. bergauf und "~ab)
+% "= = Hyphenation with separation before and after
+% "" = Separation without a hyphenation (e.g. und/""oder)
+
+% Describe separation hints here:
+\hyphenation{
+% Pro-to-koll-in-stan-zen
+% Ma-na-ge-ment  Netz-werk-ele-men-ten
+% Netz-werk Netz-werk-re-ser-vie-rung
+% Netz-werk-adap-ter Fein-ju-stier-ung
+% Da-ten-strom-spe-zi-fi-ka-tion Pa-ket-rumpf
+% Kon-troll-in-stanz
+}
+
+
+%% ------------------------
+%% |    Including files   |
+%% ------------------------
+% Only files listed here will be included!
+% Userful command for partially translating the document (for bug-fixing e.g.)
+\includeonly{%
+titlepage,
+text/abbreviations,
+text/introduction,
+text/content,
+text/evaluation,
+text/conclusion,
+text/appendix
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Here, main documents begins %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+
+\frontmatter
+\pagenumbering{roman}
+\include{titlepage}
+% IM Style: No additional blank page
+% \blankpage
+
+
+%% -------------------
+%% |   Directories   |
+%% -------------------
+\iflanguage{english}{
+\renewcommand*\contentsname{Table of Contents}}
+{}
+\clearpage
+\tableofcontents
+
+% IM Style: No additional blank page
+% \blankpaage
+
+% If you do not wish to include a list of figures, list of tables and list of abbreviations, comment out the following section
+\iflanguage{english}
+{
+\clearpage
+\phantomsection % Properly links List of Figures in Table of Contents and starts it on new page
+\listoffigures \addcontentsline{toc}{chapter}{List of Figures} 
+\clearpage
+\phantomsection % Properly links List of Tables in Table of Contents and starts it on new page
+\listoftables  \addcontentsline{toc}{chapter}{List of Tables} 
+\printnomenclature   \addcontentsline{toc}{chapter}{List of Abbreviations} 
+}
+{
+\clearpage
+\phantomsection % Properly links List of Figures in Table of Contents and starts it on new page
+\listoffigures \addcontentsline{toc}{chapter}{Abbildungsverzeichnis} 
+\clearpage
+\phantomsection % Properly links List of Tables in Table of Contents and starts it on new page
+\listoftables \addcontentsline{toc}{chapter}{Tabellenverzeichnis} 
+\printnomenclature \addcontentsline{toc}{chapter}{Abkürzungsverzeichnis}
+}
+
+
+% Execute this command for index creation, i.e., for abbreviations by the nomencl package
+% makeindex thesis.nlo -s nomencl.ist -o thesis.nls
+
+
+
+%\printnomenclature
+
+
+
+%% -----------------
+%% |   Main part   |
+%% -----------------
+\mainmatter
+\pagenumbering{arabic}
+
+
+%% ==============
+\chapter*{Abstract} 
+This section is a short summary of your entire paper. It should briefly cover the most important aspects of your paper. After reading this section, the reader should have a good understanding of what the research question is, how you answered it and what the answer was. This section is intentionally meant to be brief and no longer than half a page.
+
+%\chapter*{Zusammenfassung} 
+%\textit{summary in German; only if required by the examination rules}
+
+
+\chapter{Introduction} 
+Motive the importance of your research without overselling it. Clearly state your research question. Depending on the discipline, you may summarize your results in this section.
+
+
+
+%% ===========================
+\section{Section 1}
+\label{ch:Content1:sec:Section1}
+%% ===========================
+Use sections to help structure your paper and make it easier for your reader to understand the main point of the section.
+
+\iflanguage{english}
+{The abbreviation etc. \nomenclature{etc.}{et cetera} can be viewed in the list of abbreviations.}
+{Die Abkürzung etc.\nomenclature{etc.}{et cetera} steht im Abkürzungsverzeichnis.}
+
+\subsection{Subsection}
+Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Maecenas porttitor congue massa. Fusce posuere, magna sed pulvinar ultricies, purus lectus malesuada libero, sit amet commodo magna eros quis urna. 
+
+\subsubsection{SubSubsection}
+Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Maecenas porttitor congue massa. Fusce posuere, magna sed pulvinar ultricies, purus lectus malesuada libero, sit amet commodo magna eros quis urna. 
+%% ===========================
+\section{Table Example}
+\label{ch:Content1:sec:Section2}
+%% ===========================
+
+Here I use the label of the table to reference Table~\ref{tab:Tabelle1}. The \~~ is a protected blank that is not broken when a line ends. This looks nicer for numbers with units 3~kW or numbered items. 
+
+\begin{table}[htb]
+\centering
+\caption{Tables have captions above}
+\begin{tabular}{llr}
+\toprule
+\multicolumn{2}{c}{Item} \\
+\cmidrule(r){1-2}
+Animal    & Description & Price (\$) \\
+\midrule
+Gnat      & per gram    & 13.65      \\
+          & each        & 0.01       \\
+Gnu       & stuffed     & 92.50      \\
+Emu       & stuffed     & 33.33      \\
+Armadillo & frozen      & 8.99       \\
+\bottomrule
+\end{tabular}
+
+\label{tab:Tabelle1}
+\end{table}
+%%
+% Nice little helper: https://www.tablesgenerator.com/
+\clearpage
+%% ===========================
+\section{Figure Example}
+\label{ch:Content1:sec:Section3}
+%% ===========================
+
+This is an example of a figure depicting the redesign of Google's logo in 2015 \citep{kastrenakes2015}.
+\begin{figure}[ht]
+\centering
+\includegraphics[scale=0.4]{figures/google-logo.png}
+\caption{Google's 2015 Logo}
+\label{fig:google}
+\end{figure}
+
+\chapter{Literature Research} Describe how you carried out the literature research such that it can be replicated. The PRISMA Methodology is an example of a systematic way to conduct literature research. It is crucial that you cite all your sources to prevent your work from being regarded as plagiarism. For a  detailed look on how to cite your sources, please see the APA style guide in Appendix A.
+
+Here are some examples of citations from different sources: 
+
+\emph{Journal Article}
+
+This is contrary to the conventional perception that ``large data sets offer a higher form of intelligence and knowledge'' and possess an ``aura of truth, objectivity, and accuracy'' \citep[663]{boyd2012critical}.
+
+Following \citet{conejo2005day} and \citet{misiorek2006point}, we employ a naive but challenging test to verify that our proposed models are better than random guessing.
+
+\emph{Book}
+
+These are robust to errors resulting from the inclusion of predictors that do not contribute to the model by performing feature selection \citep{kuhn2013applied}.
+
+\emph{Website}
+
+The Model 3's roof-crush test displayed its resilience where it resisted the equivalent weight of ``two full-grown African elephants'' \citep{Model3Tesla2021}.
+
+\section{Methodology}\dots
+\section{Results}\dots
+
+\chapter{Theoretical Foundations} Also called "Related work" or similar – collate all relevant prior research. 
+\section{Section 1}\dots
+
+\chapter{Research Model} Develop your hypotheses, describe your mental model for the research question.
+\section{Section 1}\dots
+
+
+\chapter{Research Methodology} Describe how (and explain why) you decided to investigate your research question. Your methodology should be clear especially in the event where it needs to be replicated. It should cover what data is going to be collected, how it will be collected and how it will be analysed.
+\section{Section 1}\dots
+
+\chapter{Results} What are the findings? Describe the results of your investigation (e.g. hypothesis rejection). Use appropriate visualization (e.g., tables, charts).
+\section{Section 1}\dots
+
+\chapter{Discussion} What does it mean? Discuss the theoretical and practical implications of your findings as well as the limitations of your study.
+\section{Theoretical Implications}\dots
+\section{Practical Implications}\dots
+\section{Limitations}\dots
+
+\chapter{Conclusion \& Outlook} Repeat the problem and its relevance, as well as the contribution (plus quantitative results). Provide an outlook for further research steps.
+
+
+
+%% ----------------
+%% |   Appendix   |
+%% ----------------
+% IM Style: No additional blank page
+%\cleardoublepage
+
+%Use the appendix.tex file in the text folder to edit
+
+\input{text/appendix} 
+
+
+
+
+%% --------------------
+%% |   Bibliography   |
+%% --------------------
+%%\cleardoublepage
+\phantomsection
+\addcontentsline{toc}{chapter}{\bibname}
+
+% IM Style
+\bibliographystyle{apalike}
+
+%What research is referred to?
+
+% Informatik-Style
+%\iflanguage{english}
+%{\bibliographystyle{IEEEtranSA}}	% english style
+%{\bibliographystyle{babalpha-fl}}	% german style
+												  
+% Use IEEEtran for numeric references
+%\bibliographystyle{IEEEtranSA})
+
+\bibliography{thesis}
+
+
+\end{document}

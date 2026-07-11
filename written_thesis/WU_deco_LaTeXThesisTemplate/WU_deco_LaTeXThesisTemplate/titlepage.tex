@@ -1,0 +1,62 @@
+%% titlepage.tex
+%%
+
+% coordinates for the bg shape on the titlepage
+\newcommand{\diameter}{20}
+\newcommand{\xone}{-15}
+\newcommand{\xtwo}{160}
+\newcommand{\yone}{15}
+\newcommand{\ytwo}{-253}
+
+\begin{titlepage}
+
+	\begin{textblock}{9}[0,0](11,1.03)
+		\includegraphics[width=.7\textwidth]{logos/WULogo.pdf}
+	\end{textblock}
+	\changefont{ppl}{m}{n}	% helvetica	(phv), % IM Style: palatino (ppl) 
+	\vspace*{3.5cm}
+	\begin{center}
+		\Huge{\mytitle}
+		\vspace*{2cm}\\
+		\Large{
+			\iflanguage{english}{\mytype}			
+								{\mytype}
+		}\\
+		\vspace*{1cm}
+		\huge{\myname}\\
+			\Large{\matricle}\\
+		\vspace*{1cm}
+		\Large{
+			\iflanguage{english}{Department of Information Systems and Operations Management}			
+							    {Department für Wirtschaftsinformatik und Operations Management}
+			\\
+			\myinstitute
+		}
+	\end{center}
+	\vspace*{3cm}
+\Large{
+\begin{center}
+\begin{tabular}[ht]{l c l}
+  % Gutachter sind die Professoren, die die Arbeit bewerten. 
+  %\iflanguage{english}{Reviewer}{Erstgutachter}: & \hfill  & \reviewerone\\
+  \iflanguage{english}{Reviewer}{Gutachter}: & \hfill  & \reviewerone\\
+  \iflanguage{english}{Second reviewer}{Zweitgutachter}: & \hfill  & \reviewertwo\\
+  \iflanguage{english}{Advisor}{Betreuender Assistent}: & \hfill  & \advisor\\
+  % \iflanguage{english}{Second advisor}{Zweiter betreuender Mitarbeiter}: & \hfill  & \advisortwo\\
+  % IM: No second advisor
+  % Der zweite betreuende Mitarbeiter kann weggelassen werden. 
+\end{tabular}
+\end{center}
+}
+
+
+\vspace{3cm}
+\begin{center}
+\large{\timeend}
+% \iflanguage{english}{Duration:}{Bearbeitungszeit:} \timestart \hspace*{0.25cm}
+% -- \hspace*{0.25cm} 
+% \timeend}
+\end{center}
+
+
+\end{titlepage}

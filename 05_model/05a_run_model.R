@@ -3,9 +3,12 @@
 library(Matrix)
 setwd("D:/DRC/gaussian_process_AOC")
 source("./05_model/05a_a_helper_run_model.R")
-# ── 2. Load data ──────────────────────────────────────────────────────────────
+# ── 1. set up ──────────────────────────────────────────────────────────────
 
-data_mat_w <- readRDS("./data/data_for_prediction/data_mat_w_mixed_time_decay.RData")
+name = "second_neighbour" # first_neighbour
+data_mat_w <- readRDS(paste0("./data/data_for_prediction/data_mat_w_mixed_time_",name,".RData"))
+rho =0.6
+
 
 # ── 3. Build W over ALL areas (including NA areas) ───────────────────────────
 W <- as.matrix(data_mat_w)
@@ -20,8 +23,8 @@ L       <- D - W_sp
 
 
 #eig_DmW <- eigen(as.matrix(L), symmetric = TRUE, only.values = TRUE)$values
-#save(eig_DmW,file = "./05_model/eigvalues_data_mat_w_mixed_time_decay.RData")
-load(file = "./05_model/eigvalues_data_mat_w_mixed_time_decay.RData")
+#save(eig_DmW,file = paste0("./05_model/eigvalues_data_mat_w_mixed_time_",name,".RData"))
+load(file =  paste0("./05_model/eigvalues_data_mat_w_mixed_time_",name,".RData"))
 
 cat("Min eigenvalue of (D-W):", min(eig_DmW), "\n")  # expect >= 0 (or tiny negative)
 cat("Negative eigenvalues (> -1e-8 is fine):", sum(eig_DmW < -1e-8), "\n")
@@ -80,7 +83,7 @@ for ( date in all_dates){
     tau_prior_scale     = 2,
     logit_rho_prior_mean = 10,
     logit_rho_prior_sd   = 1,
-    rho = 0.99
+    rho = rho
   )
   
   
@@ -94,7 +97,8 @@ for ( date in all_dates){
   run_model(date = date,
             model_name = "leroux_with_priors_wo_constraint_alldata",
             data_lst, 
-            parameters)
+            parameters,
+            name_identifier = name)
   
 }
 

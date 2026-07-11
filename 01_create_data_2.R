@@ -118,11 +118,11 @@ water3 <- st_read(gpkg_path, layer = "gis_osm_water_a_free") |>
 
 
 
-water2$id_w2 =1:nrow(water2)
-water3$id_w3 =1:nrow(water3)
+#water2$id_w2 =1:nrow(water2)
+#water3$id_w3 =1:nrow(water3)
 
 # Start with df1
-result <- water3
+water_result <- water3
 
 # Remove any overlap from df2
 df2_no_overlap <- st_difference(water2, st_union(water3))
@@ -131,7 +131,7 @@ df2_no_overlap <- st_difference(water2, st_union(water3))
 df2_no_overlap <- df2_no_overlap[!st_is_empty(df2_no_overlap), ]
 df2_no_overlap = st_buffer(df2_no_overlap, units::set_units(1, "m"))
 # Combine
-water <- rbind(result[,c("osm_id","code","fclass","name")], df2_no_overlap[,c("osm_id","code","fclass","name")])
+water_all <- rbind(water_result[,c("osm_id","code","fclass","name")], df2_no_overlap[,c("osm_id","code","fclass","name")])
 
 
 # Remove waterways already contained within water polygons
@@ -156,13 +156,13 @@ water <- rbind(result[,c("osm_id","code","fclass","name")], df2_no_overlap[,c("o
 # 6. ERASE WATERWAYS (water2) FROM GRID — via terra for speed
 # ============================================================
 
-intersects2_idx  <- unique(unlist(st_intersects(water, grid)))
+intersects2_idx  <- unique(unlist(st_intersects(water_all, grid)))
 grid2_touches    <- grid[intersects2_idx, ]
 grid2_no_touch   <- grid[-intersects2_idx, ]
 
 # Convert to terra, make valid, erase
 grid2_touches_terra <- makeValid(vect(grid2_touches))
-water_terra        <- makeValid(vect(water))
+water_terra        <- makeValid(vect(water_all))
 water_terra        <- disagg(water_terra)
 water_terra        <- aggregate(water_terra, dissolve = TRUE)
 water_terra        <- makeValid(water_terra)
@@ -171,11 +171,11 @@ grid_without_water_terra <- erase(grid2_touches_terra, water_terra)
 grid_without_water_terra <- disagg(grid_without_water_terra)
 # Convert back and recombine
 grid_without_water <- st_as_sf(grid_without_water_terra)
-grid_without_water <- rbind(grid2_no_touch, grid_without_water2)
-grid_without_water <- grid_without_water2[!st_is_empty(grid_without_water2), ]
+grid_without_water <- rbind(grid2_no_touch, grid_without_water)
+grid_without_water <- grid_without_water[!st_is_empty(grid_without_water), ]
 
 rm(grid2_touches, grid2_no_touch, grid2_touches_terra,
-   water2_terra, grid_without_water2_terra)
+   water_terra, grid_without_water_terra)
 
 
 # Only process cells that actually touch water2
@@ -205,35 +205,37 @@ rm(grid2_touches, grid2_no_touch, grid2_touches_terra,
 # ============================================================
 
 # Only process cells that touch water3
-intersects3_idx  <- unique(unlist(st_intersects(water3, grid_without_water2)))
-grid3_touches    <- grid_without_water2[intersects3_idx, ]
-grid3_no_touch   <- grid_without_water2[-intersects3_idx, ]
-
-grid3_touches_terra <- makeValid(vect(grid3_touches))
-water3_terra        <- makeValid(vect(water3))
-water3_terra        <- disagg(water3_terra)
-water3_terra        <- aggregate(water3_terra, dissolve = TRUE)
-water3_terra        <- makeValid(water3_terra)
-
-grid_without_water3_terra <- erase(grid3_touches_terra, water3_terra)
-grid_without_water3_terra <- disagg(grid_without_water3_terra)
-
-grid_without_water <- st_as_sf(grid_without_water3_terra)
-grid_without_water <- rbind(grid3_no_touch, grid_without_water)
-grid_without_water <- grid_without_water[!st_is_empty(grid_without_water), ]
-
-rm(grid3_touches, grid3_no_touch, grid3_touches_terra,
-   water3_terra, grid_without_water3_terra, grid_without_water2)
+# intersects3_idx  <- unique(unlist(st_intersects(water3, grid_without_water2)))
+# grid3_touches    <- grid_without_water2[intersects3_idx, ]
+# grid3_no_touch   <- grid_without_water2[-intersects3_idx, ]
+# 
+# grid3_touches_terra <- makeValid(vect(grid3_touches))
+# water3_terra        <- makeValid(vect(water3))
+# water3_terra        <- disagg(water3_terra)
+# water3_terra        <- aggregate(water3_terra, dissolve = TRUE)
+# water3_terra        <- makeValid(water3_terra)
+# 
+# grid_without_water3_terra <- erase(grid3_touches_terra, water3_terra)
+# grid_without_water3_terra <- disagg(grid_without_water3_terra)
+# 
+# grid_without_water <- st_as_sf(grid_without_water3_terra)
+# grid_without_water <- rbind(grid3_no_touch, grid_without_water)
+# grid_without_water <- grid_without_water[!st_is_empty(grid_without_water), ]
+# 
+# rm(grid3_touches, grid3_no_touch, grid3_touches_terra,
+#    water3_terra, grid_without_water3_terra, grid_without_water2)
 
 # ============================================================
 # 8. BUILD WATER SHAPE LAYER
 # ============================================================
 
-water_all <- rbind(
-  water2 |> dplyr::select(geom) |> mutate(surface = "water"),
-  water3 |> dplyr::select(geom) |> mutate(surface = "water")
-) |>
-  st_make_valid()
+# water_all <- rbind(
+#   water2 |> dplyr::select(geom) |> mutate(surface = "water"),
+#   water3 |> dplyr::select(geom) |> mutate(surface = "water")
+# ) |>
+#   st_make_valid()
+
+water_all$surface = "water"
 
 # Clip water to grid boundary
 #water_all_try     <- st_intersection(water_all, grid)
@@ -244,13 +246,14 @@ water_all     <- st_intersection(water_all, grid_boundary) |>
 water_all     <- water_all[!st_is_empty(water_all), ]
 
 
-rm(water2, water3)
+#rm(water2, water3)
 water_all = water_all%>%rename(geometry = geom)
 # ============================================================
 # 9. COMBINE LAND + WATER INTO FINAL GRID
 # ============================================================
 
 grid_without_water$surface <- "land"
+
 
 # Align columns
 align_cols2 <- function(a, b) {
@@ -291,21 +294,21 @@ grid_final$cell_id   <- seq_len(nrow(grid_final))
 # overlap_final[bol_overlap][1]
 # plot(grid_final[c(which(bol_overlap)[2],overlap_final[bol_overlap][2][[1]]),"cell_id"])
 
-data_adj = spdep::poly2nb(grid_final,queen =T,snap = 5)
+data_adj = spdep::poly2nb(grid_final,queen =T,snap = 3)
 # data_adj_s10 = spdep::poly2nb(grid_final,queen =T,snap = 10)
-bol_nghbr = unlist(lapply(data_adj, function(x){if(x[[1]]!=0){TRUE}else{FALSE}}))
-# which(!bol_nghbr)
-plot(grid_final[which(!bol_nghbr),])
-bbox =st_as_sfc(st_bbox(grid_final[which(!bol_nghbr)[1],]))
-gf = st_intersects(grid_final,bbox)
-bol_gf = unlist(lapply(gf, function(x){if(length(x)!=0){TRUE}else{FALSE}}))
-
-
-plot(grid_final[which(!bol_nghbr)[1],]$geometry, col ="red")
-plot(grid_final[which(bol_gf)[4],]$geometry,add =T)
-st_touches(grid_final[which(!bol_nghbr)[1],],grid_final[bol_gf,])
-st_contains(grid_final[which(bol_gf)[4],],grid_final[which(!bol_nghbr)[1],])
-#st_area(grid_final[which(!bol_nghbr),])
+# bol_nghbr = unlist(lapply(data_adj, function(x){if(x[[1]]!=0){TRUE}else{FALSE}}))
+# # which(!bol_nghbr)
+# plot(grid_final[which(!bol_nghbr),])
+# bbox =st_as_sfc(st_bbox(grid_final[which(!bol_nghbr)[1],]))
+# gf = st_intersects(grid_final,bbox)
+# bol_gf = unlist(lapply(gf, function(x){if(length(x)!=0){TRUE}else{FALSE}}))
+# 
+# 
+# plot(grid_final[which(!bol_nghbr)[1],]$geometry, col ="red")
+# plot(grid_final[which(bol_gf)[4],]$geometry,add =T)
+# st_touches(grid_final[which(!bol_nghbr)[1],],grid_final[bol_gf,])
+# st_contains(grid_final[which(bol_gf)[4],],grid_final[which(!bol_nghbr)[1],])
+# #st_area(grid_final[which(!bol_nghbr),])
 
 # k = st_distance(grid_final[which(!bol_nghbr),],grid_final)
 # dist_k_1 = k[1,]

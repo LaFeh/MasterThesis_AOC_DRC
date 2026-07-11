@@ -26,26 +26,10 @@ rm(grid_settlements)
 grid_mix_time = data.table::fread("./data/grid_mix_time.csv",sep =",")
 grid = left_join(grid,grid_mix_time,by ="cell_id")
 rm(grid_mix_time)
-plot(grid[,c("mix_time_mean")])
 
 grid_walk_time = data.table::fread("./data/grid_walk_time.csv",sep =",")
 grid = left_join(grid,grid_walk_time,by ="cell_id")
 rm(grid_walk_time)
-
-####
-#plot(grid[440:443,c("surface")])
-
-# plot(grid$geometry)
-# plot(grid[100:1000,]$geometry)
-# plot(grid[442:442,c("surface")])
-
-#bbox = st_as_sf(st_as_sfc(st_bbox(grid[442,])))
-#bbox = st_as_sf(st_as_sfc(st_bbox(grid[440:443,])))
-#grid_test = st_join(grid, bbox,st_intersects, left = FALSE)
-# plot(grid_test[,c("surface")])
-# plot(grid_test[,c("mix_time_mean")])
-# plot(grid_test[,c("walk_time_mean")])
-
 
 # control_bol
 #acled_territory_mnth$control_bol = 1
@@ -58,10 +42,6 @@ acled_conflict_mnth$year_mnth = as.numeric(acled_conflict_mnth$year_mnth)
 # rwa distance ###########################
 dist_rwa = data.table::fread("./data/distance_rwanda.csv")
 grid = left_join(grid,dist_rwa, by="cell_id")
-
-
-
-#plot(admin[which(admin$adm1_name=="Nord-Kivu"),c("adm2_pcode")])
 
 
 # landcover ################################
@@ -108,10 +88,8 @@ acled_conflict_per_cell = acled_conflict_mnth%>%st_drop_geometry()%>%ungroup()%>
   dplyr::group_by(year_mnth,cell_id)%>%
   dplyr::summarise(events_violence_civilian = sum(events_violence_civilian,na.rm =T),
                    events_battles = sum(events_Battles,na.rm =T),
-                   events_battles_multip = sum(events_Battles,na.rm =T)*0.2,
                    events_strategic_developments = sum(events_strategic_developments,na.rm =T),
                    events_remote_violence = sum(events_remote_violence,na.rm =T),
-                   events_remote_violence_multip = sum(events_remote_violence,na.rm =T)*-0.5,
                    fatalities_violence_civilian = sum(fatalities_violence_civilian,na.rm =T),
                    fatalities_battles = sum(fatalities_Battles,na.rm =T),
                    fatalities_strategic_developments = sum(fatalities_strategic_developments,na.rm =T),
@@ -135,38 +113,6 @@ rain$date = as.numeric(gsub("-","",rain$date))
 grid_cntrl_mnth = left_join(grid_cntrl_mnth, rain, by =c("cell_id"="cell_id", "year_mnth" = "date"))
 
 
-
-#plt_grid = grid_cntrl_mnth%>%filter(name =="Nord-Kivu")
-#plot(plt_grid[,c("year_mnth")], col =plt_grid$controle)
-# 
-# graphics.off()
-# library(ggplot2)
-# for (tm in date_combinations$year_mnth){
-#   plt_grid = grid_cntrl_mnth%>%filter(year_mnth <= tm & name =="Nord-Kivu") %>%  
-#     group_by(geometry)%>%
-#     filter(!(controle == "neutral" & any(controle != "neutral"))) %>%
-#     slice_max(year_mnth, n = 1, with_ties = FALSE) %>%
-#     ungroup()
-#   
-# 
-#   gp = ggplot2::ggplot(plt_grid) +
-#     ggplot2::geom_sf(aes(fill = controle))+
-#     ggplot2::scale_fill_manual(
-#       values = c(
-#         "government" = "#1f78b4",
-#         "non-state actor" = "#e31a1c",
-#         "neutral" = "#bdbdbd",
-#         "unknown" = "lightblue"
-#         
-#       )
-#     )
-#     
-#   
-#   ggsave(paste0("./plots/accumulativ_mnth_year_change_aoc/",tm,".png"),gp)
-# 
-# }
-
-
 # as year month dateformat
 library(zoo)
 
@@ -182,35 +128,15 @@ date_combinations$year_mnth_date = as.yearmon(as.character(date_combinations$yea
 
 ##################################################################
 # create the data frontline - fortschreibung des Gebiete
-# - all previous months and last 2 months and current month
+# - all previous months 
 ###################################################################
 
-
-frontline_data = data.frame()
-frontline_data_controle_num = data.frame()
 frontline_data_controle_num_all_previous_time = data.frame()
 
 for (d in 1:nrow(date_combinations)){
   tm = date_combinations$year_mnth_date[d]
   print(tm)
   
-  # frnt_data = grid_cntrl_mnth%>%filter(year_mnth_date <= tm & year_mnth_date >= (tm-2/12) & name =="Nord-Kivu") %>%  
-  #   group_by(geometry)%>%
-  #   
-  #   filter(!(is.na(controle) & any(!is.na(controle)))) %>%
-  #   slice_max(year_mnth_date, n = 1, with_ties = FALSE) %>%
-  #   ungroup()%>%mutate(time = tm)
-  # 
-  # frontline_data = rbind(frontline_data,frnt_data)
-  
-  # frnt_data_controle_num = grid_cntrl_mnth%>%filter(year_mnth_date <= tm & year_mnth_date >= (tm-2/12) & 
-  #                                                     name =="Nord-Kivu") %>%  
-  #   group_by(geometry)%>%
-  #   filter(!(is.na(controle_num) & any(!is.na(controle_num)))) %>%
-  #   slice_max(year_mnth_date, n = 1, with_ties = FALSE) %>%
-  #   ungroup()%>%mutate(time = tm)
-  # 
-  # frontline_data_controle_num = rbind(frontline_data_controle_num,frnt_data_controle_num)
   
   frnt_data_controle_num_all_previous_time = grid_cntrl_mnth%>%filter(year_mnth_date <= tm & name =="Nord-Kivu") %>%  
     group_by(geometry)%>%
@@ -224,83 +150,38 @@ for (d in 1:nrow(date_combinations)){
   
 }
 
-#save(frontline_data,file = "./data/frontline_data_2_mnths.RData")
-#save(frontline_data_controle_num,file = "./data/frontline_data_2_mnths_controle_num.RData")
-
 save(frontline_data_controle_num_all_previous_time,file = "./data/frontline_data_all_previous_mnths_controle_num.RData")
-
 message("frontline_data_controle_num_all_previous_time is saved!")
 
 
 
 
+
+##
+
 ########################
 #create plots frontline
 ###########################
 
-for (d in 1:nrow(date_combinations)){
-  tm = date_combinations$year_mnth_date[d]
-  print(tm)
-  
-  plt_grid = grid_cntrl_mnth%>%filter(year_mnth_date <= tm & year_mnth_date >= (tm-2/12) & name =="Nord-Kivu") %>%
-    group_by(geometry)%>%
-    filter(!(controle == 0.5 & any(controle != 0.5))) %>%
-    slice_max(year_mnth_date, n = 1, with_ties = FALSE) %>%
-    ungroup()%>%mutate(time = tm)
-  
-  
-  
-  gp = ggplot2::ggplot(plt_grid) +
-    ggplot2::geom_sf(aes(fill = controle_num))#+
-  
-  
-  ggsave(paste0("./plots/frontline_mnth_year_change_aoc/",as.numeric(format(as.Date(tm), "%Y%m")),".png"),gp)
-  
-  
-}
-
-
-
-###########################################################
-# shift the coordinates with each time step did not work ##
-###########################################################
-
-
-# grid_cntry_mnth_nk = grid_cntrl_mnth%>%filter(name =="Nord-Kivu")
-# bbx = st_bbox(grid_cntry_mnth_nk)
-# width = bbx[3] - bbx[1]
-# height = bbx[4] - bbx[2]
-# shift_vec <- c(width, height)
-# 
-# rm(frontline_data_controle_num)
-# rm(frontline_data_controle_num_all_previous_time)
-# frontline_data = data.frame()
-# 
 # for (d in 1:nrow(date_combinations)){
 #   tm = date_combinations$year_mnth_date[d]
 #   print(tm)
 #   
-#   
-#   
-#   frnt_data = grid_cntry_mnth_nk%>%filter(year_mnth_date == tm & name =="Nord-Kivu") %>%  
+#   plt_grid = grid_cntrl_mnth%>%filter(year_mnth_date <= tm & year_mnth_date >= (tm-2/12) & name =="Nord-Kivu") %>%
 #     group_by(geometry)%>%
-#     filter(!(is.na(controle) & any(!is.na(controle)))) %>%
-#     #filter(!(controle == "neutral" & any(controle != "neutral"))) %>%
+#     filter(!(controle == 0.5 & any(controle != 0.5))) %>%
 #     slice_max(year_mnth_date, n = 1, with_ties = FALSE) %>%
-#     ungroup()%>%mutate(time = tm)%>%mutate(geometry = geometry+shift_vec*(d-1))
+#     ungroup()%>%mutate(time = tm)
 #   
-#   frontline_data = rbind(frontline_data,frnt_data)
 #   
+#   
+#   gp = ggplot2::ggplot(plt_grid) +
+#     ggplot2::geom_sf(aes(fill = controle_num))#+
+#   
+#   
+#   ggsave(paste0("./plots/frontline_mnth_year_change_aoc/",as.numeric(format(as.Date(tm), "%Y%m")),".png"),gp)
 #   
 #   
 # }
-# #plot(frontline_data[which(frontline_data$year_mnth_date %in% c(date_combinations$year_mnth_date[20:23])),c("r1h")])
-# #points(bbx,add =TRUE,col = "red")
-# #st_crs(bbx)
-# #st_crs(frontline_data)
-# save(frontline_data,file = "./data/frontline_data_1_mnths_time_shift.RData")
-# 
-
-
 
 

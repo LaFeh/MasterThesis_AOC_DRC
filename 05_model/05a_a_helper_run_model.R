@@ -1,7 +1,8 @@
 setwd("D:/DRC/gaussian_process_AOC")
 
 run_model <- function(date,model_name = "leroux_with_priors_wo_constraint_alldata",
-                      data_lst, parameters){
+                      data_lst, parameters,
+                      name_identifier = NULL){
   
   library(TMB)
   library(Matrix)
@@ -53,8 +54,8 @@ run_model <- function(date,model_name = "leroux_with_priors_wo_constraint_alldat
   report_vals <- obj$report(full_par)
   
   
-  save(rep,file = paste0("./05_model/",date,"_report.RData"))
-  save(report_vals,file = paste0("./05_model/",date,"_report_vals.RData"))
+  save(rep,file = paste0("./05_model/",date,"_",name_identifier,"_report.RData"))
+  save(report_vals,file = paste0("./05_model/",date,"_",name_identifier,"_report_vals.RData"))
        
   data$p_mean   <- as.numeric(report_vals$p)
   data$phi_mean   <- as.numeric(plogis(report_vals$phi))
@@ -67,9 +68,9 @@ run_model <- function(date,model_name = "leroux_with_priors_wo_constraint_alldat
         geom_sf(aes(fill =  phi_mean)) +
         scale_fill_viridis_c() +
         theme_minimal()  +
-    ggtitle(paste0("tau: ",tau,"; rho: 0.99"))
+    ggtitle(paste0("tau: ",tau,"; rho: ",data_lst$rho))
        
-  ggsave(paste0("./05_model/plots/",date,"_phi.png"),p)
+  ggsave(paste0("./05_model/plots/",date,"_",name_identifier,"_phi.png"),p)
   
   
   
