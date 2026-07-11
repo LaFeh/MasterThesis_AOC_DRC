@@ -27,7 +27,7 @@ Type objective_function<Type>::operator()() {
 
   // ── Derived ───────────────────────────────────────────────────────────────
   Type tau = exp(log_tau);
-  Type rho = Type(0.6);
+  
 
   //Type rho = invlogit(logit_rho);
    

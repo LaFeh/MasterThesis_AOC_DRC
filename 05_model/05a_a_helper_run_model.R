@@ -1,8 +1,10 @@
 setwd("D:/DRC/gaussian_process_AOC")
 
-run_model <- function(date,model_name = "leroux_with_priors_wo_constraint_alldata",
-                      data_lst, parameters,
-                      name_identifier = NULL){
+run_model <- function(date,
+                      data_lst, 
+                      parameters,
+                      cpp_file = paste0("./05_model/leroux_with_priors_wo_constraint_alldata"),
+                      output_path = "leroux_with_priors_wo_constraint_alldata"){
   
   library(TMB)
   library(Matrix)
@@ -10,20 +12,22 @@ run_model <- function(date,model_name = "leroux_with_priors_wo_constraint_alldat
 
   
   # ── 1. Clean recompile ────────────────────────────────────────────────────────
-  model_files = paste0("./05_model/",model_name)
-  try(dyn.unload(dynlib(model_files)), silent = TRUE)
-  file.remove(paste0(model_files,".o"))
-  file.remove(paste0(model_files,".dll"))
+  #model_files = paste0("./05_model/",cpp_name)
+  try(dyn.unload(dynlib(cpp_file)), silent = TRUE)
+  file.remove(paste0(cpp_file,".o"))
+  file.remove(paste0(cpp_file,".dll"))
   
-  compile(paste0(model_files,".cpp"))
-  dyn.load(dynlib(model_files))
+  compile(paste0(cpp_file,".cpp"))
+  cpp_file_load = gsub("//.","",cpp_file)
+  dyn.load(dynlib(cpp_file_load))
+  cpp_obj = basename(cpp_file)
   
   # ── 2. Build AD objective ─────────────────────────────────────────────────────
   obj <- MakeADFun(
     data       = data_lst,
     parameters = parameters,
     random     = "phi",       # phi integrated out by Laplace for ALL N areas
-    DLL        = model_name,
+    DLL        = cpp_obj,
     silent     = FALSE
   )
   
@@ -54,8 +58,8 @@ run_model <- function(date,model_name = "leroux_with_priors_wo_constraint_alldat
   report_vals <- obj$report(full_par)
   
   
-  save(rep,file = paste0("./05_model/",date,"_",name_identifier,"_report.RData"))
-  save(report_vals,file = paste0("./05_model/",date,"_",name_identifier,"_report_vals.RData"))
+  save(rep,file = paste0(output_path,"/",date,"_report.RData"))
+  save(report_vals,file = paste0(output_path,"/",date,"_report_vals.RData"))
        
   data$p_mean   <- as.numeric(report_vals$p)
   data$phi_mean   <- as.numeric(plogis(report_vals$phi))
@@ -70,7 +74,7 @@ run_model <- function(date,model_name = "leroux_with_priors_wo_constraint_alldat
         theme_minimal()  +
     ggtitle(paste0("tau: ",tau,"; rho: ",data_lst$rho))
        
-  ggsave(paste0("./05_model/plots/",date,"_",name_identifier,"_phi.png"),p)
+  ggsave(paste0(output_path,"/plots/",date,"_phi.png"),p)
   
   
   
