@@ -5,45 +5,6 @@ library(sf)
 library(dplyr)
 library(terra)
 
-
-# ============================================================
-# 1. walk time
-# ============================================================
-
-
-tif_path <-'./data/GRID3_COD_walk_travel_time_friction_surface_v1/GRID3_COD_walk_travel_time_friction_surface_v1.tif' 
-walk_time=rast(tif_path)
-
-
-grid = read_sf("./data/grid_surface.shp")
-grid = st_transform(grid,st_crs(walk_time))
-
- # crop raster to grid bounding box
-walk_time_crop <- crop(
-  walk_time,
-  vect(grid),
-  filename = "./data/walk_crop.tif",
-  overwrite = TRUE
-)
-
-
-library(exactextractr)
-
-grid$walk_time_mean <- exact_extract(
-  walk_time_crop,
-  grid,
-  'mean'
-)
-
-grid$lg_walk_time_mean = log(grid$walk_time_mean)
-
-# ============================================================
-# 1.2 write walking data
-# ============================================================
-
-grid = st_drop_geometry(grid)
-data.table::fwrite(grid[,c("cell_id","walk_time_mean","lg_walk_time_mean")],"./data/grid_walk_time.csv")
-
 # ============================================================
 # 2. travel speed (motorized)
 # ============================================================
