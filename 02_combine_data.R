@@ -27,9 +27,6 @@ grid_mix_time = data.table::fread("./data/grid_mix_time.csv",sep =",")
 grid = left_join(grid,grid_mix_time,by ="cell_id")
 rm(grid_mix_time)
 
-grid_walk_time = data.table::fread("./data/grid_walk_time.csv",sep =",")
-grid = left_join(grid,grid_walk_time,by ="cell_id")
-rm(grid_walk_time)
 
 # control_bol
 #acled_territory_mnth$control_bol = 1
@@ -43,11 +40,6 @@ acled_conflict_mnth$year_mnth = as.numeric(acled_conflict_mnth$year_mnth)
 dist_rwa = data.table::fread("./data/distance_rwanda.csv")
 grid = left_join(grid,dist_rwa, by="cell_id")
 
-
-# landcover ################################
-landcover = data.table::fread("./data/landcover.csv")
-grid = left_join(grid,landcover,by="cell_id")
-rm(landcover)
 
 
 # 1st. create data per month year ####################################################
