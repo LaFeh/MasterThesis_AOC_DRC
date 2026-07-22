@@ -1,23 +1,24 @@
-setwd("D:/DRC/gaussian_process_AOC")
+setwd(here::here())
 
 library(terra)
 library(sf)
 library(dplyr)
 library(units)
 
-library(smoothr)
+#library(smoothr)
 # ============================================================
 # 1. LOAD AND PROJECT STUDY AREA
 # ============================================================
 
-relevant_regions <- read_sf("./data/Congo_relevant_provinces.shp")
+relevant_regions <- read_sf("./data/congo_relevant_provinces")
 relevant_regions <- relevant_regions |>
   filter(name %in% c("Ituri", "Sud-Kivu", "Nord-Kivu")) |>
   distinct()
 
+target_crs <- sf::st_crs("ESRI:102022")$wkt
 drc_m <- relevant_regions |>
   vect() |>
-  project("EPSG:102022")
+  project(target_crs)
 
 # ============================================================
 # 2. CREATE 5KM GRID
