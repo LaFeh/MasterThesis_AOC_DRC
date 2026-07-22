@@ -1,5 +1,6 @@
 **/plots/*
 **/data/*
+!data/congo-democratic-republic-260530-free.gpkg.zip
 *.RData
 *.dll
 *.o
