@@ -18,7 +18,10 @@ grid = st_transform(grid,st_crs(landcover))
 # crop raster to grid bounding box
 landcover_crop <- crop(
   landcover,
-  vect(grid)
+  vect(grid),
+  filename = "./data/landcover_crop.tif",
+  overwrite = TRUE
+  
 )
 
 

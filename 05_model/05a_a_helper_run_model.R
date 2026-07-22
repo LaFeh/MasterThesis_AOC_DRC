@@ -40,7 +40,7 @@ run_model <- function(date,
     start     = obj$par,
     objective = obj$fn,
     gradient  = obj$gr,
-    lower     = c(lower_bounds_beta, -6, -6),  # bound logit_rho
+    lower     = c(lower_bounds_beta, -12, -6),  # bound logit_rho
     upper     = c(upper_bounds_beta,  6,  6),
     control   = list(iter.max = 5000, eval.max = 2000)
   )
@@ -52,7 +52,7 @@ run_model <- function(date,
   # ── 11. Uncertainty ───────────────────────────────────────────────────────────
   rep <- sdreport(obj, par.fixed = fit$par)
   fixed = summary(rep, "fixed")    # beta, log_tau, logit_rho with SEs
-  cat(fixed)
+  #cat(fixed)
   # full parameter vector: fixed + random modes
   full_par <- obj$env$last.par.best
   report_vals <- obj$report(full_par)
@@ -67,6 +67,8 @@ run_model <- function(date,
        
   
   tau = exp(fixed[,"Estimate"]["log_tau"])
+  
+  
   library(ggplot2)
   p <- ggplot2::ggplot(data) +
         geom_sf(aes(fill =  phi_mean)) +
