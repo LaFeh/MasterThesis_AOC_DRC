@@ -15,10 +15,11 @@ relevant_regions <- relevant_regions |>
   filter(name %in% c("Ituri", "Sud-Kivu", "Nord-Kivu")) |>
   distinct()
 
-target_crs <- sf::st_crs("ESRI:102022")$wkt
+
 drc_m <- relevant_regions |>
   vect() |>
-  project(target_crs)
+  project("EPSG:102022")
+
 
 # ============================================================
 # 2. CREATE 5KM GRID

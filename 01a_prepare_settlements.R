@@ -16,13 +16,13 @@ grid = read_sf("./data/grid_surface.shp")
 settlements = st_read("./data/GRID3_COD_settlement_grid_v3_1_gpkg/GRID3_COD_settlement_grid_v3_1.gpkg",
                       query = "SELECT building_count,building_area,grid3_id,longitude,latitude,Shape FROM \"GRID3_COD_settlement_grid_v3_1\"")
 
-settlements = st_transform(settlements,grid)
+settlements = st_transform(settlements,st_crs(grid))
 
 mat_within = st_within(settlements,st_as_sfc(st_bbox(grid)),sparse =F)
 settlements_within = settlements[mat_within,]
 rm(settlements)
 
-settlements_grid = st_join(settlements_within,grid[,c("cell_id")], st_within)
+settlements_grid = st_join(settlements_within,grid[,c("cell_id")], st_within,by_element = FALSE)
 settlement_grid = settlements_grid%>%group_by(cell_id)%>%summarise(building_count = sum(building_count,na.rm = T),
                                                   building_area = sum(building_area,na.rm = T))
 
