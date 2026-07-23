@@ -1,8 +1,10 @@
 **/plots/*
 **/data/*
-!data/congo-democratic-republic-260530-free.gpkg.zip
-!data/GRID3_COD_settlement_grid_v3_1_gpkg/
-!data/GRID3_COD_settlement_grid_v3_1_gpkg/**
 *.RData
 *.dll
 *.o
+!data/congo-democratic-republic-260530-free.gpkg.zip
+!data/GRID3_COD_settlement_grid_v3_1_gpkg/
+!data/GRID3_COD_settlement_grid_v3_1_gpkg/**
+!/data/COD_population_v4_4_gridded/
+!/data/COD_population_v4_4_gridded/**
