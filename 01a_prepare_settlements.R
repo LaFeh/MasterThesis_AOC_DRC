@@ -22,7 +22,15 @@ mat_within = st_within(settlements,st_as_sfc(st_bbox(grid)),sparse =F)
 settlements_within = settlements[mat_within,]
 rm(settlements)
 
-settlements_grid = st_join(settlements_within,grid[,c("cell_id")], st_within,by_element = FALSE)
+if(sf::sf_extSoftVersion()["GEOS"]<"3.14.0"){
+  # geos 12. ist doin st_within much slower than GEO 3.14. st_within is not usable with geos 12
+  settlements_grid = st_join(settlements_within,grid[,c("cell_id")], st_intersects,by_element = FALSE)
+  
+}else{
+  settlements_grid = st_join(settlements_within,grid[,c("cell_id")], st_within,by_element = FALSE)
+  
+}
+
 settlement_grid = settlements_grid%>%group_by(cell_id)%>%summarise(building_count = sum(building_count,na.rm = T),
                                                   building_area = sum(building_area,na.rm = T))
 
@@ -45,7 +53,8 @@ grid = read_sf("./data/grid_surface.shp")
 tif_path = "./data/COD_population_v4_4_gridded/COD_population_v4_4_gridded/COD_Population_v4_4_gridded.tif"
 population=rast(tif_path)
 
-population= st_transform(population,st_crs(grid))
+population = project(population, st_crs(grid)$wkt)
+#population= st_transform(population,st_crs(grid))
 
 # crop raster to grid bounding box
 population_crop <- crop(

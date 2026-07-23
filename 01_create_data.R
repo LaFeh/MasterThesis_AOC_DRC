@@ -10,15 +10,15 @@ library(smoothr)
 # 1. LOAD AND PROJECT STUDY AREA
 # ============================================================
 
-relevant_regions <- read_sf("./data/congo_relevant_provinces")
+relevant_regions <- read_sf("./data/congo_relevant_provinces/")
 relevant_regions <- relevant_regions |>
   filter(name %in% c("Ituri", "Sud-Kivu", "Nord-Kivu")) |>
   distinct()
 
-
+relevant_regions = st_transform(relevant_regions,sf::st_crs("ESRI:102022"))
 drc_m <- relevant_regions |>
-  vect() |>
-  project("EPSG:102022")
+  vect()# |>
+  #project("EPSG:102022")
 
 
 # ============================================================
