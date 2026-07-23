@@ -4,8 +4,8 @@ library(terra)
 library(sf)
 library(dplyr)
 library(units)
+library(smoothr)
 
-#library(smoothr)
 # ============================================================
 # 1. LOAD AND PROJECT STUDY AREA
 # ============================================================
