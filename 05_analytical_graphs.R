@@ -1,14 +1,14 @@
-library("INLA")
-
-library("spatstat")
-library("sp")
-library("sf")
-
-library(sf)
-library(dplyr)
-library(kernlab)
-library(spdep)
-library(grid)
+# library("INLA")
+# 
+# library("spatstat")
+# library("sp")
+# library("sf")
+# 
+# library(sf)
+# library(dplyr)
+# library(kernlab)
+# library(spdep)
+# library(grid)
 
 setwd("D:/DRC/gaussian_process_AOC")
 load("./data/frontline_data_all_previous_mnths_controle_num.RData")
@@ -223,7 +223,4 @@ unique(names(rep$value))
 k = rep[names(rep$value)=="rho"]
 mean(k)
 
-k = rep$value
-k[ which(names(k)=="rho")
-k[c(1,2,3,4,5,6)]
 ###########
