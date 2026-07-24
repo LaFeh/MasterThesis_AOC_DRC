@@ -1,5 +1,5 @@
 # travelspeed data
-setwd("D:/DRC/gaussian_process_AOC")
+
 
 library(sf)
 library(dplyr)
@@ -10,7 +10,7 @@ library(terra)
 # ============================================================
 
 ## start with mixed travel speed
-setwd("D:/DRC/gaussian_process_AOC")
+#setwd("D:/DRC/gaussian_process_AOC")
 
 library(sf)
 library(dplyr)
@@ -33,10 +33,78 @@ mix_time_crop <- crop(
   filename = "./data/mix_crop.tif",
   overwrite = TRUE
 )
+rm(mix_time)
 
 if (clean_stream){ # clean all streams -> values above 2
   
-  mix_time_crop_wo_streams = mix_time_crop
+  
+  
+  
+
+  gpkg_path <- "./data/congo-democratic-republic-260530-free.gpkg/congo-democratic-republic.gpkg"
+
+  water3 <- st_read(gpkg_path, layer = "gis_osm_water_a_free") |>
+    st_transform(st_crs(grid)) |>  st_crop(st_bbox(grid))
+  
+  
+  trimmed_lakes = read_sf("./data/Congo_relevant_lakes.shp")
+  trimmed_lakes = st_transform(trimmed_lakes,st_crs(grid))
+  
+  # this is the lake with values for mixed_time
+  trimmed_lakes = trimmed_lakes[which(trimmed_lakes$name =="Lac Kivu"),]
+  lac_kivu_mixed_time <- exactextractr::exact_extract(mix_time_crop, trimmed_lakes, 'mean')
+  lac_kivu_mixed_time = mean(lac_kivu_mixed_time)
+  grid[which(is.na(grid$mix_time_mean)),]$mix_time_mean = lac_kivu_mixed_time
+  
+  
+  
+  
+  water3 <- st_buffer(water3,30)
+  streams <- vect(water3)
+  
+  # Save where the original NAs are
+  orig_na <- is.na(mix_time_crop)
+  # Mask out polygons (set cells inside polygons to NA)
+  r_masked <- mask(mix_time_crop,streams, inverse = TRUE)
+  
+  # Cells that became NA because of masking
+  masked_na <- is.na(r_masked) & !orig_na
+  
+  
+  # 5x5 moving window
+  w <- matrix(1, 3, 3)
+
+  r_fill <- r_masked
+
+  
+  repeat {
+    
+    # Current missing cells that came from masking
+    to_fill <- masked_na & is.na(r_fill)
+    
+    if (!global(to_fill, "sum")[1,1]) break
+    
+    print(!global(to_fill, "sum")[1,1])
+    
+    # Compute neighborhood means
+    f <- focal(
+      r_fill,
+      w = w,
+      fun = mean,
+      na.rm = TRUE,
+      na.policy = "only"
+    )
+    
+    # Fill only those masked cells that are currently NA
+    r_fill <- ifel(to_fill, f, r_fill)
+  }
+  
+
+  # Fill only the NA cells
+  mix_time_crop_filled <- cover(mix_time_crop_masked, focal_mean)
+  
+
+
   vals = values(mix_time_crop_wo_streams)
   values(mix_time_crop_wo_streams) <- ifelse(vals > 2, NA,vals)
   summary <- exactextractr::exact_extract(mix_time_crop_wo_streams, grid, 'mean')
