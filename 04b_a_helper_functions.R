@@ -25,7 +25,10 @@ prepare_adj_matrix_for_prediction <- function(frontline_data,
                                               N,
                                               date=NULL,
                                               snap = 0,
-                                              second_degree_neighbours = FALSE){
+                                              second_degree_neighbours = FALSE,
+                                              distance = FALSE){
+  
+  # distance if only considered when second degree neighbour
   
   if (is.null(date)){
     date = paste0(unique(frontline_data$year_mnth)[1],"01")
@@ -35,7 +38,6 @@ prepare_adj_matrix_for_prediction <- function(frontline_data,
   data = frontline_data%>%
     filter(time == tm)
   stopifnot(nrow(data)==N)
-  
   
   data = cbind(data,st_coordinates(st_centroid(data$geometry)))
   data$mix_time_mean_decay = log(data$mix_time_mean) - min(log(data$mix_time_mean))
@@ -107,12 +109,25 @@ prepare_adj_matrix_for_prediction <- function(frontline_data,
         # if first degree neighbour
         if (end_point %in% which(data_mat[start_point, ] > 0)){
           
+          if (distance){
+            dist = st_distance(data[c(start_point, end_point), ])
+            
+          }
+
+          
           mean = mean(
             data[c(start_point, end_point), ]$mix_time_mean_decay,
             na.rm = TRUE
           )
+
           
-          weights[end_point_idx] <- 1/(mean)
+          if (distance){
+            dist = st_distance(data[c(start_point, end_point), ])
+            weights[end_point_idx] <- 1/(mean*dist)
+          }else{
+            weights[end_point_idx] <- 1/(mean)
+          }
+          
           if (weights[end_point_idx] >1){
             weights[end_point_idx] = 1
           }
@@ -129,7 +144,15 @@ prepare_adj_matrix_for_prediction <- function(frontline_data,
             na.rm = TRUE
           )
           
-          weights[end_point_idx] <- 1/(mean)^2
+          
+          if (distance){
+            dist = st_distance(data[c(start_point, end_point), ])
+            weights[end_point_idx] <- 1/(mean*dist)
+          }else{
+            weights[end_point_idx] <- 1/(mean)^2
+          }
+          
+          #weights[end_point_idx] <- 1/(mean)^2
           if (weights[end_point_idx] >1){
             weights[end_point_idx] = 1
           }
@@ -144,7 +167,7 @@ prepare_adj_matrix_for_prediction <- function(frontline_data,
     data_adj_nb = nb2listw(data_adj_second$neighbours,zero.policy = T)
     data_adj_nb$weights = weights_second_neightbours_decay
     data_mat_w_decay  = listw2mat(data_adj_nb)
-    saveRDS(data_mat_w_decay, "./data/data_for_prediction/data_mat_w_mixed_time_second_neighbour.RData")
+    saveRDS(data_mat_w_decay, paste0("./data/data_for_prediction/data_mat_w_mixed_time_second_neighbour_distance_",distance,".RData"))
     
     
   }

@@ -1,6 +1,7 @@
 setwd("~/MasterThesis_AOC_DRC")
 library(here)
 getwd()
+
 # 1.1.1. made some changes that slow down the code considerably.
 # remotes::install_version(
 #   "sf",
