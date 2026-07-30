@@ -141,8 +141,8 @@ grid$lg_mix_time_mean = log(grid$mix_time_mean)
 # leaflet(options = leafletOptions(zoomControl = FALSE)) %>%
 #   addTiles() %>%
 #   addPolygons(
-#     data = st_transform(grid_wo_water, 4326),
-#     fillColor = ~pal(grid_wo_water$lg_mix_time_mean),
+#     data = st_transform(grid, 4326),
+#     fillColor = ~pal(grid$lg_mix_time_mean),
 #     fillOpacity = 1,
 #     color = "black",
 #     weight = 1
@@ -155,13 +155,21 @@ grid$lg_mix_time_mean = log(grid$mix_time_mean)
 #     labFormat = labelFormat(transform = function(x) sort(x, decreasing = TRUE))
 #   )# %>%
 #   # setView(
-  #   lng = coords[1],
-  #   lat = coords[2],
-  #   zoom = 8
-  # )
+#   lng = coords[1],
+#   lat = coords[2],
+#   zoom = 8
+# )
 
-
-
+# library(leaflet)
+# leaflet(options = leafletOptions(zoomControl = T)) %>%
+#   addTiles() %>%
+#   addPolygons(
+#     data = st_transform(grid[which(grid$name =="Nord-Kivu"),], 4326),
+#     color = "black",
+#     weight = 1
+#   ) %>%
+#   addRasterImage(project(log(mix_time_crop),"EPSG:4326"),
+#                  opacity =0.5)
 
 # ============================================================
 # 2.2 write data

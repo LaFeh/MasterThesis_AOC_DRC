@@ -5,7 +5,7 @@
 #       computed along the network, per segment.
 # ============================================================
 
-create_street_splittedfunction(){
+create_street_splitted <- function(){
   
   
   library(sf)
@@ -84,10 +84,14 @@ create_street_splittedfunction(){
   
   streets_split <- line_segment(streets_without_cities2, 
                                 segment_length = target_length)
-  
+
+
+
   # Sanity check: distribution of segment lengths should now be tight
   seg_lengths <- as.numeric(st_length(streets_split))
   streets_split = streets_split[which(seg_lengths>= 30),]
+  
+
   #summary(seg_lengths)
   #table(seg_lengths <30)
   
@@ -95,28 +99,53 @@ create_street_splittedfunction(){
   # accessibility values back later.
   streets_split <- streets_split %>%
     mutate(segment_id = row_number())
+
+  streets_split$width_calculated = streets_split$width
+  streets_split$width_calculated = ifelse(is.na(streets_split$width_calculated),streets_split$lanes *4,streets_split$width_calculated)
+  streets_split$width_calculated = 30 # with time travel coherent
+  streets_split = sf::st_buffer(streets_split,streets_split$width_calculated/2,singleSide =F,endCapStyle = "FLAT")
+  streets_split$geom_type = NULL
+  
+  streets_split = st_difference(streets_split)
+  
+  streets_split = streets_split%>%sf::st_make_valid(.)%>%
+    sf::st_cast(.,"MULTIPOLYGON")%>%
+    sf::st_cast(.,"POLYGON")
+  
+  tif_path <-'./data/GRID3_COD_mix_travel_time_friction_surface_v1/GRID3_COD_mix_travel_time_friction_surface_v1.tif' 
+  mix_time=terra::rast(tif_path) 
+  streets_split_plot = st_transform(streets_split,st_crs(mix_time))
+
+  
+  # crop raster to grid bounding box
+  mix_time_crop <- terra::crop(
+    mix_time,
+    terra::vect(streets_split_plot),
+    filename = "./data/mix_crop_2.tif",
+    overwrite = TRUE
+  )
+  mix_time_crop = terra::project(mix_time_crop,"EPSG:4326")
+  streets_split_plot = st_transform(streets_split_plot,"EPSG:4326")
   
 
-  # library(leaflet)
-  # leaflet(options = leafletOptions(zoomControl = T)) %>%
-  #   addTiles() %>%
-  #   addPolygons(
-  #     data = st_transform(settlements_union_wo_hole,4326),
-  #     fillOpacity = 0.8,
-  #     color = "blue"#,
-  #     #label =~block_id
-  #   )%>%
-  #   addPolylines(
-  #     data = st_transform(streets_without_cities2, 4326),
-  #     fillOpacity = 0.8,
-  #     color = "red",
-  #     weight = 1
-  #   )
+  
+  
+  library(leaflet)
+  leaflet(options = leafletOptions(zoomControl = T)) %>%
+    addPolygons(
+      data = streets_split_plot,
+      color = "black"
+    )%>%
+    addRasterImage(
+      mix_time_crop,
+      opacity = 0.8
+    )
   
   
   # ---- 5. Save outputs ---------------------------------------------------
-  st_write(streets_split, "./data/streets_split.gpkg", append = F)
+  sf::st_write(streets_split, "./data/streets_split.gpkg", append = F)
   
+
   # streets_split.gpkg   -> uniform segments with segment_id (for joining results)
   # midpoints layer      -> one representative point per segment, ready to
 

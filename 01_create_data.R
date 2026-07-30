@@ -6,6 +6,9 @@ library(dplyr)
 library(units)
 library(smoothr)
 
+source("./01_xb_remove_from_grid.R")
+
+ add_streets = TRUE
 # ============================================================
 # 1. LOAD AND PROJECT STUDY AREA
 # ============================================================
@@ -164,26 +167,28 @@ water_all <- rbind(water_result[,c("osm_id","code","fclass","name")], df2_no_ove
 # 6. ERASE WATERWAYS (water2) FROM GRID — via terra for speed
 # ============================================================
 
-intersects2_idx  <- unique(unlist(st_intersects(water_all, grid)))
-grid2_touches    <- grid[intersects2_idx, ]
-grid2_no_touch   <- grid[-intersects2_idx, ]
 
-# Convert to terra, make valid, erase
-grid2_touches_terra <- makeValid(vect(grid2_touches))
-water_terra        <- makeValid(vect(water_all))
-water_terra        <- disagg(water_terra)
-water_terra        <- aggregate(water_terra, dissolve = TRUE)
-water_terra        <- makeValid(water_terra)
-
-grid_without_water_terra <- erase(grid2_touches_terra, water_terra)
-grid_without_water_terra <- disagg(grid_without_water_terra)
-# Convert back and recombine
-grid_without_water <- st_as_sf(grid_without_water_terra)
-grid_without_water <- rbind(grid2_no_touch, grid_without_water)
-grid_without_water <- grid_without_water[!st_is_empty(grid_without_water), ]
-
-rm(grid2_touches, grid2_no_touch, grid2_touches_terra,
-   water_terra, grid_without_water_terra)
+grid_without_water = remove_from_grid(grid,water_all)
+# intersects2_idx  <- unique(unlist(st_intersects(water_all, grid)))
+# grid2_touches    <- grid[intersects2_idx, ]
+# grid2_no_touch   <- grid[-intersects2_idx, ]
+# 
+# # Convert to terra, make valid, erase
+# grid2_touches_terra <- makeValid(vect(grid2_touches))
+# water_terra        <- makeValid(vect(water_all))
+# water_terra        <- disagg(water_terra)
+# water_terra        <- aggregate(water_terra, dissolve = TRUE)
+# water_terra        <- makeValid(water_terra)
+# 
+# grid_without_water_terra <- erase(grid2_touches_terra, water_terra)
+# grid_without_water_terra <- disagg(grid_without_water_terra)
+# # Convert back and recombine
+# grid_without_water <- st_as_sf(grid_without_water_terra)
+# grid_without_water <- rbind(grid2_no_touch, grid_without_water)
+# grid_without_water <- grid_without_water[!st_is_empty(grid_without_water), ]
+# 
+# rm(grid2_touches, grid2_no_touch, grid2_touches_terra,
+#    water_terra, grid_without_water_terra)
 
 
 # Only process cells that actually touch water2
@@ -288,110 +293,46 @@ grid_final_clean <- grid_final %>%
   st_cast("MULTIPOLYGON") %>%
   st_cast("POLYGON")
 
-if (add_street){
-  streets = read_sf("./data/hotosm_cod_roads_osm_gpkg/roads.gpkg")%>%
-    filter((adm1_name %in% c("Nord-Kivu","Sud-Kivu","Ituri"))&
-           highway %in% c("trunk","primary","secondary","tertiary","primary_link","seondary_link","tertiary_link","unclassified"))%>%
-    mutate(geom_type = st_geometry_type(geom),
-           lanes = as.numeric(lanes)) %>%
-    filter(geom_type != "POINT" & geom_type != "POLYGON")
+if (add_streets){
   
-  library(sf)
-  library(sfnetworks)
+  if(!file.exist("./data/streets_split.gpkg")){
+    source("./01_xa_prepare_street_data.R")
+    create_street_splitted()
+  }
+  streets = read_sf("./data/streets_split.gpkg")
   
-  net <- as_sfnetwork(streets)%>%
-    activate(nodes) %>%
-    mutate(name = as.character(row_number()))
-
-  net_smooth <- net %>%
-    to_spatial_smooth(
-      protect = "highway",
-      summarise_attributes = "first"
-    )
+  streets = st_transform(streets,st_crs(grid_final_clean))
+  grid_without_streets = remove_from_grid(grid_final_clean,streets)
   
-  roads_smooth <- st_as_sf(net_smooth, "edges")
+  streets$osm_id = streets$id
+  streets$fclass = streets$highway
+  streets$name = streets$adm1_name
   
-  
-  streets$width_calulcate = ifelse(!is.na(streets$lanes),streets$lanes*4,NA)
-  streets$width_calulcate = ifelse(is.na(streets$width_calulcate), 2*4,streets$width_calulcate)
-  
-  streets <- st_transform(streets, 32734)  # choose correct zone
-  
-  streets <- st_buffer(
-    streets,
-    dist = streets$width_calulcate / 2,
-    nQuadSegs = 4
-  )
-  streets <- st_transform(streets, 4326)
-  
-
-
+  streets[,c("osm_id","adm1_pcode","name","adm2_pcode","adm2_name","fclass")]
+  streets$surface ="road"
+  streets$code =NA
+  streets$layer =4
+  streets$cell_id = streets$segment_id
+  streets$geometry = streets$geom
+  streets = st_set_geometry(streets,"geometry")
+  strt = streets[,c("osm_id","adm1_pcode","name","adm2_pcode","adm2_name",
+             "fclass","code","layer","cell_id","surface")]
+  grid_final_clean = rbind(grid_without_streets,strt)
   
   
-  
-  streets$area = st_area(streets)
-  streets$bol_area = ifelse(streets$area<set_units(900,"m^2"),0,1)
-  
-  touches = st_intersects(streets)
-  
-  which(unlist(lapply(touches,function(x) {length(x)>2})))
-  
-  plot(st_buffer(streets[touches[[1]],"bol_area"],50),col =pal(streets[touches[[1]],]$bol_area))
-
-  
-  # mix_time_crop <- rast( "./data/mix_crop.tif")
-  # mix_time_crop <- project(mix_time_crop, st_crs(streets)$wkt)
-  # mix_time_crop <- crop(mix_time_crop,(st_bbox(streets[which(streets$adm1_name=="Nord-Kivu"),])))
-  # mix_time_crop <-log(mix_time_crop)
-  # 
-  # 
-  # mix_time_leaflet <- aggregate(mix_time_crop, fact = 10)
-  
-  library(leaflet)
-  leaflet(options = leafletOptions(zoomControl = FALSE)) %>%
-    addTiles() %>%
-    addPolylines(
-      data = st_transform(streets[which(streets$adm1_name=="Nord-Kivu"),], 4326),
-      fillOpacity = 0.8,
-      color = "black",
-      weight = 1
-    )#%>%addRasterImage(mix_time_leaflet,
-          #             opacity = 0.5)
-  pal <- colorFactor(
-    palette = "Set1",
-    domain = streets$bol_area
-  )
-  
-  leaflet() %>%
-    addTiles() %>%
-    addPolygons(
-      data = merged_road,
-      fillColor = ~pal(bol_area),
-      fillOpacity = 0.8,
-      color =  ~pal(bol_area),
-      weight = 1
-    )
-  
-  
-  unique(streets$highway)
-  
-  
-  table(streets$lanes,streets$highway)
-  table(streets$highway)
-  
-  streets[which(streets$highway=="street_lamp"),]$geom
-  
-  streets[which(st_geometry_type(streets)=="POINT"),]$highway
-  
-  table(st_geometry_type(streets))
   
 }
 
 
+#area = st_area(grid_final_clean)
+#table(st_area(grid_final_clean)<set_units(900,"m^2"))
+#summary(st_area(grid_without_streets))
 
 grid_final = smoothr::drop_crumbs(grid_final_clean,threshold = units::set_units((30*30),"m^2"))
 
 grid_final$cell_id   <- seq_len(nrow(grid_final))
+
+
 
 #plot(grid_final[,"surface"])
 # ============================================================
