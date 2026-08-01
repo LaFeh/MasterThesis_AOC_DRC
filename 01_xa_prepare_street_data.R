@@ -10,9 +10,11 @@ create_street_splitted <- function(){
   
   library(sf)
   library(stplanr)
-  library(sfnetworks)
+  #library(sfnetworks)
   library(dplyr)
   library(smoothr)
+  
+  library(nngeo)
   
   # ---- 1. Load data --------------------------------------------------
   streets = read_sf("./data/hotosm_cod_roads_osm_gpkg/roads.gpkg")%>%
@@ -24,7 +26,6 @@ create_street_splitted <- function(){
   
   # ---- 2. Reproject to a metric CRS -----------------------------------
   # Segment "length" only makes sense in a projected CRS.
-  # Pick one appropriate for your study area (this is ETRS89-LAEA, good for Europe).
   streets <- st_transform(streets, 32734)
   
   
@@ -80,7 +81,7 @@ create_street_splitted <- function(){
   # Choose target_length based on your accessibility use case:
   #   ~25-50m  -> pedestrian-scale accessibility
   #   ~100-200m -> road/driving-scale accessibility
-  target_length <- 300  # metres
+  target_length <- 10000  # metres
   
   streets_split <- line_segment(streets_without_cities2, 
                                 segment_length = target_length)
@@ -107,43 +108,56 @@ create_street_splitted <- function(){
   streets_split$geom_type = NULL
   
   streets_split = st_difference(streets_split)
+
+
   
-  streets_split = streets_split%>%sf::st_make_valid(.)%>%
+
+  streets_split2 = streets_split%>% 
+    st_collection_extract(.,"POLYGON")%>%
     sf::st_cast(.,"MULTIPOLYGON")%>%
     sf::st_cast(.,"POLYGON")
-  
-  tif_path <-'./data/GRID3_COD_mix_travel_time_friction_surface_v1/GRID3_COD_mix_travel_time_friction_surface_v1.tif' 
-  mix_time=terra::rast(tif_path) 
-  streets_split_plot = st_transform(streets_split,st_crs(mix_time))
 
   
-  # crop raster to grid bounding box
-  mix_time_crop <- terra::crop(
-    mix_time,
-    terra::vect(streets_split_plot),
-    filename = "./data/mix_crop_2.tif",
-    overwrite = TRUE
-  )
-  mix_time_crop = terra::project(mix_time_crop,"EPSG:4326")
-  streets_split_plot = st_transform(streets_split_plot,"EPSG:4326")
+  street_split_noholes <- st_remove_holes(streets_split2)
   
+  # tif_path <-'./data/GRID3_COD_mix_travel_time_friction_surface_v1/GRID3_COD_mix_travel_time_friction_surface_v1.tif' 
+  # mix_time=terra::rast(tif_path) 
+  # streets_split_plot = st_transform(streets_split,st_crs(mix_time))%>%filter(adm1_name =="Nord-Kivu")
+  # crop_frame= st_bbox(streets_split_plot)
+  # crop_frame["xmin"] = crop_frame["xmin"] +(crop_frame["xmax"] - crop_frame["xmin"])*0.9
+  # crop_frame["ymin"] = crop_frame["ymin"] +(crop_frame["ymax"] - crop_frame["ymin"])*0.9
 
   
-  
-  library(leaflet)
-  leaflet(options = leafletOptions(zoomControl = T)) %>%
-    addPolygons(
-      data = streets_split_plot,
-      color = "black"
-    )%>%
-    addRasterImage(
-      mix_time_crop,
-      opacity = 0.8
-    )
-  
-  
+  # # crop raster to grid bounding box
+  # mix_time_crop <- terra::crop(
+  #   mix_time,
+  #   sf::st_as_sfc(crop_frame),
+  #   #terra::vect(streets_split_plot),
+  #   filename = "./data/mix_crop_2.tif",
+  #   overwrite = TRUE
+  # )
+  # mix_time_crop = terra::project(mix_time_crop,"EPSG:4326")
+  # mix_time_crop = log(mix_time_crop)
+  # streets_split_plot = st_transform(streets_split_plot,"EPSG:4326")
+  #mix_time_crop = terra::aggregate(mix_time_crop,2,mean)
+
+  # 
+  # 
+  # library(leaflet)
+  # leaflet(options = leafletOptions(zoomControl = T)) %>%addTiles()%>%
+  #   addPolygons(
+  #     data = streets_split_plot,
+  #     stroke =T,
+  #     fill =F
+  #   )%>%
+  #   addRasterImage(
+  #     mix_time_crop,
+  #     opacity = 0.8
+  #   )
+  # 
+  # 
   # ---- 5. Save outputs ---------------------------------------------------
-  sf::st_write(streets_split, "./data/streets_split.gpkg", append = F)
+  sf::st_write(street_split_noholes, "./data/streets_split.gpkg", append = F)
   
 
   # streets_split.gpkg   -> uniform segments with segment_id (for joining results)

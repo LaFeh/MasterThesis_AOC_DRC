@@ -8,7 +8,17 @@ library(smoothr)
 
 source("./01_xb_remove_from_grid.R")
 
- add_streets = TRUE
+add_streets = F
+if(add_streets){
+  grid_name_street = "street"
+}else {
+  grid_name_street = ""
+}
+
+cell_size     <- 5000
+
+name_of_grid = paste0("grid_surface_",cell_size,"_",grid_name_street,".shp")
+
 # ============================================================
 # 1. LOAD AND PROJECT STUDY AREA
 # ============================================================
@@ -169,6 +179,7 @@ water_all <- rbind(water_result[,c("osm_id","code","fclass","name")], df2_no_ove
 
 
 grid_without_water = remove_from_grid(grid,water_all)
+
 # intersects2_idx  <- unique(unlist(st_intersects(water_all, grid)))
 # grid2_touches    <- grid[intersects2_idx, ]
 # grid2_no_touch   <- grid[-intersects2_idx, ]
@@ -293,46 +304,69 @@ grid_final_clean <- grid_final %>%
   st_cast("MULTIPOLYGON") %>%
   st_cast("POLYGON")
 
+
 if (add_streets){
   
-  if(!file.exist("./data/streets_split.gpkg")){
+ 
+  if(!file.exists("./data/streets_split.gpkg")){
     source("./01_xa_prepare_street_data.R")
     create_street_splitted()
   }
+  
   streets = read_sf("./data/streets_split.gpkg")
+  streets_transformed = st_transform(streets,st_crs(grid_final_clean))
+  streets_transformed_valid1=st_make_valid(streets_transformed)
+  line_string_idx = which(st_geometry_type(streets_transformed_valid1)=="LINESTRING")
+
   
-  streets = st_transform(streets,st_crs(grid_final_clean))
-  grid_without_streets = remove_from_grid(grid_final_clean,streets)
+  sf::st_crs(streets_transformed)$units
+  buffered_valids = streets_transformed[line_string_idx,]%>%
+    st_buffer(0.001) %>%   # tiny buffer, adjust to your CRS units
+    st_make_valid()
   
-  streets$osm_id = streets$id
-  streets$fclass = streets$highway
-  streets$name = streets$adm1_name
+  streets_transformed = streets_transformed[-line_string_idx,]
+  streets_transformed = rbind(streets_transformed,buffered_valids)
+  streets_transformed = streets_transformed %>%
+    st_cast("MULTIPOLYGON")%>%
+    st_cast("POLYGON")%>%st_make_valid()
+
+  grid_without_streets = remove_from_grid(grid_final_clean,streets_transformed)
   
-  streets[,c("osm_id","adm1_pcode","name","adm2_pcode","adm2_name","fclass")]
-  streets$surface ="road"
-  streets$code =NA
-  streets$layer =4
-  streets$cell_id = streets$segment_id
-  streets$geometry = streets$geom
-  streets = st_set_geometry(streets,"geometry")
-  strt = streets[,c("osm_id","adm1_pcode","name","adm2_pcode","adm2_name",
+  streets_transformed$osm_id = streets_transformed$id
+  streets_transformed$fclass = streets_transformed$highway
+  streets_transformed$name = streets_transformed$adm1_name
+  
+  streets_transformed$surface ="road"
+  streets_transformed$code =NA
+  streets_transformed$layer =4
+  streets_transformed$cell_id = streets_transformed$segment_id
+  st_geometry(streets_transformed) <- "geometry"
+  
+  strt = streets_transformed[,c("osm_id","adm1_pcode","name","adm2_pcode","adm2_name",
              "fclass","code","layer","cell_id","surface")]
+
   grid_final_clean = rbind(grid_without_streets,strt)
   
+  grid_final_clean = grid_final_clean %>%st_cast(.,"MULTIPOLYGON")%>%st_cast(.,"POLYGON")
   
   
-}
+  }
 
 
 #area = st_area(grid_final_clean)
 #table(st_area(grid_final_clean)<set_units(900,"m^2"))
 #summary(st_area(grid_without_streets))
 
-grid_final = smoothr::drop_crumbs(grid_final_clean,threshold = units::set_units((30*30),"m^2"))
+grid_final = smoothr::drop_crumbs(grid_final_clean,threshold = units::set_units((15*15),"m^2"))
 
-grid_final$cell_id   <- seq_len(nrow(grid_final))
+grid_final_cast = st_difference(grid_final)
+grid_final_cast$cell_id   <- seq_len(nrow(grid_final_cast))
+#grid_final = st_set_precision(grid_final,1)
 
-
+# grid_final_snapped <- grid_final %>%
+#   st_make_valid() %>%
+#   lwgeom::st_snap_to_grid(size = 1) %>%   # adjust size to your CRS units (e.g. 1cm if in meters)
+#   st_make_valid()                             # re-validate after snapping, snapping can create new invalidities
 
 #plot(grid_final[,"surface"])
 # ============================================================
@@ -345,25 +379,90 @@ grid_final$cell_id   <- seq_len(nrow(grid_final))
 # which(!bol_overlap)
 # overlap_final[bol_overlap][1]
 # plot(grid_final[c(which(bol_overlap)[2],overlap_final[bol_overlap][2][[1]]),"cell_id"])
-
-data_adj = spdep::poly2nb(grid_final,queen =T,snap = 3)
+sf::st_crs(grid_final_cast)$units
+data_adj = spdep::poly2nb(grid_final,queen =T,snap = 10)
 # data_adj_s10 = spdep::poly2nb(grid_final,queen =T,snap = 10)
+
 # bol_nghbr = unlist(lapply(data_adj, function(x){if(x[[1]]!=0){TRUE}else{FALSE}}))
-# # which(!bol_nghbr)
-# plot(grid_final[which(!bol_nghbr),])
-# bbox =st_as_sfc(st_bbox(grid_final[which(!bol_nghbr)[1],]))
+# which(!bol_nghbr)
+# plot(grid_final[which(!bol_nghbr)[1],"surface"])
+# bbox =st_as_sfc(st_bbox(grid_final[which(!bol_nghbr)[2],]))
+# bbox = st_buffer(bbox,5000)
 # gf = st_intersects(grid_final,bbox)
 # bol_gf = unlist(lapply(gf, function(x){if(length(x)!=0){TRUE}else{FALSE}}))
-# 
-# 
-# plot(grid_final[which(!bol_nghbr)[1],]$geometry, col ="red")
-# plot(grid_final[which(bol_gf)[4],]$geometry,add =T)
-# st_touches(grid_final[which(!bol_nghbr)[1],],grid_final[bol_gf,])
-# st_contains(grid_final[which(bol_gf)[4],],grid_final[which(!bol_nghbr)[1],])
-# #st_area(grid_final[which(!bol_nghbr),])
 
-# k = st_distance(grid_final[which(!bol_nghbr),],grid_final)
-# dist_k_1 = k[1,]
+
+graph = F
+if(graph){
+  
+  library(leaflet)
+  library(sf)
+  library(dplyr)
+  
+  # make sure everything is in WGS84 for leaflet
+  grid_final_ll <- st_transform(grid_final, 4326)
+  
+  # indices of problem features
+  problem_idx <- which(!bol_nghbr)
+  
+  # base map
+  m <- leaflet() %>%
+    addProviderTiles(providers$CartoDB.Positron)
+  
+  # loop through each problem feature, add its context (bol_gf) + itself highlighted
+  for (i in seq_along(problem_idx)) {
+    
+    idx <- problem_idx[i]
+    
+    # bbox + buffer around this specific problem feature
+    bbox <- st_as_sfc(st_bbox(grid_final[idx, ])) %>%
+      st_buffer(5000)
+    
+    # find neighboring context polygons
+    gf <- st_intersects(grid_final, bbox)
+    bol_gf <- lengths(gf) != 0
+    
+    # transform this feature's context + itself to WGS84
+    context_layer <- grid_final_ll[bol_gf, ]
+    highlight_layer <- grid_final_ll[idx, ]
+    
+    group_name <- paste0("Problem #", i, " (row ", idx, ")")
+    
+    m <- m %>%
+      addPolygons(data = context_layer,
+                  fillColor = "lightblue",
+                  color = "black",
+                  weight = 1,
+                  fillOpacity = 0.4,
+                  group = group_name) %>%
+      addPolygons(data = highlight_layer,
+                  fillColor = "red",
+                  color = "red",
+                  weight = 2,
+                  fillOpacity = 0.8,
+                  group = group_name,
+                  popup = paste("Row:", idx))
+  }
+  
+  # layer control to toggle each problem feature's context on/off
+  m <- m %>%
+    addLayersControl(
+      overlayGroups = paste0("Problem #", seq_along(problem_idx), " (row ", problem_idx, ")"),
+      options = layersControlOptions(collapsed = FALSE)
+    )
+  
+  m
+}
+# 
+# # 
+# plot(grid_final[which(!bol_nghbr)[1],]$geometry, col ="red", add =T)
+# plot(grid_final[which(bol_gf),]$geometry)
+# st_intersects(grid_final[which(!bol_nghbr)[1],],grid_final[bol_gf,])
+# st_contains(grid_final[which(bol_gf),],grid_final[which(!bol_nghbr)[1],])
+# # #st_area(grid_final[which(!bol_nghbr),])
+# st_distance(grid_final[which(bol_gf),],grid_final[which(!bol_nghbr)[1],])
+# # k = st_distance(grid_final[which(!bol_nghbr),],grid_final)
+# # dist_k_1 = k[1,]
 # dist_k_1 = data.frame(dist = dist_k_1, id = 1:length(dist_k_1))
 # dist_k_1 = dist_k_1[order(dist_k_1$dist),]
 # 
@@ -385,8 +484,8 @@ data_adj = spdep::poly2nb(grid_final,queen =T,snap = 3)
 # all_multipolygons <- grid_final[st_is(grid_final, "MULTIPOLYGON"), ]
 
 
-write_sf(grid_final, "./data/grid_surface.shp")
-message("Done! Grid saved to ./data/grid_surface.shp")
+write_sf(grid_final, paste0("./data/",name_of_grid))
+message(paste0("Done! Grid saved to","./data/",name_of_grid))
 message(paste("Total features:", nrow(grid_final)))
 message(paste("Surface types:", paste(unique(grid_final$surface), collapse = ", ")))
 

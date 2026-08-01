@@ -36,31 +36,16 @@ mix_time_crop <- crop(
 rm(mix_time)
 
 if (clean_stream){ # clean all streams -> values above 2
-  
-  
-  
-  
 
   gpkg_path <- "./data/congo-democratic-republic-260530-free.gpkg/congo-democratic-republic.gpkg"
+  
+  water2 <- st_read(gpkg_path, layer = "gis_osm_waterways_free") |>
+    st_transform(st_crs(grid)) |>
+    st_crop(st_bbox(grid)) |> 
+    dplyr::filter(fclass =="drain" | fclass == "stream")
 
-  water3 <- st_read(gpkg_path, layer = "gis_osm_water_a_free") |>
-    st_transform(st_crs(grid)) |>  st_crop(st_bbox(grid))
-  
-  
-  trimmed_lakes = read_sf("./data/Congo_relevant_lakes.shp")
-  trimmed_lakes = st_transform(trimmed_lakes,st_crs(grid))
-  
-  # this is the lake with values for mixed_time
-  trimmed_lakes = trimmed_lakes[which(trimmed_lakes$name =="Lac Kivu"),]
-  lac_kivu_mixed_time <- exactextractr::exact_extract(mix_time_crop, trimmed_lakes, 'mean')
-  lac_kivu_mixed_time = mean(lac_kivu_mixed_time)
-  grid[which(is.na(grid$mix_time_mean)),]$mix_time_mean = lac_kivu_mixed_time
-  
-  
-  
-  
-  water3 <- st_buffer(water3,30)
-  streams <- vect(water3)
+  water2 <- st_buffer(water2,dist = 30)
+  streams <- vect(water2)
   
   # Save where the original NAs are
   orig_na <- is.na(mix_time_crop)
@@ -70,44 +55,45 @@ if (clean_stream){ # clean all streams -> values above 2
   # Cells that became NA because of masking
   masked_na <- is.na(r_masked) & !orig_na
   
-  
   # 5x5 moving window
-  w <- matrix(1, 3, 3)
-
+  #w <- matrix(1, 3, 3)
+  
   r_fill <- r_masked
-
+  target <- which(values(masked_na))
+  
+  # 8-neighbour offsets
+  #dirs <- adjacent(r_fill, cells = target, directions = 8, pairs = TRUE)
   
   repeat {
     
-    # Current missing cells that came from masking
-    to_fill <- masked_na & is.na(r_fill)
+    vals <- values(r_fill)
     
-    if (!global(to_fill, "sum")[1,1]) break
+    remaining <- target[is.na(vals[target])]
+    if (length(remaining) == 0) break
+    print(length(remaining))
     
-    print(!global(to_fill, "sum")[1,1])
+    adj <- adjacent(r_fill, remaining, directions = 8, pairs = TRUE)
     
-    # Compute neighborhood means
-    f <- focal(
-      r_fill,
-      w = w,
-      fun = mean,
-      na.rm = TRUE,
-      na.policy = "only"
-    )
+    # neighbour values
+    nbr_vals <- vals[adj[,2]]
     
-    # Fill only those masked cells that are currently NA
-    r_fill <- ifel(to_fill, f, r_fill)
+    # mean of neighbours for each target cell
+    m <- tapply(nbr_vals, adj[,1], mean, na.rm = TRUE)
+    
+    vals[as.integer(names(m))] <- m
+    
+    values(r_fill) <- vals
+  }
+  
+  # Fill only those masked cells that are currently NA
+  r_fill <- ifel(to_fill, f, r_fill)
+  gc()
   }
   
 
-  # Fill only the NA cells
-  mix_time_crop_filled <- cover(mix_time_crop_masked, focal_mean)
-  
-
-
-  vals = values(mix_time_crop_wo_streams)
-  values(mix_time_crop_wo_streams) <- ifelse(vals > 2, NA,vals)
-  summary <- exactextractr::exact_extract(mix_time_crop_wo_streams, grid, 'mean')
+ # vals = values(mix_time_crop_wo_streams)
+  #values(mix_time_crop_wo_streams) <- ifelse(vals > 2, NA,vals)
+  summary <- exactextractr::exact_extract(r_fill, grid, 'mean')
   grid$mix_time_mean <- summary
   
   waters = grid[which(grid$surface=="water" ),]
@@ -120,25 +106,6 @@ if (clean_stream){ # clean all streams -> values above 2
 }
 
 grid$lg_mix_time_mean = log(grid$mix_time_mean)
-
-
-
-# 2 seems to be already very good
-#threshold <- 2
-# 1 is incorporating a bit too  much
-# threshold <- 1
-# plot(mix_time_crop)
-# 
-# # 770 1st quartile
-# threshold <- 2
-# vals = values(mix_time_crop)
-# highlight <- mix_time_crop
-# #highlight[vals < threshold ] <- NA
-# # yes2 is generally a good cutoff, things between    and 2 , are not rivers but sth in between
-# highlight[((vals < 1) | (vals >2)) ] <- NA
-# 
-# highlight = terra::project(highlight, "EPSG:4326")
-#highlight[((vals < threshold) & (vals > 10))] <- NA
 
 
 
@@ -191,7 +158,7 @@ grid$lg_mix_time_mean = log(grid$mix_time_mean)
 # missing mix_time mean is always in water (in the big lakes). therefore fille it up with the value for water, of the lake 
 # we have data for.
 
-trimmed_lakes = read_sf("./data/Congo_relevant_lakes.shp")
+trimmed_lakes = read_sf("./data/congo_relevant_lakes")
 trimmed_lakes = st_transform(trimmed_lakes,st_crs(grid))
 
 # this is the lake with values for mixed_time
@@ -202,7 +169,7 @@ grid[which(is.na(grid$mix_time_mean)),]$mix_time_mean = lac_kivu_mixed_time
 
 grid$lg_mix_time_mean  = log(grid$mix_time_mean)
 
-
+plot(grid[,"lg_mix_time_mean"])
 
 # ============================================================
 # 2.2 write data
