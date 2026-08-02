@@ -1,5 +1,5 @@
 ####### ACLED DATA ############################
-setwd("D:/DRC/gaussian_process_AOC")
+
 
 # get ACLED data and calculate for each grid AOC for each month
 
@@ -9,7 +9,7 @@ library(lubridate)
 library(tidyverse)
 
 # Read shapefile
-gdf <- st_read("D:/DRC/01_prepare_acled_data/data/acled_event_data.gpkg")
+gdf <- st_read("./data/acled_event_data.gpkg")
 
 # Prepare data
 gdf <- gdf %>%

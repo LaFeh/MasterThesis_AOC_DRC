@@ -8,16 +8,16 @@ library(smoothr)
 
 source("./01_xb_remove_from_grid.R")
 
-add_streets = F
+add_streets = T
 if(add_streets){
-  grid_name_street = "street"
+  grid_name_street = "_street"
 }else {
   grid_name_street = ""
 }
 
 cell_size     <- 5000
 
-name_of_grid = paste0("grid_surface_",cell_size,"_",grid_name_street,".shp")
+name_of_grid = paste0("grid_surface_",cell_size,grid_name_street,".shp")
 
 # ============================================================
 # 1. LOAD AND PROJECT STUDY AREA
@@ -357,10 +357,15 @@ if (add_streets){
 #table(st_area(grid_final_clean)<set_units(900,"m^2"))
 #summary(st_area(grid_without_streets))
 
-grid_final = smoothr::drop_crumbs(grid_final_clean,threshold = units::set_units((15*15),"m^2"))
+grid_final = smoothr::drop_crumbs(grid_final_clean, threshold = units::set_units((15*15),"m^2"))
+# 
+# if(add_streets){
+#   grid_final_cast = st_difference(grid_final)
+# }
 
-grid_final_cast = st_difference(grid_final)
-grid_final_cast$cell_id   <- seq_len(nrow(grid_final_cast))
+grid_final$cell_id   <- seq_len(nrow(grid_final))
+length(unique(grid_final$cell_id))==nrow(grid_final)
+table(st_geometry_type(grid_final))
 #grid_final = st_set_precision(grid_final,1)
 
 # grid_final_snapped <- grid_final %>%
@@ -379,11 +384,11 @@ grid_final_cast$cell_id   <- seq_len(nrow(grid_final_cast))
 # which(!bol_overlap)
 # overlap_final[bol_overlap][1]
 # plot(grid_final[c(which(bol_overlap)[2],overlap_final[bol_overlap][2][[1]]),"cell_id"])
-sf::st_crs(grid_final_cast)$units
+sf::st_crs(grid_final)$units
 data_adj = spdep::poly2nb(grid_final,queen =T,snap = 10)
 # data_adj_s10 = spdep::poly2nb(grid_final,queen =T,snap = 10)
 
-# bol_nghbr = unlist(lapply(data_adj, function(x){if(x[[1]]!=0){TRUE}else{FALSE}}))
+ bol_nghbr = unlist(lapply(data_adj, function(x){if(x[[1]]!=0){TRUE}else{FALSE}}))
 # which(!bol_nghbr)
 # plot(grid_final[which(!bol_nghbr)[1],"surface"])
 # bbox =st_as_sfc(st_bbox(grid_final[which(!bol_nghbr)[2],]))
@@ -391,7 +396,12 @@ data_adj = spdep::poly2nb(grid_final,queen =T,snap = 10)
 # gf = st_intersects(grid_final,bbox)
 # bol_gf = unlist(lapply(gf, function(x){if(length(x)!=0){TRUE}else{FALSE}}))
 
+# k = st_within(grid,st_union(relevant_regions))
+# plot(grid[which(lengths(k)==0),])
+# outside_Drc = unlist(lapply(k, function(x){if(x[[1]]!=0){TRUE}else{FALSE}}))
+# 
 
+ 
 graph = F
 if(graph){
   
@@ -484,7 +494,7 @@ if(graph){
 # all_multipolygons <- grid_final[st_is(grid_final, "MULTIPOLYGON"), ]
 
 
-write_sf(grid_final, paste0("./data/",name_of_grid))
+write_sf(grid_final, paste0("./data/",name_of_grid),overwrite = T)
 message(paste0("Done! Grid saved to","./data/",name_of_grid))
 message(paste("Total features:", nrow(grid_final)))
 message(paste("Surface types:", paste(unique(grid_final$surface), collapse = ", ")))

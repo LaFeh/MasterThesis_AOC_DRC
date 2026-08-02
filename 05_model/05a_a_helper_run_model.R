@@ -1,4 +1,3 @@
-setwd("D:/DRC/gaussian_process_AOC")
 
 run_model <- function(date,
                       data_lst, 

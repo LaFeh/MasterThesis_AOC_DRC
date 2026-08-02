@@ -1,10 +1,5 @@
 # travelspeed data
 
-
-library(sf)
-library(dplyr)
-library(terra)
-
 # ============================================================
 # 2. travel speed (motorized)
 # ============================================================
@@ -20,10 +15,16 @@ library(exactextractr)
 # Clean the streams away from surface friction dataset
 clean_stream = TRUE
 
-tif_path <-'./data/GRID3_COD_mix_travel_time_friction_surface_v1/GRID3_COD_mix_travel_time_friction_surface_v1.tif' 
+if(clean_stream){
+  tif_path <-'./data/travel_time_friction_surface_removed_streams.tif' 
+} else {
+  tif_path <-'./data/GRID3_COD_mix_travel_time_friction_surface_v1/GRID3_COD_mix_travel_time_friction_surface_v1.tif' 
+}
+
 mix_time=rast(tif_path)
 
-grid = read_sf("./data/grid_surface.shp")
+grid = read_sf(paste0("./data/",name_of_grid))
+
 grid = st_transform(grid,st_crs(mix_time))
 
 # crop raster to grid bounding box
@@ -35,104 +36,43 @@ mix_time_crop <- crop(
 )
 rm(mix_time)
 
-if (clean_stream){ # clean all streams -> values above 2
 
-  gpkg_path <- "./data/congo-democratic-republic-260530-free.gpkg/congo-democratic-republic.gpkg"
-  
-  water2 <- st_read(gpkg_path, layer = "gis_osm_waterways_free") |>
-    st_transform(st_crs(grid)) |>
-    st_crop(st_bbox(grid)) |> 
-    dplyr::filter(fclass =="drain" | fclass == "stream")
 
-  water2 <- st_buffer(water2,dist = 30)
-  streams <- vect(water2)
-  
-  # Save where the original NAs are
-  orig_na <- is.na(mix_time_crop)
-  # Mask out polygons (set cells inside polygons to NA)
-  r_masked <- mask(mix_time_crop,streams, inverse = TRUE)
-  
-  # Cells that became NA because of masking
-  masked_na <- is.na(r_masked) & !orig_na
-  
-  # 5x5 moving window
-  #w <- matrix(1, 3, 3)
-  
-  r_fill <- r_masked
-  target <- which(values(masked_na))
-  
-  # 8-neighbour offsets
-  #dirs <- adjacent(r_fill, cells = target, directions = 8, pairs = TRUE)
-  
-  repeat {
-    
-    vals <- values(r_fill)
-    
-    remaining <- target[is.na(vals[target])]
-    if (length(remaining) == 0) break
-    print(length(remaining))
-    
-    adj <- adjacent(r_fill, remaining, directions = 8, pairs = TRUE)
-    
-    # neighbour values
-    nbr_vals <- vals[adj[,2]]
-    
-    # mean of neighbours for each target cell
-    m <- tapply(nbr_vals, adj[,1], mean, na.rm = TRUE)
-    
-    vals[as.integer(names(m))] <- m
-    
-    values(r_fill) <- vals
-  }
-  
-  # Fill only those masked cells that are currently NA
-  r_fill <- ifel(to_fill, f, r_fill)
-  gc()
-  }
-  
-
- # vals = values(mix_time_crop_wo_streams)
-  #values(mix_time_crop_wo_streams) <- ifelse(vals > 2, NA,vals)
-  summary <- exactextractr::exact_extract(r_fill, grid, 'mean')
-  grid$mix_time_mean <- summary
-  
-  waters = grid[which(grid$surface=="water" ),]
-  summary_waters <- exactextractr::exact_extract(mix_time_crop, waters, 'mean')
-  grid[which(grid$surface=="water" ),]$mix_time_mean <- summary_waters
-  
-}else{
-  summary <- exactextractr::exact_extract(mix_time_crop, grid, 'mean')
-  grid$mix_time_mean <- summary
-}
-
+summary <- exactextractr::exact_extract(mix_time_crop, grid, 'mean')
+grid$mix_time_mean <- summary
 grid$lg_mix_time_mean = log(grid$mix_time_mean)
 
 
 
-# center = st_transform(st_centroid(st_combine(grid)),4326)
-# coords <- st_coordinates(center)
-# 
+library(sf)
+library(leaflet)
 
-# grid_wo_water = grid[which(grid$surface!="water"),]
-# pal <- leaflet::colorNumeric(
-#   palette = "viridis",
-#   domain = grid_wo_water$lg_mix_time_mean,
-#   na.color = "transparent"
-# )
-# pal_rev <- leaflet::colorNumeric(
-#   palette = "viridis",
-#   domain = grid_wo_water$lg_mix_time_mean,
-#   na.color = "transparent",
-#   reverse = T
-# )
-# 
+# Keep only rows where mix_time_mean is NA
+grid_na <- grid[is.na(grid$mix_time_mean), ]
+st_geometry(grid_na)
+# Plot
+leaflet() |>
+  addTiles() |>
+  addPolygons(
+    sf::st_transform(grid_na, 4326),
+    color = "red",
+    weight = 1,
+    fillColor = "red",
+    fillOpacity = 0.6,
+    popup = ~paste("Row:", seq_len(nrow(grid_na)))
+  )
+
+
+# graphics::boxplot(lg_mix_time_mean~surface,grid)
+# graphics::boxplot(mix_time_mean~surface,grid)
+
 # 
 # library(leaflet)
 # leaflet(options = leafletOptions(zoomControl = FALSE)) %>%
 #   addTiles() %>%
 #   addPolygons(
-#     data = st_transform(grid_wo_water, 4326),
-#     fillColor = ~pal(grid_wo_water$lg_mix_time_mean),
+#     data = st_transform(grid, 4326),
+#     fillColor = ~pal(grid$lg_mix_time_mean),
 #     fillOpacity = 1,
 #     color = "black",
 #     weight = 1
@@ -145,113 +85,26 @@ grid$lg_mix_time_mean = log(grid$mix_time_mean)
 #     labFormat = labelFormat(transform = function(x) sort(x, decreasing = TRUE))
 #   )# %>%
 #   # setView(
-  #   lng = coords[1],
-  #   lat = coords[2],
-  #   zoom = 8
-  # )
+#   lng = coords[1],
+#   lat = coords[2],
+#   zoom = 8
+# )
 
-
-# ============================================================
-# 2.1 interpolate missing mix time
-# ============================================================
-
-# missing mix_time mean is always in water (in the big lakes). therefore fille it up with the value for water, of the lake 
-# we have data for.
-
-trimmed_lakes = read_sf("./data/congo_relevant_lakes")
-trimmed_lakes = st_transform(trimmed_lakes,st_crs(grid))
-
-# this is the lake with values for mixed_time
-trimmed_lakes = trimmed_lakes[which(trimmed_lakes$name =="Lac Kivu"),]
-lac_kivu_mixed_time <- exactextractr::exact_extract(mix_time_crop, trimmed_lakes, 'mean')
-lac_kivu_mixed_time = mean(lac_kivu_mixed_time)
-grid[which(is.na(grid$mix_time_mean)),]$mix_time_mean = lac_kivu_mixed_time
-
-grid$lg_mix_time_mean  = log(grid$mix_time_mean)
-
-plot(grid[,"lg_mix_time_mean"])
+# library(leaflet)
+# leaflet(options = leafletOptions(zoomControl = T)) %>%
+#   addTiles() %>%
+#   addPolygons(
+#     data = st_transform(grid[which(grid$name =="Nord-Kivu"),], 4326),
+#     color = "black",
+#     weight = 1
+#   ) %>%
+#   addRasterImage(project(log(mix_time_crop),"EPSG:4326"),
+#                  opacity =0.5)
 
 # ============================================================
 # 2.2 write data
 # ============================================================
+length(unique(grid$cell_id))==nrow(grid)
 
 grid = st_drop_geometry(grid)
 data.table::fwrite(grid[,c("cell_id","mix_time_mean","lg_mix_time_mean")],"./data/grid_mix_time.csv")
-
-
-# ============================================================
-# 3 investigate other dataset
-# Problem here is that rivers are considered -> motorized -> boat travel
-# is possible
-# ============================================================
-# 
-# setwd("D:/DRC/gaussian_process_AOC")
-# 
-# library(sf)
-# library(dplyr)
-# library(terra)
-# 
-# 
-# 
-# tif_path <-'./data/2020_motorized_friction_surface/2020_motorized_friction_surface.geotiff' 
-# motorized=rast(tif_path)
-# 
-# grid = read_sf("./data/grid_surface.shp")
-# grid = st_transform(grid,st_crs(motorized))
-# 
-# # crop raster to grid bounding box
-# motorized_crop <- crop(
-#   motorized,
-#   vect(grid)
-# )
-# 
-# summary <- exactextractr::exact_extract(motorized_crop, grid, 'mean')
-# grid$motorized_speed = summary
-# grid$lg_motorized_speed = log(summary)
-# # plot(motorized_crop)
-# # plot(grid[,"motorized_speed"])
-# # plot(grid[,"lg_motorized_speed"])
-# # plot(grid[which(grid$surface=="water"),"lg_motorized_speed"])
-# # plot(grid[,"lg_motorized_speed"])
-# # plot(grid[which(grid$name=="Nord-Kivu"),"motorized_speed"])
-# 
-# 
-# motorized_crop_small <- crop(
-#   motorized_crop,
-#   vect(grid[which(grid$name=="Nord-Kivu"),])
-# )
-# 
-# 
-# mix_time_crop_small <- crop(
-#   mix_time_crop,
-#   vect(grid[which(grid$name=="Nord-Kivu"),]),
-# )
-# 
-# 
-# plot(log(mix_time_crop_small))
-# plot(motorized_crop_small)
-# plot(grid[which(grid$name=="Nord-Kivu"),"lg_mix_time_mean"])
-# plot(grid[which(grid$name=="Nord-Kivu"),"lg_motorized_speed"])
-# 
-# 
-# tif_path <-'./data/202001_Global_Walking_Only_Friction_Surface_2019/202001_Global_Walking_Only_Friction_Surface_2019.tif' 
-# walking_speed=rast(tif_path)
-# 
-# 
-# grid = st_transform(grid,st_crs(walking_speed))
-# 
-# # crop raster to grid bounding box
-# walking_speed_crop <- crop(
-#   walking_speed,
-#   vect(grid)
-# )
-# plot(walking_speed_crop)
-# 
-# diff <- motorized_crop - walking_speed_crop
-# diff[diff< 0.048] <- NA
-# plot(diff)
-# 
-# plot(grid[which(grid$surface=="water"),],add =T ,col ="red")
-# 
-# 
-# plot(diff)

@@ -1,19 +1,19 @@
 # 02 combine data
-setwd("D:/DRC/gaussian_process_AOC")
 
 library(sf)
 library(dplyr)
 
+
+
+grid = read_sf(paste0("./data/",name_of_grid))
+
 load(file = "./data/acled_conflict_mnth.RData")
-
 load(file="./data/acled_territory_mnth.RData")
-
-grid = read_sf("./data/grid_surface.shp")
 grid = st_transform(grid,st_crs(acled_territory_mnth))
 acled_conflict_mnth = st_transform(acled_conflict_mnth,st_crs(acled_territory_mnth))
 
 
-### settlements ########################
+##### settlements ########################
 grid_settlements = data.table::fread("./data/grid_settlements.csv")
 grid_settlements = grid_settlements[,c("cell_id","building_count","building_area")]
 
@@ -22,24 +22,23 @@ grid[which(is.na(grid$building_count)),]$building_count = 0
 grid[which(is.na(grid$building_area)),]$building_area = 0
 rm(grid_settlements)
 
-# mix time walk time ########################
+#### mix time walk time ########################
 grid_mix_time = data.table::fread("./data/grid_mix_time.csv",sep =",")
 grid = left_join(grid,grid_mix_time,by ="cell_id")
+#plot(grid[which(is.na(grid$mix_time_mean)),])
+grid = grid[-which(is.na(grid$mix_time_mean)),]
 rm(grid_mix_time)
 
 
-# control_bol
-#acled_territory_mnth$control_bol = 1
 
-
-# year mnth #######################
+### acled data year mnth #######################
 acled_territory_mnth$year_mnth = as.numeric(acled_territory_mnth$year_mnth)
 acled_conflict_mnth$year_mnth = as.numeric(acled_conflict_mnth$year_mnth)
 
 # rwa distance ###########################
-dist_rwa = data.table::fread("./data/distance_rwanda.csv")
-grid = left_join(grid,dist_rwa, by="cell_id")
-
+# dist_rwa = data.table::fread("./data/distance_rwanda.csv")
+# grid = left_join(grid,dist_rwa, by="cell_id")
+# 
 
 
 # 1st. create data per month year ####################################################
@@ -62,7 +61,6 @@ aoc_per_cell = acled_territory_grid%>%
   dplyr::group_by(year_mnth,cell_id)%>%
   dplyr::summarise(non_state_actor = sum(controle == "non-state actor"),
                    government = sum(controle == "government"),
-                   #unknown = sum (controle == "unknown")
                    controle_num = mean(controle_num)
                    )%>%
   mutate(control = if_else((non_state_actor+government)!=0, non_state_actor/(non_state_actor+government), 0.5))
@@ -99,11 +97,11 @@ grid_cntrl_mnth[which(is.na(grid_cntrl_mnth$total_events)),]$total_events = 0
 
 # join rain data #########################################
 
-rain = data.table::fread("./data/rain_per_month.csv")[,c("cell_id","rain_mean","lg_rain_mean","date")]
-rain$date = as.numeric(gsub("-","",rain$date))
-
-grid_cntrl_mnth = left_join(grid_cntrl_mnth, rain, by =c("cell_id"="cell_id", "year_mnth" = "date"))
-
+# rain = data.table::fread("./data/rain_per_month.csv")[,c("cell_id","rain_mean","lg_rain_mean","date")]
+# rain$date = as.numeric(gsub("-","",rain$date))
+# 
+# grid_cntrl_mnth = left_join(grid_cntrl_mnth, rain, by =c("cell_id"="cell_id", "year_mnth" = "date"))
+# 
 
 # as year month dateformat
 library(zoo)
@@ -142,7 +140,14 @@ for (d in 1:nrow(date_combinations)){
   
 }
 
-save(frontline_data_controle_num_all_previous_time,file = "./data/frontline_data_all_previous_mnths_controle_num.RData")
+
+if("road" %in% grid_cntrl_mnth$surface){
+  data_to_be_saved_to = paste0("./data/frontline_data_all_previous_mnths_control_num_street.RData")
+} else {
+  data_to_be_saved_to = paste0("./data/frontline_data_all_previous_mnths_control_num.RData")
+  
+}
+save(frontline_data_controle_num_all_previous_time,file = data_to_be_saved_to)
 message("frontline_data_controle_num_all_previous_time is saved!")
 
 

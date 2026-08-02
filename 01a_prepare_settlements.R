@@ -10,7 +10,7 @@ library(terra)
 # crs_acled_territory = st_crs(cleaned_gdf_territory)
 # rm(cleaned_gdf_territory)
 
-grid = read_sf("./data/grid_surface.shp")
+grid = read_sf(paste0("./data/",name_of_grid))
 #grid = st_transform(grid,crs_acled_territory)
 
 settlements = st_read("./data/GRID3_COD_settlement_grid_v3_1_gpkg/GRID3_COD_settlement_grid_v3_1.gpkg",

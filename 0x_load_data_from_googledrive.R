@@ -20,3 +20,8 @@ unzip("/home/laura/MasterThesis_AOC_DRC/data/hotosm_cod_roads_osm_gpkg.zip")
 drive_download("https://drive.google.com/file/d/1a1HqMPQrovrjBv-FrQSelUDkiIE9Va9u/")
 
 unzip("/home/laura/MasterThesis_AOC_DRC/data/grid3_cod_settlement_extents_v4.zip")
+
+
+
+drive_download("https://drive.google.com/file/d/1yU9sFFqCdWaRnFbnWVQZ6Ndzb4fEPlaX/")
+

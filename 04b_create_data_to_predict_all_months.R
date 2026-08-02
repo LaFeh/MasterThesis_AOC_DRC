@@ -6,10 +6,19 @@ library(sf)
 library(dplyr)
 library(spdep)
 
-setwd("D:/DRC/gaussian_process_AOC")
+
 
 source("./04b_a_helper_functions.R")
-load("./data/frontline_data_all_previous_mnths_controle_num.RData")
+
+
+if(add_streets){
+  data_to_read = paste0("./data/frontline_data_all_previous_mnths_control_num_street.RData")
+} else {
+  data_to_read = paste0("./data/frontline_data_all_previous_mnths_control_num.RData")
+  
+}
+
+load(data_to_read)
 
 frontline_data = frontline_data_controle_num_all_previous_time
 frontline_data = frontline_data[order(frontline_data$cell_id),]
@@ -35,4 +44,5 @@ for(date in all_dates){
 
 
 # needs to be done only once because grid stays the same for the whole time span
-prepare_adj_matrix_for_prediction(frontline_data,N,snap = 3,second_degree_neighbours = FALSE)
+prepare_adj_matrix_for_prediction(frontline_data,N,snap = 10,second_degree_neighbours = T,bol_distance = T)
+ 

@@ -1,12 +1,13 @@
 #05a run model
 
 library(Matrix)
-setwd("D:/DRC/gaussian_process_AOC")
+#setwd("D:/DRC/gaussian_process_AOC")
 source("./05_model/05a_a_helper_run_model.R")
 # ── 1. set up ──────────────────────────────────────────────────────────────
-degree_of_neighbour = "first"
+degree_of_neighbour = "second"
 covariates_title = "Intercept"
-other_name = "_friction_surface_wo_streams" 
+bol_distance = TRUE
+other_name = "_friction_surface_wo_streams_with_streets" 
 
 covariates = as.formula("~1")
 
@@ -21,10 +22,14 @@ dir.create(output_path)
 dir.create(paste0(output_path,"/plots"))
 
 
-data_mat_w <- readRDS(paste0("./data/data_for_prediction/data_mat_w_mixed_time_",degree_of_neighbour,"_neighbour.RData"))
+data_mat_w <- readRDS(paste0("./data/data_for_prediction/data_mat_w_mixed_time_",degree_of_neighbour,"_neighbour_distance_",bol_distance,".RData"))
 rho =0.6
-
-
+### tset
+# w_true = as.vector(data_mat_w_true)
+# w = as.vector(data_mat_w)
+# summary(w[w!=0])
+# summary(w_true[w_true!=0])
+##
 # ── 3. Build W over ALL areas (including NA areas) ───────────────────────────
 W <- as.matrix(data_mat_w)
 W <- (W + t(W)) / 2    # enforce symmetry
@@ -38,18 +43,18 @@ L       <- D - W_sp
 
 
 # load or calculate eigenvalues of W
-eigenvalue_file_path = paste0("./05_model/eigvalues_data_mat_w_mixed_time_",degree_of_neighbour,"_neighbour",other_name,".RData")
-
-if (file.exists(eigenvalue_file_path)){
-  
-  load(file =  eigenvalue_file_path)
-
-} else {
+eigenvalue_file_path = paste0("./05_model/eigvalues_data_mat_w_mixed_time_",degree_of_neighbour,"_neighbour_distance",bol_distance,"_",other_name,".RData")
+# 
+# if (file.exists(eigenvalue_file_path)){
+#   
+#   load(file =  eigenvalue_file_path)
+# 
+# } else {
   
   eig_DmW <- eigen(as.matrix(L), symmetric = TRUE, only.values = TRUE)$values
   save(eig_DmW,file = eigenvalue_file_path)
 
-}
+#}
 
 cat("Min eigenvalue of (D-W):", min(eig_DmW), "\n")  # expect >= 0 (or tiny negative)
 cat("Negative eigenvalues (> -1e-8 is fine):", sum(eig_DmW < -1e-8), "\n")
@@ -91,7 +96,7 @@ for ( date in all_dates){
   # ── 6. Handle NAs in response ────────────────────────────────────────────────
   obs_idx  <- which(!is.na(data$control_binom)) - 1L   # 0-based for C++
   y_filled <- data$control_binom
-  y_filled[is.na(y_filled)] <- 0   # placeholder; these rows excluded from likelihood
+  y_filled[is.na(y_filled)] <- 0  
   
   cat("Observed:", length(obs_idx), "/ Missing:", sum(is.na(data$control_binom)),
       "/ Total:", N, "\n")
@@ -127,4 +132,5 @@ for ( date in all_dates){
             output_path = output_path)
   
 }
+
 
