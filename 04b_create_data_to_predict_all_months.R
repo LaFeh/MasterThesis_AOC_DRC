@@ -1,7 +1,5 @@
 #04b predict all months
 
-
-
 library(sf)
 library(dplyr)
 library(spdep)
@@ -43,6 +41,14 @@ for(date in all_dates){
 }
 
 
+
+
 # needs to be done only once because grid stays the same for the whole time span
-prepare_adj_matrix_for_prediction(frontline_data,N,snap = 10,second_degree_neighbours = T,bol_distance = T)
+prepare_adj_matrix_for_prediction(frontline_data,N,
+                                  snap = 10,
+                                  second_degree_neighbours = T,
+                                  bol_distance = T,
+                                  FUN = dist_in_km)
+
+
  

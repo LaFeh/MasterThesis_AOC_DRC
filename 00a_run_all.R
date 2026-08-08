@@ -2,40 +2,43 @@ setwd("~/MasterThesis_AOC_DRC")
 library(here)
 getwd()
 
-# 1.1.1. made some changes that slow down the code considerably.
-# remotes::install_version(
-#   "sf",
-#   version = "1.1-0",
-#   repos = "https://cloud.r-project.org"
-# )
-if (packageVersion("sf") != "1.1.0"){
-  stop("Please use packageversion 1.1.0 for sf")
-}
-
-# 1.9-1 supports different Coordinate systems EPSG:102022 doesnot work like this anymore
-# remotes::install_version(
-#   "terra",
-#   version = "1.9-1",
-#   repos = "https://cloud.r-project.org"
-# )
-
-if(packageVersion("terra") != "1.9.1"){
-  stop("Please use package version 1.9.1 for terra")
-}
-
-do_preparational_calculation = F
+do_preparational_calculations = F
 
 # settings for grid
-add_streets = T
+
+add_streets = F
+add_nationalparks =F
+add_waterways = F
+
+cell_size     <- 5000
+
+# ============================================================
+# 1. IMPLEMENT SETTINGS
+# ============================================================
+
+
 if(add_streets){
   grid_name_street = "_street"
 }else {
   grid_name_street = ""
 }
-cell_size     <- 5000
-name_of_grid = paste0("grid_surface_",cell_size,grid_name_street,".shp")
 
+if(add_nationalparks){
+  grid_name_park = "_park"
+}else {
+  grid_name_park = ""
+}
 
+if(add_waterways){
+  grid_name_water = "_water"
+}else {
+  grid_name_water = ""
+}
+
+name_of_grid = paste0("grid_surface_",cell_size,
+                      grid_name_water,
+                      grid_name_park,
+                      grid_name_street,".shp")
 
 ######## preparational calculations ##############
 
@@ -54,7 +57,10 @@ if(do_preparational_calculations){
 ####### make base grid calculations ##########
 
 
-rm(list = setdiff(ls(), "name_of_grid"))
+rm(list = setdiff(ls(), c("name_of_grid",
+                          "add_nationalparks",
+                          "add_waterways",
+                          "add_streets")))
 gc()
 source("./01_create_data.R")
 rm(list = setdiff(ls(), "name_of_grid"))
@@ -83,3 +89,5 @@ gc()
 source("./04b_create_data_to_predict_all_months.R")
 rm(list = ls())
 gc()
+
+

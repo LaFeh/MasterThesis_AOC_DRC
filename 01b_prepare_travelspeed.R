@@ -13,7 +13,7 @@ library(terra)
 library(exactextractr)
 
 # Clean the streams away from surface friction dataset
-clean_stream = TRUE
+clean_stream = T
 
 if(clean_stream){
   tif_path <-'./data/travel_time_friction_surface_removed_streams.tif' 
@@ -44,24 +44,23 @@ grid$lg_mix_time_mean = log(grid$mix_time_mean)
 
 
 
-library(sf)
-library(leaflet)
+#library(leaflet)
 
 # Keep only rows where mix_time_mean is NA
-grid_na <- grid[is.na(grid$mix_time_mean), ]
-st_geometry(grid_na)
+#grid_na <- grid[is.na(grid$mix_time_mean), ]
+#st_geometry(grid_na)
 # Plot
-leaflet() |>
-  addTiles() |>
-  addPolygons(
-    sf::st_transform(grid_na, 4326),
-    color = "red",
-    weight = 1,
-    fillColor = "red",
-    fillOpacity = 0.6,
-    popup = ~paste("Row:", seq_len(nrow(grid_na)))
-  )
-
+# leaflet() |>
+#   addTiles() |>
+#   addPolygons(
+#     sf::st_transform(grid_na, 4326),
+#     color = "red",
+#     weight = 1,
+#     fillColor = "red",
+#     fillOpacity = 0.6,
+#     popup = ~paste("Row:", seq_len(nrow(grid_na)))
+#   )
+# 
 
 # graphics::boxplot(lg_mix_time_mean~surface,grid)
 # graphics::boxplot(mix_time_mean~surface,grid)
