@@ -5,11 +5,11 @@ library(Matrix)
 source("./05_model/05a_a_helper_run_model.R")
 # ── 1. set up ──────────────────────────────────────────────────────────────
 degree_of_neighbour = "second"
-covariates_title = "Intercept"
+covariates_title = "conflict_fatalities_total_lead_lag"
 bol_distance = TRUE
 other_name = "_friction_surface_wo_streams_with_streets" 
 
-covariates = as.formula("~1")
+covariates = as.formula("~ total_events+total_events_lag+total_events_lead+total_fatalities+total_fatalities_lead+total_fatalities_lag")
 
 #directory for saving all the output
 output_folder_name = paste0("model_",

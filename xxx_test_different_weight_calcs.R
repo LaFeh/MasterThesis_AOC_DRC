@@ -168,7 +168,7 @@ date_combinations$year_mnth = as.numeric(paste0(date_combinations$value.x,date_c
 
 all_dates = date_combinations$year_mnth
 
-date = 202405
+
 print(date)
 
 load(paste0("./data/data_for_prediction/",date,"_events.RData"))

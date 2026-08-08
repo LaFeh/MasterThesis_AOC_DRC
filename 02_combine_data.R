@@ -74,26 +74,101 @@ grid_cntrl_mnth[which(is.na(grid_cntrl_mnth$controle)),]$controle=0.5 #"neutral"
 
 acled_conflict_mnth= st_join(acled_conflict_mnth,grid,join = st_within, left = FALSE)
 
-acled_conflict_per_cell = acled_conflict_mnth%>%st_drop_geometry()%>%ungroup()%>%
-  dplyr::group_by(year_mnth,cell_id)%>%
-  dplyr::summarise(events_violence_civilian = sum(events_violence_civilian,na.rm =T),
-                   events_battles = sum(events_Battles,na.rm =T),
-                   events_strategic_developments = sum(events_strategic_developments,na.rm =T),
-                   events_remote_violence = sum(events_remote_violence,na.rm =T),
-                   fatalities_violence_civilian = sum(fatalities_violence_civilian,na.rm =T),
-                   fatalities_battles = sum(fatalities_Battles,na.rm =T),
-                   fatalities_strategic_developments = sum(fatalities_strategic_developments,na.rm =T),
-                   fatalities_remote_violence = sum(fatalities_remote_violence,na.rm =T),
-                   )
+# acled_conflict_per_cell = acled_conflict_mnth%>%st_drop_geometry()%>%ungroup()%>%
+#   dplyr::group_by(year_mnth,cell_id)%>%
+#   dplyr::summarise(events_violence_civilian = sum(events_violence_civilian,na.rm =T),
+#                    events_battles = sum(events_Battles,na.rm =T),
+#                    events_strategic_developments = sum(events_strategic_developments,na.rm =T),
+#                    events_remote_violence = sum(events_remote_violence,na.rm =T),
+#                    fatalities_violence_civilian = sum(fatalities_violence_civilian,na.rm =T),
+#                    fatalities_battles = sum(fatalities_Battles,na.rm =T),
+#                    fatalities_strategic_developments = sum(fatalities_strategic_developments,na.rm =T),
+#                    fatalities_remote_violence = sum(fatalities_remote_violence,na.rm =T),
+#                    )
 
-acled_conflict_per_cell$total_fatalities = apply(acled_conflict_per_cell[,grep("fatalities",colnames(acled_conflict_per_cell))],1,sum,na.rm =T)
-acled_conflict_per_cell$total_events = apply(acled_conflict_per_cell[,grep("events",colnames(acled_conflict_per_cell))],1,sum,na.rm =T)
+acled_conflict_per_cell = acled_conflict_mnth %>%
+  st_drop_geometry() %>%
+  ungroup() %>%
+  dplyr::group_by(year_mnth, cell_id) %>%
+  dplyr::summarise(
+    events_violence_civilian = sum(events_violence_civilian, na.rm = TRUE),
+    events_battles = sum(events_Battles, na.rm = TRUE),
+    events_strategic_developments = sum(events_strategic_developments, na.rm = TRUE),
+    events_remote_violence = sum(events_remote_violence, na.rm = TRUE),
+    fatalities_violence_civilian = sum(fatalities_violence_civilian, na.rm = TRUE),
+    fatalities_battles = sum(fatalities_Battles, na.rm = TRUE),
+    fatalities_strategic_developments = sum(fatalities_strategic_developments, na.rm = TRUE),
+    fatalities_remote_violence = sum(fatalities_remote_violence, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  dplyr::arrange(cell_id, year_mnth) %>%
+  dplyr::group_by(cell_id) %>%
+  mutate(
+    across(
+      c(starts_with("events_"), starts_with("fatalities_")),
+      list(
+        lag = ~lag(.x),
+        lead = ~lead(.x)
+      ),
+      .names = "{.col}_{.fn}"
+    )
+  ) %>%
+  dplyr::ungroup()
+
+
+# Current period
+acled_conflict_per_cell$total_fatalities =
+  rowSums(acled_conflict_per_cell[, grep("^fatalities_(?!.*_(lag|lead)$)",
+                                         colnames(acled_conflict_per_cell),
+                                         perl = TRUE)],
+          na.rm = TRUE)
+
+acled_conflict_per_cell$total_events =
+  rowSums(acled_conflict_per_cell[, grep("^events_(?!.*_(lag|lead)$)",
+                                         colnames(acled_conflict_per_cell),
+                                         perl = TRUE)],
+          na.rm = TRUE)
+
+# Lag totals
+acled_conflict_per_cell$total_fatalities_lag =
+  rowSums(acled_conflict_per_cell[, grep("^fatalities_.*_lag$",
+                                         colnames(acled_conflict_per_cell))],
+          na.rm = TRUE)
+
+acled_conflict_per_cell$total_events_lag =
+  rowSums(acled_conflict_per_cell[, grep("^events_.*_lag$",
+                                         colnames(acled_conflict_per_cell))],
+          na.rm = TRUE)
+
+# Lead totals
+acled_conflict_per_cell$total_fatalities_lead =
+  rowSums(acled_conflict_per_cell[, grep("^fatalities_.*_lead$",
+                                         colnames(acled_conflict_per_cell))],
+          na.rm = TRUE)
+
+acled_conflict_per_cell$total_events_lead =
+  rowSums(acled_conflict_per_cell[, grep("^events_.*_lead$",
+                                         colnames(acled_conflict_per_cell))],
+          na.rm = TRUE)
+
+
+
+
+
+
+#acled_conflict_per_cell$total_fatalities = apply(acled_conflict_per_cell[,grep("fatalities",colnames(acled_conflict_per_cell))],1,sum,na.rm =T)
+#acled_conflict_per_cell$total_events = apply(acled_conflict_per_cell[,grep("events",colnames(acled_conflict_per_cell))],1,sum,na.rm =T)
 
 grid_cntrl_mnth = full_join(grid_cntrl_mnth,
                             acled_conflict_per_cell, by =c("cell_id","year_mnth"))
 
-grid_cntrl_mnth[which(is.na(grid_cntrl_mnth$total_fatalities)),]$total_fatalities = 0
-grid_cntrl_mnth[which(is.na(grid_cntrl_mnth$total_events)),]$total_events = 0
+grid_cntrl_mnth <- grid_cntrl_mnth %>%
+  dplyr::mutate(
+    dplyr::across(
+      matches("^(events_|fatalities_|total_events|total_fatalities)"),
+      ~ ifelse(is.na(.x), 0, .x)
+    )
+  )
 
 # join rain data #########################################
 

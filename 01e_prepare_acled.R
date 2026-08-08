@@ -134,9 +134,95 @@ acled_conflict_summarise_avg = as.data.frame(acled_conflict)%>%group_by(year_mnt
 
 acled_conflict_mnth = acled_conflict_wide_sum%>%left_join(acled_conflict_summarise_avg, by =c("year_mnth","longitude","latitude") )
 
+# acled_conflict_per_cell = acled_conflict_mnth%>%st_drop_geometry()%>%ungroup()%>%
+#   dplyr::group_by(year_mnth,cell_id)%>%
+#   dplyr::summarise(events_violence_civilian = sum(events_violence_civilian,na.rm =T),
+#                    events_battles = sum(events_Battles,na.rm =T),
+#                    events_strategic_developments = sum(events_strategic_developments,na.rm =T),
+#                    events_remote_violence = sum(events_remote_violence,na.rm =T),
+#                    fatalities_violence_civilian = sum(fatalities_violence_civilian,na.rm =T),
+#                    fatalities_battles = sum(fatalities_Battles,na.rm =T),
+#                    fatalities_strategic_developments = sum(fatalities_strategic_developments,na.rm =T),
+#                    fatalities_remote_violence = sum(fatalities_remote_violence,na.rm =T),
+#                    )
+
+acled_conflict_mnth = acled_conflict_mnth %>%
+  st_drop_geometry() %>%
+  ungroup() %>%
+  dplyr::group_by(year_mnth, cell_id) %>%
+  dplyr::summarise(
+    events_violence_civilian = sum(events_violence_civilian, na.rm = TRUE),
+    events_battles = sum(events_Battles, na.rm = TRUE),
+    events_strategic_developments = sum(events_strategic_developments, na.rm = TRUE),
+    events_remote_violence = sum(events_remote_violence, na.rm = TRUE),
+    fatalities_violence_civilian = sum(fatalities_violence_civilian, na.rm = TRUE),
+    fatalities_battles = sum(fatalities_Battles, na.rm = TRUE),
+    fatalities_strategic_developments = sum(fatalities_strategic_developments, na.rm = TRUE),
+    fatalities_remote_violence = sum(fatalities_remote_violence, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  dplyr::arrange(cell_id, year_mnth) %>%
+  dplyr::group_by(cell_id) %>%
+  mutate(
+    across(
+      c(starts_with("events_"), starts_with("fatalities_")),
+      list(
+        lag = ~lag(.x),
+        lead = ~lead(.x)
+      ),
+      .names = "{.col}_{.fn}"
+    )
+  ) %>%
+  dplyr::ungroup()
+
+
+# Current period
+acled_conflict_mnth$total_fatalities =
+  rowSums(acled_conflict_mnth[, grep("^fatalities_(?!.*_(lag|lead)$)",
+                                         colnames(acled_conflict_mnth),
+                                         perl = TRUE)],
+          na.rm = TRUE)
+
+acled_conflict_mnth$total_events =
+  rowSums(acled_conflict_mnth[, grep("^events_(?!.*_(lag|lead)$)",
+                                         colnames(acled_conflict_mnth),
+                                         perl = TRUE)],
+          na.rm = TRUE)
+
+# Lag totals
+acled_conflict_mnth$total_fatalities_lag =
+  rowSums(acled_conflict_mnth[, grep("^fatalities_.*_lag$",
+                                         colnames(acled_conflict_mnth))],
+          na.rm = TRUE)
+
+acled_conflict_mnth$total_events_lag =
+  rowSums(acled_conflict_mnth[, grep("^events_.*_lag$",
+                                         colnames(acled_conflict_mnth))],
+          na.rm = TRUE)
+
+# Lead totals
+acled_conflict_mnth$total_fatalities_lead =
+  rowSums(acled_conflict_mnth[, grep("^fatalities_.*_lead$",
+                                         colnames(acled_conflict_mnth))],
+          na.rm = TRUE)
+
+acled_conflict_mnth$total_events_lead =
+  rowSums(acled_conflict_mnth[, grep("^events_.*_lead$",
+                                         colnames(acled_conflict_per_cell))],
+          na.rm = TRUE)
+
+
+acled_conflict_mnth <- acled_conflict_mnth %>%
+  dplyr::mutate(
+    dplyr::across(
+      matches("^(events_|fatalities_|total_events|total_fatalities)"),
+      ~ ifelse(is.na(.x), 0, .x)
+    )
+  )
+
 
 #------------------------------------------------
-# MERGE FATALITIES THAT HAPPENED AFTER CONTROLE
+# MERGE FATALITIES THAT HAPPENED AFTER CONTROL
 # ------------------------------------------------
 controle_per_conflict = left_join(acled_conflict,as.data.frame(acled_territory_mnth),by =c("latitude","longitude","year_mnth"),suffix = c("","_territory"))
 conflict_after_controle= controle_per_conflict %>%
