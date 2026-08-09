@@ -46,7 +46,8 @@ prepare_adj_matrix_for_prediction <- function(frontline_data,
                                               snap = 0,
                                               second_degree_neighbours = TRUE,
                                               bol_distance = TRUE,
-                                              FUN = dist_in_km){
+                                              FUN = dist_in_km,
+                                              name_of_grid = name_of_grid){
   
   
   library(units)
@@ -95,8 +96,7 @@ prepare_adj_matrix_for_prediction <- function(frontline_data,
     data_adj_nb <- nb2listw(data_adj, zero.policy = TRUE)
     data_adj_nb$weights <- weights_neightbours_decay
     data_mat_w_decay <- listw2mat(data_adj_nb)
-    saveRDS(data_mat_w_decay, "./data/data_for_prediction/data_mat_w_mixed_time_first_neighbour.RData")
-    
+
   } else {
     
     data_mat <- nb2mat(data_adj, zero.policy = TRUE)
@@ -141,7 +141,7 @@ prepare_adj_matrix_for_prediction <- function(frontline_data,
       }
       
       
-      #}
+      
       
       weights_second_neightbours_decay[[start_point]] <- weights
     }
@@ -149,7 +149,18 @@ prepare_adj_matrix_for_prediction <- function(frontline_data,
     data_adj_nb <- nb2listw(data_adj_second$neighbours, zero.policy = TRUE)
     data_adj_nb$weights <- weights_second_neightbours_decay
     data_mat_w_decay <- listw2mat(data_adj_nb)
-    saveRDS(data_mat_w_decay,
-            paste0("./data/data_for_prediction/data_mat_w_mixed_time_second_neighbour_distance_", bol_distance, ".RData"))
   }
+  
+  
+  
+  if(second_degree_neighbours){
+    degree = "second"
+  }else{
+    degree = "first"
+  }
+  grid_name = gsub(".shp","",name_of_grid)
+  
+  saveRDS(data_mat_w_decay,
+          paste0("./data/data_for_prediction/mat_w_mixedtime_neighbour",degree,"_distance_", bol_distance,"_",grid_name,".RData"))
+
 }

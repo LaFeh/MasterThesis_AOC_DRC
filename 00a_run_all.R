@@ -6,39 +6,21 @@ do_preparational_calculations = F
 
 # settings for grid
 
-add_streets = F
-add_nationalparks =F
-add_waterways = F
+add_streets = T
+add_nationalparks =T
+add_waterways = T
 
 cell_size     <- 5000
 
+source("./00b_helper_create_grid_name.R")
+name_of_grid = create_grid_name(add_waterways = add_waterways,
+                 add_nationalparks = add_nationalparks,
+                 add_streets = add_streets,
+                 cell_size = cell_size)
 # ============================================================
 # 1. IMPLEMENT SETTINGS
 # ============================================================
 
-
-if(add_streets){
-  grid_name_street = "_street"
-}else {
-  grid_name_street = ""
-}
-
-if(add_nationalparks){
-  grid_name_park = "_park"
-}else {
-  grid_name_park = ""
-}
-
-if(add_waterways){
-  grid_name_water = "_water"
-}else {
-  grid_name_water = ""
-}
-
-name_of_grid = paste0("grid_surface_",cell_size,
-                      grid_name_water,
-                      grid_name_park,
-                      grid_name_street,".shp")
 
 ######## preparational calculations ##############
 
@@ -61,6 +43,8 @@ rm(list = setdiff(ls(), c("name_of_grid",
                           "add_nationalparks",
                           "add_waterways",
                           "add_streets")))
+
+
 gc()
 source("./01_create_data.R")
 rm(list = setdiff(ls(), "name_of_grid"))

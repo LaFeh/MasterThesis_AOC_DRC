@@ -216,14 +216,11 @@ for (d in 1:nrow(date_combinations)){
 }
 
 
-if("road" %in% grid_cntrl_mnth$surface){
-  data_to_be_saved_to = paste0("./data/frontline_data_all_previous_mnths_control_num_street.RData")
-} else {
-  data_to_be_saved_to = paste0("./data/frontline_data_all_previous_mnths_control_num.RData")
-  
-}
+name_of_grid_file_name = gsub(".shp","",name_of_grid)
+data_to_be_saved_to = paste0("./data/frontline_data_all_mnths_",name_of_grid_file_name,".RData")
+
 save(frontline_data_controle_num_all_previous_time,file = data_to_be_saved_to)
-message("frontline_data_controle_num_all_previous_time is saved!")
+message(paste0("./data/frontline_data_all_mnths_",name_of_grid_file_name,".RData is saved!"))
 
 
 

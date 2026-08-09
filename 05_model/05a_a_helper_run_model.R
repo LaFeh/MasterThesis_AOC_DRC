@@ -1,4 +1,17 @@
 
+create_covariates_list<-function(){
+  
+  
+  covariates_list = list()
+  covariates_list[["Intercept"]] = as.formula("~1")
+  covariates_list[["total_lag_lead_events_fatalities"]] =  as.formula("~ total_events+total_events_lag+total_events_lead+total_fatalities+total_fatalities_lead+total_fatalities_lag")
+
+  
+  return(covariates_list)
+}
+
+
+
 run_model <- function(date,
                       data_lst, 
                       parameters,

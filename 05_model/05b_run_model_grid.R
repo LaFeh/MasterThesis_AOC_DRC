@@ -5,6 +5,50 @@ source("./00b_helper_create_grid_name.R")
 source("./05_model/05a_a_helper_run_model.R")
 # ── 1. set up ──────────────────────────────────────────────────────────────
 
+# create grid
+parameter_grid <- list()
+
+add_to_parameter_grid <- function(
+    name,
+    grid_add_streets,
+    grid_add_nationalparks,
+    grid_add_waterways,
+    grid_cell_size,
+    model_dates_to_run,
+    model_degree_of_neighbour,
+    model_bol_distance,
+    model_covariates_title
+) {
+  
+  list(
+    name = name,
+    grid = list(
+      add_streets = grid_add_streets,
+      add_nationalparks = grid_add_nationalparks,
+      add_waterways = grid_add_waterways,
+      cell_size = grid_cell_size
+    ),
+    model = list(
+      dates_to_run = model_dates_to_run,
+      degree_of_neighbour = model_degree_of_neighbour,
+      bol_distance = model_bol_distance,
+      covariates_title = model_covariates_title
+    )
+  )
+}
+parameter_grid <- list(
+  streets_no_dist = add_to_parameter_grid(
+    name = "streets_no_dist",
+    grid_add_streets = TRUE,
+    grid_add_nationalparks = FALSE,
+    grid_add_waterways = FALSE,
+    grid_cell_size = 100,
+    model_dates_to_run = c("2020-01-01", "2020-02-01"),
+    model_degree_of_neighbour = 1,
+    model_bol_distance = 0,
+    model_covariates_title = "streets"
+  )
+)
 
 # -- 1.1 grid setup ------------------------
 grid_add_streets = T
@@ -31,8 +75,8 @@ model_covariates = covariates_list[[model_covariates_title]]
 #directory for saving all the output
 output_folder_name = paste0("model_",
                             model_degree_of_neighbour,
-                  "_neighbour_covariates_",model_covariates_title,
-                  model_other_name)
+                            "_neighbour_covariates_",model_covariates_title,
+                            model_other_name)
 
 output_path = paste0("./05_model/",output_folder_name)
 dir.create(output_path)
@@ -54,9 +98,9 @@ path_of_adjacency_matrix = paste0("./data/data_for_prediction/mat_w_mixedtime_ne
 
 
 path_of_eigenvalue = paste0("./05_model/eigvalues_mat_w_mixedtime_",
-                              model_degree_of_neighbour,
-                              "_distance_", model_bol_distance,
-                              "_",name_of_grid_clean,".RData")
+                            model_degree_of_neighbour,
+                            "_distance_", model_bol_distance,
+                            "_",name_of_grid_clean,".RData")
 
 ##########################################
 
@@ -83,14 +127,14 @@ L       <- D - W_sp
 
 
 if (file.exists(path_of_eigenvalue)){
-
+  
   load(file =  path_of_eigenvalue)
-
+  
 } else {
   
   eig_DmW <- eigen(as.matrix(L), symmetric = TRUE, only.values = TRUE)$values
   save(eig_DmW,file = path_of_eigenvalue)
-
+  
 }
 
 cat("Min eigenvalue of (D-W):", min(eig_DmW), "\n")  # expect >= 0 (or tiny negative)

@@ -9,14 +9,12 @@ library(spdep)
 source("./04b_a_helper_functions.R")
 
 
-if(add_streets){
-  data_to_read = paste0("./data/frontline_data_all_previous_mnths_control_num_street.RData")
-} else {
-  data_to_read = paste0("./data/frontline_data_all_previous_mnths_control_num.RData")
-  
-}
+name_of_grid_file_name = gsub(".shp","",name_of_grid)
+data_path_to_be_read = paste0("./data/frontline_data_all_mnths_",name_of_grid_file_name,".RData")
 
-load(data_to_read)
+
+
+load(data_path_to_be_read)
 
 frontline_data = frontline_data_controle_num_all_previous_time
 frontline_data = frontline_data[order(frontline_data$cell_id),]
@@ -45,10 +43,12 @@ for(date in all_dates){
 
 # needs to be done only once because grid stays the same for the whole time span
 prepare_adj_matrix_for_prediction(frontline_data,N,
+                                  date = NULL,
                                   snap = 10,
                                   second_degree_neighbours = T,
                                   bol_distance = T,
-                                  FUN = dist_in_km)
+                                  FUN = dist_in_km,
+                                  name_of_grid)
 
 
  
