@@ -10,6 +10,7 @@ remove_from_grid <- function(grid,to_be_removed){
   intersects_idx  <- unique(unlist(st_intersects(to_be_removed, grid)))
   grid_touches    <- grid[intersects_idx, ]
   grid_no_touch   <- grid[-intersects_idx, ]
+  cat("grid divided into part that is close to any street and part that is not")
   
 
   
@@ -29,10 +30,13 @@ remove_from_grid <- function(grid,to_be_removed){
     dissolve = TRUE
   )
   
+  cat("dataset to be removed is not aggregated")
+  
   grid_without_terra <- terra::erase(
     grid_touches_terra,
     to_be_removed_terra
   )
+  cat("dataset to be removed is removed from grid")
   
   grid_without <- st_as_sf(grid_without_terra)
   

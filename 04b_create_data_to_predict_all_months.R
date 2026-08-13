@@ -31,11 +31,12 @@ all_dates =  paste0(all_dates, "01")
 all_dates = as.Date(all_dates,format = "%Y%m%d")
 # 11174 cellids
 
+
 N = length(unique(frontline_data$cell_id))
 
 for(date in all_dates){
   print(as.Date(date))
-  prepare_data_for_prediction(frontline_data,date,N)
+  prepare_data_for_prediction(frontline_data,date,N,grid_file_name = name_of_grid_file_name)
 }
 
 
@@ -45,8 +46,9 @@ for(date in all_dates){
 prepare_adj_matrix_for_prediction(frontline_data,N,
                                   date = NULL,
                                   snap = 10,
-                                  second_degree_neighbours = T,
+                                  second_degree_neighbours = F,
                                   bol_distance = T,
+                                  border_distance = F,
                                   FUN = dist_in_km,
                                   name_of_grid)
 

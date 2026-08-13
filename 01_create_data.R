@@ -165,8 +165,9 @@ if(add_waterways){
   
   #rm(water2, water3)
   water_all = water_all%>%rename(geometry = geom)
+  
   # ============================================================
-  # 9. COMBINE LAND + WATER INTO FINAL GRID
+  # COMBINE LAND + WATER INTO  GRID
   # ============================================================
   
   grid_without_water$surface <- "land"
@@ -243,7 +244,7 @@ if (add_streets){
   
   strt = streets_transformed[,c("osm_id","adm1_pcode","adm1_name","adm2_pcode","adm2_name",
              "fclass","code","layer","cell_id","surface")]
-
+  strt$name = NA
   grid = rbind(grid_without_streets,strt)
   
   grid = grid %>%st_cast(.,"MULTIPOLYGON")%>%st_cast(.,"POLYGON")

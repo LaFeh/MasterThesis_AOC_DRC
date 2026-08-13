@@ -20,6 +20,7 @@ model_dates_to_run = "202405" #if NULL all are run
 model_degree_of_neighbour = "second"
 model_bol_distance = TRUE
 model_other_name = "_friction_surface_simple_grid" 
+model_rho = 0.6
 
 covariates_list = create_covariates_list()
 
@@ -63,7 +64,7 @@ path_of_eigenvalue = paste0("./05_model/eigvalues_mat_w_mixedtime_",
 
 data_mat_w <- readRDS(path_of_adjacency_matrix)
 
-rho =0.6
+
 
 
 # ── 3. Build W over ALL areas (including NA areas) ───────────────────────────
@@ -161,7 +162,7 @@ for ( date in all_dates){
     tau_prior_scale     = 2,
     #logit_rho_prior_mean = 10,
     #logit_rho_prior_sd   = 1,
-    rho = rho
+    rho = model_rho
   )
   
   
