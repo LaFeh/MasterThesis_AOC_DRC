@@ -40,6 +40,8 @@ for (model_dir in model_dirs) {
     )
   )
   
+
+  
   # -------------------------
   # Find both plots
   # -------------------------
@@ -120,8 +122,66 @@ for (model_dir in model_dirs) {
     just = c("left", "top"),
     gp = gpar(fontsize = 8)
   )
+  
+  
+  # pull the CV summary that run_model_wrapper() / run_model() just saved
+  # (if requested) and stash it for the final cross-model table
+  RUN_LORO_CV = T
+  if (RUN_LORO_CV) {
+    cv_file <- paste0(model_dir,"/",as.character("202405"),"_loro_cv.RData")
+    if (file.exists(cv_file)) {
+      load(cv_file)   # loads loro_df, cv_summary
+      grid_cv_summary[[model_name]] <- data.frame(
+        model_name      = model_name,
+        n_folds         = cv_summary$n_folds,
+        n_converged     = cv_summary$n_converged,
+        elpd            = cv_summary$elpd,
+        mean_log_score  = cv_summary$mean_log_score,
+        brier           = cv_summary$brier,
+        auc             = ifelse(is.null(cv_summary$auc), NA, cv_summary$auc)
+      )
+      
+      grid.text(
+        paste(capture.output(print(grid_cv_summary[[model_name]])), collapse = "\n"),
+        x = 0.5,
+        y = 0.2,
+        just = "center",
+        gp = gpar(fontfamily = "mono", fontsize = 5)
+      )
+      
+
+    } else {
+      warning(paste("No LORO-CV file found for", model_name))
+    }
+  }
 }
 
 dev.off()
 
+
+for (model_dir in model_dirs) {
+  
+  cv_file <- paste0(model_dir,"/",as.character("202405"),"_loro_cv.RData")
+  if (file.exists(cv_file)) {
+    print(model_dir)
+    load(cv_file)   # loads loro_df, cv_summary
+    grid_cv_summary[[model_dir]] <- data.frame(
+      model_name      = model_dir,
+      n_folds         = cv_summary$n_folds,
+      n_converged     = cv_summary$n_converged,
+      elpd            = cv_summary$elpd,
+      mean_log_score  = cv_summary$mean_log_score,
+      brier           = cv_summary$brier,
+      auc             = ifelse(is.null(cv_summary$auc), NA, cv_summary$auc)
+    )
+
+    
+  
+  }
+  
+  grid_cv_summary_df <- dplyr::bind_rows(grid_cv_summary)
+  
+  openxlsx::write.xlsx(grid_cv_summary_df,"./model_summary.xlsx")
+ 
+}
 

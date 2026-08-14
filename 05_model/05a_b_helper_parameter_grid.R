@@ -7,6 +7,8 @@ create_covariates_list<-function(){
   covariates_list[["noIntercept"]] = as.formula("~-1")
   covariates_list[["Intercept"]] = as.formula("~1")
   covariates_list[["total_lag_lead_events_fatalities"]] =  as.formula("~ total_events+total_events_lag+total_events_lead+total_fatalities+total_fatalities_lead+total_fatalities_lag")
+  covariates_list[["lead_events_fatalities"]] =  as.formula("~ total_events_lead+total_fatalities_lead")
+  
   
   
   return(covariates_list)
@@ -167,6 +169,45 @@ parameter_grid <- list(
     model_bol_distance = TRUE,
     model_bol_border = F,
     model_covariates_title = "total_lag_lead_events_fatalities",
+    model_rho = 0.6
+  ),
+  wo_streets_first_degree_dist_cov_lead_events_fatalities = add_to_parameter_grid(
+    name = "wo_streets_first_degree_dist_cov_lead_events_fatalities",
+    grid_add_streets = F,
+    grid_add_nationalparks = TRUE,
+    grid_add_waterways = TRUE,
+    grid_cell_size = 5000,
+    model_dates_to_run = c("202405"),
+    model_degree_of_neighbour = "first",
+    model_bol_distance = TRUE,
+    model_bol_border = FALSE,
+    model_covariates_title = "lead_events_fatalities",
+    model_rho = 0.6
+  ),
+  streets_first_degree_no_dist_cov_lead_events_fatalities = add_to_parameter_grid(
+    name = "streets_first_degree_no_dist_cov_lead_events_fatalities",
+    grid_add_streets = TRUE,
+    grid_add_nationalparks = TRUE,
+    grid_add_waterways = TRUE,
+    grid_cell_size = 5000,
+    model_dates_to_run = c("202405"),
+    model_degree_of_neighbour = "second",
+    model_bol_distance = TRUE,
+    model_bol_border = FALSE,
+    model_covariates_title = "lead_events_fatalities",
+    model_rho = 0.6
+  ),
+  streets_first_degree_no_dist_cov_lead_events_fatalities = add_to_parameter_grid(
+    name = "streets_first_degree_no_dist_cov_lead_events_fatalities",
+    grid_add_streets = F,
+    grid_add_nationalparks = TRUE,
+    grid_add_waterways = TRUE,
+    grid_cell_size = 5000,
+    model_dates_to_run = c("202405"),
+    model_degree_of_neighbour = "second",
+    model_bol_distance = TRUE,
+    model_bol_border = F,
+    model_covariates_title = "lead_events_fatalities",
     model_rho = 0.6
   )
 )

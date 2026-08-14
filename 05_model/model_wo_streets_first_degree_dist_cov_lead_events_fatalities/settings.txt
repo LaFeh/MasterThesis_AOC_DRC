@@ -1,0 +1,14 @@
+c(`Moran I statistic standard deviate` = 21.0171853178706)
+2.28363755572884e-98
+c(`Moran I statistic` = 0.235771429437016, Expectation = -0.000186880956830499, Variance = 0.000126043788459876)
+greater
+Moran I test under randomisation
+y_filled  
+weights: weights_list  
+n reduced by no-neighbour observations  
+
+
+
+
+
+list(name = "wo_streets_first_degree_dist_cov_lead_events_fatalities", grid = list(add_streets = FALSE, add_nationalparks = TRUE, add_waterways = TRUE, cell_size = 5000), model = list(dates_to_run = "202405", degree_of_neighbour = "first", bol_distance = TRUE, bol_border = FALSE, covariates_title = "lead_events_fatalities", rho = 0.6))

@@ -7,6 +7,7 @@ run_model <- function(date,
   
   library(TMB)
   library(Matrix)
+  library(spdep)
   
 
   
@@ -73,7 +74,7 @@ run_model <- function(date,
   betas = rep$par.fixed[names(rep$par.fixed)=="beta"]
   if(length(betas)>1){
     betas_minus_intercept = betas[2:length(betas)]
-    data$relative_risk = plogis(data_lst$X %*%as.vector(rep$par.fixed[names(rep$par.fixed)=="beta"]))
+    data$relative_risk = plogis(data_lst$X %*%as.vector(rep$par.fixed[names(rep$par.fixed)=="beta"]) + data$phi_w)
   } else{
     data$relative_risk = plogis(data$phi_w)
   }
