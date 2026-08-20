@@ -7,6 +7,10 @@ create_covariates_list<-function(){
   covariates_list[["noIntercept"]] = as.formula("~-1")
   covariates_list[["Intercept"]] = as.formula("~1")
   covariates_list[["total_lag_lead_events_fatalities"]] =  as.formula("~ total_events+total_events_lag+total_events_lead+total_fatalities+total_fatalities_lead+total_fatalities_lag")
+  covariates_list[["total_lag_lead_battles_remotev_fatalities"]] =  as.formula("~ events_battles+events_battles_lag+events_battles_lead+
+  events_remote_violence+events_remote_violence_lag+events_remote_violence_lead+
+                                                                            total_fatalities+total_fatalities_lead+total_fatalities_lag")
+  
   covariates_list[["lead_events_fatalities"]] =  as.formula("~ total_events_lead+total_fatalities_lead")
   
   
@@ -16,6 +20,8 @@ create_covariates_list<-function(){
 
 
 parameter_grid <- list()
+
+
 
 add_to_parameter_grid <- function(
     name,
@@ -56,8 +62,8 @@ parameter_grid <- list(
     grid_add_streets = TRUE,
     grid_add_nationalparks = TRUE,
     grid_add_waterways = TRUE,
-    grid_cell_size = 5000,
-    model_dates_to_run = c("202405"),
+    grid_cell_size = 3000,
+    model_dates_to_run = c("202411"),
     model_degree_of_neighbour = "first",
     model_bol_distance = FALSE,
     model_bol_border = FALSE,
@@ -69,8 +75,8 @@ parameter_grid <- list(
     grid_add_streets = TRUE,
     grid_add_nationalparks = TRUE,
     grid_add_waterways = TRUE,
-    grid_cell_size = 5000,
-    model_dates_to_run = c("202405"),
+    grid_cell_size = 3000,
+    model_dates_to_run = c("202411"),
     model_degree_of_neighbour = "first",
     model_bol_distance = FALSE,
     model_bol_border = FALSE,
@@ -82,8 +88,8 @@ parameter_grid <- list(
     grid_add_streets = TRUE,
     grid_add_nationalparks = TRUE,
     grid_add_waterways = TRUE,
-    grid_cell_size = 5000,
-    model_dates_to_run = c("202405"),
+    grid_cell_size = 3000,
+    model_dates_to_run = c("202411"),
     model_degree_of_neighbour = "second",
     model_bol_distance = TRUE,
     model_bol_border = FALSE,
@@ -96,8 +102,8 @@ parameter_grid <- list(
     grid_add_streets = TRUE,
     grid_add_nationalparks = TRUE,
     grid_add_waterways = TRUE,
-    grid_cell_size = 5000,
-    model_dates_to_run = c("202405"),
+    grid_cell_size = 3000,
+    model_dates_to_run = c("202411"),
     model_degree_of_neighbour = "first",
     model_bol_distance = TRUE,
     model_bol_border = FALSE,
@@ -105,40 +111,40 @@ parameter_grid <- list(
     
     model_rho = 0.6
   ),
-  wo_streets_scnd_degree_dist = add_to_parameter_grid(
-    name = "wo_streets_scnd_degree_dist",
-    grid_add_streets = F,
-    grid_add_nationalparks = TRUE,
-    grid_add_waterways = TRUE,
-    grid_cell_size = 5000,
-    model_dates_to_run = c("202405"),
-    model_degree_of_neighbour = "second",
-    model_bol_distance = TRUE,
-    model_bol_border = FALSE,
-    model_covariates_title = "Intercept",
-    
-    model_rho = 0.6
-  ),
-  wo_streets_first_degree_no_dist = add_to_parameter_grid(
-    name = "wo_streets_first_degree_no_dist",
-    grid_add_streets = F,
-    grid_add_nationalparks = TRUE,
-    grid_add_waterways = TRUE,
-    grid_cell_size = 5000,
-    model_dates_to_run = c("202405"),
-    model_degree_of_neighbour = "first",
-    model_bol_distance = FALSE,
-    model_bol_border = FALSE,
-    model_covariates_title = "Intercept",
-    model_rho = 0.6
-  ),
-  wo_streets_first_degree_no_dist_cov_total_lag_lead_events_fatalities = add_to_parameter_grid(
+  # wo_streets_scnd_degree_dist = add_to_parameter_grid( # too much spread in weird directions.
+  #   name = "wo_streets_scnd_degree_dist",
+  #   grid_add_streets = F,
+  #   grid_add_nationalparks = TRUE,
+  #   grid_add_waterways = TRUE,
+  #   grid_cell_size = 3000,
+  #   model_dates_to_run = c("202411"),
+  #   model_degree_of_neighbour = "second",
+  #   model_bol_distance = TRUE,
+  #   model_bol_border = FALSE,
+  #   model_covariates_title = "Intercept",
+  #   
+  #   model_rho = 0.6
+  # ),
+  # wo_streets_first_degree_no_dist = add_to_parameter_grid( # is spreading too much, more spread than model with street with same settings.
+  #   name = "wo_streets_first_degree_no_dist",
+  #   grid_add_streets = F,
+  #   grid_add_nationalparks = TRUE,
+  #   grid_add_waterways = TRUE,
+  #   grid_cell_size = 3000,
+  #   model_dates_to_run = c("202411"),
+  #   model_degree_of_neighbour = "first",
+  #   model_bol_distance = FALSE,
+  #   model_bol_border = FALSE,
+  #   model_covariates_title = "Intercept",
+  #   model_rho = 0.6
+  # ),
+  wo_streets_first_degree_dist_cov_total_lag_lead_events_fatalities = add_to_parameter_grid(
     name = "wo_streets_first_degree_dist_cov_total_lag_lead_events_fatalities",
     grid_add_streets = F,
     grid_add_nationalparks = TRUE,
     grid_add_waterways = TRUE,
-    grid_cell_size = 5000,
-    model_dates_to_run = c("202405"),
+    grid_cell_size = 3000,
+    model_dates_to_run = c("202411"),
     model_degree_of_neighbour = "first",
     model_bol_distance = TRUE,
     model_bol_border = FALSE,
@@ -150,21 +156,21 @@ parameter_grid <- list(
     grid_add_streets = TRUE,
     grid_add_nationalparks = TRUE,
     grid_add_waterways = TRUE,
-    grid_cell_size = 5000,
-    model_dates_to_run = c("202405"),
+    grid_cell_size = 3000,
+    model_dates_to_run = c("202411"),
     model_degree_of_neighbour = "second",
-    model_bol_distance = TRUE,
+    model_bol_distance = F,
     model_bol_border = FALSE,
     model_covariates_title = "total_lag_lead_events_fatalities",
     model_rho = 0.6
   ),
-  streets_scnd_degree_no_dist_cov_total_lag_lead_events_fatalities = add_to_parameter_grid(
-    name = "streets_first_degree_no_dist_cov_total_lag_lead_events_fatalities",
+  streets_first_degree_dist_cov_total_lag_lead_events_fatalities = add_to_parameter_grid(
+    name = "streets_first_degree_dist_cov_total_lag_lead_events_fatalities",
     grid_add_streets = F,
     grid_add_nationalparks = TRUE,
     grid_add_waterways = TRUE,
-    grid_cell_size = 5000,
-    model_dates_to_run = c("202405"),
+    grid_cell_size = 3000,
+    model_dates_to_run = c("202411"),
     model_degree_of_neighbour = "second",
     model_bol_distance = TRUE,
     model_bol_border = F,
@@ -176,8 +182,8 @@ parameter_grid <- list(
     grid_add_streets = F,
     grid_add_nationalparks = TRUE,
     grid_add_waterways = TRUE,
-    grid_cell_size = 5000,
-    model_dates_to_run = c("202405"),
+    grid_cell_size = 3000,
+    model_dates_to_run = c("202411"),
     model_degree_of_neighbour = "first",
     model_bol_distance = TRUE,
     model_bol_border = FALSE,
@@ -189,25 +195,38 @@ parameter_grid <- list(
     grid_add_streets = TRUE,
     grid_add_nationalparks = TRUE,
     grid_add_waterways = TRUE,
-    grid_cell_size = 5000,
-    model_dates_to_run = c("202405"),
+    grid_cell_size = 3000,
+    model_dates_to_run = c("202411"),
     model_degree_of_neighbour = "second",
-    model_bol_distance = TRUE,
+    model_bol_distance = F,
     model_bol_border = FALSE,
     model_covariates_title = "lead_events_fatalities",
     model_rho = 0.6
   ),
-  streets_first_degree_no_dist_cov_lead_events_fatalities = add_to_parameter_grid(
+  streets_first_degree_dist_cov_lead_events_fatalities = add_to_parameter_grid(
     name = "streets_first_degree_no_dist_cov_lead_events_fatalities",
     grid_add_streets = F,
     grid_add_nationalparks = TRUE,
     grid_add_waterways = TRUE,
-    grid_cell_size = 5000,
-    model_dates_to_run = c("202405"),
+    grid_cell_size = 3000,
+    model_dates_to_run = c("202411"),
     model_degree_of_neighbour = "second",
     model_bol_distance = TRUE,
     model_bol_border = F,
     model_covariates_title = "lead_events_fatalities",
+    model_rho = 0.6
+  ) ,
+  streets_first_degree_dist_cov_total_lag_lead_battles_remotev_fatalities = add_to_parameter_grid(
+    name = "streets_first_degree_dist_cov_total_lag_lead_battles_remotev_fatalities",
+    grid_add_streets = F,
+    grid_add_nationalparks = TRUE,
+    grid_add_waterways = TRUE,
+    grid_cell_size = 3000,
+    model_dates_to_run = c("202411"),
+    model_degree_of_neighbour = "second",
+    model_bol_distance = TRUE,
+    model_bol_border = F,
+    model_covariates_title = "total_lag_lead_battles_remotev_fatalities",
     model_rho = 0.6
   )
 )

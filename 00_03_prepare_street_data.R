@@ -5,7 +5,7 @@
 #       computed along the network, per segment.
 # ============================================================
 
-create_street_splitted <- function(){
+create_street_splitted <- function(target_length){
   
   
   library(sf)
@@ -81,7 +81,7 @@ create_street_splitted <- function(){
   # Choose target_length based on your accessibility use case:
   #   ~25-50m  -> pedestrian-scale accessibility
   #   ~100-200m -> road/driving-scale accessibility
-  target_length <- 10000  # metres
+  target_length <- 1000  # metres
   
   streets_split <- line_segment(streets_without_cities2, 
                                 segment_length = target_length)

@@ -29,7 +29,7 @@ drc_m <- relevant_regions |>
 # 2. CREATE 5KM GRID
 # ============================================================
 
-cell_size     <- 5000
+#cell_size     <- 5000
 grid_template <- rast(ext(drc_m), resolution = cell_size, crs = crs(drc_m))
 drc_raster    <- rasterize(drc_m, grid_template, field = 1)
 drc_cells_v   <- as.polygons(drc_raster, aggregate = FALSE, touches = TRUE)

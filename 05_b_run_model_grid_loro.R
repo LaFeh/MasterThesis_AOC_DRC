@@ -15,7 +15,7 @@ source("./04b_a_helper_functions.R")
 # evaluates genuine held-out predictive performance rather than an
 # in-sample fit criterion. It refits the model once per observed region, so
 # expect this to multiply total runtime by roughly length(obs_idx) per model.
-RUN_LORO_CV <- TRUE
+RUN_LORO_CV <- FALSE
 
 # collects one row of CV summary stats per grid model, for the final
 # cross-model comparison table
@@ -37,10 +37,7 @@ for (model_name in names(parameter_grid)){
   
   model_other_name = ""
   #directory for saving all the output
-  
-  output_path = paste0("./05_model/model_",name_parameter_grid)
-  dir.create(output_path)
-  dir.create(paste0(output_path,"/plots"))
+
   
   
   
@@ -50,6 +47,11 @@ for (model_name in names(parameter_grid)){
                                   cell_size = grid_cell_size)
   
   name_of_grid_clean = gsub(".shp","",name_of_grid)
+  
+  
+  output_path = paste0("./05_model/model_",name_parameter_grid,"_",name_of_grid_clean)
+  dir.create(output_path)
+  dir.create(paste0(output_path,"/plots"))
   
   path_of_adjacency_matrix = paste0("./data/data_for_prediction/mat_w_mixedtime_neighbour",
                                     model_degree_of_neighbour,
@@ -183,4 +185,6 @@ if (RUN_LORO_CV && length(grid_cv_summary) > 0) {
   
   cat("\nBest model by LORO-CV ELPD:", grid_cv_table$model_name[1], "\n")
 }
+
+
 

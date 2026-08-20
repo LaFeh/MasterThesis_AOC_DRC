@@ -34,6 +34,7 @@ all_dates = as.Date(all_dates,format = "%Y%m%d")
 
 N = length(unique(frontline_data$cell_id))
 
+
 for(date in all_dates){
   print(as.Date(date))
   prepare_data_for_prediction(frontline_data,date,N,grid_file_name = name_of_grid_file_name)
@@ -41,13 +42,16 @@ for(date in all_dates){
 
 
 
-
+date = "20241101"
+time = zoo::as.yearmon(as.Date(date,format ="%Y%m%d"))
+frontline_data = frontline_data[which(frontline_data$time == time),]
+gc()
 # needs to be done only once because grid stays the same for the whole time span
 prepare_adj_matrix_for_prediction(frontline_data,N,
                                   date = NULL,
                                   snap = 10,
-                                  second_degree_neighbours = F,
-                                  bol_distance = T,
+                                  bol_second_degree_neighbours = F,
+                                  bol_distance = F,
                                   border_distance = F,
                                   FUN = dist_in_km,
                                   name_of_grid)

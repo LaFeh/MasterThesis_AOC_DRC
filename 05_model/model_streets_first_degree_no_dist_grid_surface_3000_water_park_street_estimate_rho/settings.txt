@@ -1,0 +1,9 @@
+c(`Moran I statistic standard deviate` = 20.8204270641151)
+1.41327619356313e-96
+c(`Moran I statistic` = 0.0960050213549983, Expectation = -0.000060306356289953, Variance = 0.0000212889415893972)
+greater
+Moran I test under randomisation
+y_filled  
+weights: weights_list  
+n reduced by no-neighbour observations  
+

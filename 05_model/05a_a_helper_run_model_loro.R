@@ -1,33 +1,11 @@
-nlminb_with_restart <- function(start, fn, gr, lower, upper, iter.max, eval.max,
-                                max_retries = 3){
-  fit <- tryCatch(
-    nlminb(start = start, objective = fn, gradient = gr, lower = lower, upper = upper,
-           control = list(iter.max = iter.max, eval.max = eval.max)),
-    error = function(e) list(.error = conditionMessage(e))
-  )
-  if (!is.null(fit$.error)) return(fit)
-  
-  retries <- 0
-  while (fit$convergence %in% c(1, 8) && retries < max_retries) {
-    retries <- retries + 1
-    fit_retry <- tryCatch(
-      nlminb(start = fit$par, objective = fn, gradient = gr, lower = lower, upper = upper,
-             control = list(iter.max = iter.max, eval.max = eval.max, rel.tol = 1e-12)),
-      error = function(e) NULL
-    )
-    if (is.null(fit_retry)) break
-    fit <- fit_retry
-  }
-  fit
-}
-
 
 run_model_loro <- function(date,
                       data_lst, 
                       parameters,
                       cpp_file = paste0("./05_model/leroux_with_priors_wo_constraint_alldata"),
                       output_path = "leroux_with_priors_wo_constraint_alldata",
-                      do_loro_cv = FALSE){
+                      do_loro_cv = FALSE,
+                      run_if_exists = FALSE){
   
   library(TMB)
   library(Matrix)
@@ -35,71 +13,142 @@ run_model_loro <- function(date,
   
   
   
-  # ── 1. Clean recompile ────────────────────────────────────────────────────────
-  # NOTE: cpp_file must point at the FIXED cpp, i.e. the version whose data
-  # likelihood loop iterates over `obs_idx` only:
-  #     for (int k = 0; k < obs_idx.size(); k++) { int i = obs_idx(k); ... }
-  # instead of `for (int k = 0; k < N; k++)`. Otherwise NA rows (filled with
-  # y=0) are silently scored as observed failures, which corrupts both the
-  # fit and any downstream CV/IC comparison.
-  try(dyn.unload(dynlib(cpp_file)), silent = TRUE)
-  file.remove(paste0(cpp_file,".o"))
-  file.remove(paste0(cpp_file,".dll"))
-  
-  compile(paste0(cpp_file,".cpp"))
-  cpp_file_load = gsub("//.","",cpp_file)
-  dyn.load(dynlib(cpp_file_load))
-  cpp_obj = basename(cpp_file)
-  
-  # ── 2. Build AD objective ─────────────────────────────────────────────────────
-  obj <- MakeADFun(
-    data       = data_lst,
-    parameters = parameters,
-    random     = "phi",       # phi integrated out by Laplace for ALL N areas
-    DLL        = cpp_obj,
-    silent     = FALSE
-  )
-  
-  # Quick sanity check
-  cat("nll at start:", obj$fn(obj$par), "\n")
-  cat("Gradient finite:", all(is.finite(obj$gr(obj$par))), "\n")
-  
-  # ── 3. Optimise ──────────────────────────────────────────────────────────────
-  
-  
-  lower_bounds_beta = rep(-Inf, ncol(data_lst$X))
-  upper_bounds_beta = rep(Inf, ncol(data_lst$X))
-  
-  # FIX: parameters are now beta + log_tau only (rho is a fixed DATA_SCALAR,
-  # not estimated -- there is no logit_rho parameter any more). obj$par has
-  # length ncol(X) + 1, so lower/upper must match that -- the old extra
-  # bound (originally meant for logit_rho) is dropped.
-  fit <- nlminb(
-    start     = obj$par,
-    objective = obj$fn,
-    gradient  = obj$gr,
-    lower     = c(lower_bounds_beta, -12),  # bound log_tau
-    upper     = c(upper_bounds_beta,  6),
-    control   = list(iter.max = 5000, eval.max = 2000)
-  )
-  cat("Convergence:", fit$convergence, "\n")
-  cat("Message:", fit$message, "\n")
-  cat("Convergences:", obj$gr(fit$par), "\n")
-  
-  
-  # ── 11. Uncertainty ───────────────────────────────────────────────────────────
-  rep <- sdreport(obj, par.fixed = fit$par)
-  fixed = summary(rep, "fixed")    # beta, log_tau with SEs
-  #cat(fixed)
-  # full parameter vector: fixed + random modes
-  full_par <- obj$env$last.par.best
-  report_vals <- obj$report(full_par)
-  
-  
-  save(rep,file = paste0(output_path,"/",as.character(date),"_report.RData"))
-  save(report_vals,file = paste0(output_path,"/",as.character(date),"_report_vals.RData"))
-  
-  
+  if(run_if_exists | !file.exists(paste0(output_path,"/",as.character(date),"_report.RData"))){
+    
+    # ── 1. Clean recompile ────────────────────────────────────────────────────────
+    # NOTE: cpp_file must point at the FIXED cpp, i.e. the version whose data
+    # likelihood loop iterates over `obs_idx` only:
+    #     for (int k = 0; k < obs_idx.size(); k++) { int i = obs_idx(k); ... }
+    # instead of `for (int k = 0; k < N; k++)`. Otherwise NA rows (filled with
+    # y=0) are silently scored as observed failures, which corrupts both the
+    # fit and any downstream CV/IC comparison.
+    try(dyn.unload(dynlib(cpp_file)), silent = TRUE)
+    file.remove(paste0(cpp_file,".o"))
+    file.remove(paste0(cpp_file,".dll"))
+    
+    compile(paste0(cpp_file,".cpp"))
+    cpp_file_load = gsub("//.","",cpp_file)
+    dyn.load(dynlib(cpp_file_load))
+    cpp_obj = basename(cpp_file)
+    
+    # ── 2. Build AD objective ─────────────────────────────────────────────────────
+    obj <- MakeADFun(
+      data       = data_lst,
+      parameters = parameters,
+      random     = "phi",       # phi integrated out by Laplace for ALL N areas
+      DLL        = cpp_obj,
+      silent     = FALSE
+    )
+    
+    # Quick sanity check
+    cat("nll at start:", obj$fn(obj$par), "\n")
+    cat("Gradient finite:", all(is.finite(obj$gr(obj$par))), "\n")
+    
+    # ── 3. Optimise ──────────────────────────────────────────────────────────────
+    
+    
+    lower_bounds_beta = rep(-Inf, ncol(data_lst$X))
+    upper_bounds_beta = rep(Inf, ncol(data_lst$X))
+    
+    # FIX: parameters are now beta + log_tau only (rho is a fixed DATA_SCALAR,
+    # not estimated -- there is no logit_rho parameter any more). obj$par has
+    # length ncol(X) + 1, so lower/upper must match that -- the old extra
+    # bound (originally meant for logit_rho) is dropped.
+    fit <- nlminb(
+      start     = obj$par,
+      objective = obj$fn,
+      gradient  = obj$gr,
+      lower     = c(lower_bounds_beta, -12),  # bound log_tau
+      upper     = c(upper_bounds_beta,  6),
+      control   = list(iter.max = 5000, eval.max = 2000)
+    )
+    cat("Convergence:", fit$convergence, "\n")
+    cat("Message:", fit$message, "\n")
+    cat("Convergences:", obj$gr(fit$par), "\n")
+    
+    
+    # ── 11. Uncertainty ───────────────────────────────────────────────────────────
+    rep <- sdreport(obj, par.fixed = fit$par)
+    fixed = summary(rep, "fixed")    # beta, log_tau with SEs
+    #cat(fixed)
+    # full parameter vector: fixed + random modes
+    full_par <- obj$env$last.par.best
+    report_vals <- obj$report(full_par)
+    
+    
+    save(rep,file = paste0(output_path,"/",as.character(date),"_report.RData"))
+    save(report_vals,file = paste0(output_path,"/",as.character(date),"_report_vals.RData"))
+    
+    
+    # ── 12. Leave-one-region-out CV (optional) ────────────────────────────────
+    # Only regions in data_lst$obs_idx are ever held out -- missing areas were
+    # never in the likelihood and stay untouched. Reuses the DLL already
+    # loaded above, and warm-starts every fold from the full-data optimum
+    # `fit$par` to keep refitting fast.
+    if (do_loro_cv) {
+      
+      loro_df <- run_loro_cv(
+        data_lst         = data_lst,
+        parameters       = parameters,
+        cpp_obj          = cpp_obj,
+        warm_start_fixed = fit$par,
+        lower            = c(lower_bounds_beta, -12),
+        upper            = c(upper_bounds_beta,  6)
+      )
+      
+      #loro_ok <- loro_df[loro_df$converged, ]
+      loro_ok <- loro_df
+      
+      cv_summary <- list(
+        n_folds       = nrow(loro_df),
+        n_converged   = nrow(loro_ok),
+        elpd          = sum(loro_ok$log_score),
+        mean_log_score = mean(loro_ok$log_score),
+        brier         = mean((loro_ok$y_true - loro_ok$rr_pred)^2),
+        # baseline: leave-one-out prevalence, no covariates, no spatial term
+        baseline_elpd           = sum(loro_ok$baseline_log_score),
+        baseline_mean_log_score = mean(loro_ok$baseline_log_score),
+        baseline_brier          = mean((loro_ok$y_true - loro_ok$baseline_pred)^2)
+      )
+      # positive = model beats baseline; negative = model is worse than just
+      # knowing the prevalence
+      cv_summary$log_score_gain_vs_baseline <- cv_summary$mean_log_score - cv_summary$baseline_mean_log_score
+      # Brier skill score: 1 = perfect, 0 = no better than baseline, <0 = worse than baseline
+      cv_summary$brier_skill_score <- 1 - (cv_summary$brier / cv_summary$baseline_brier)
+      
+      if (requireNamespace("pROC", quietly = TRUE) &&
+          length(unique(loro_ok$y_true)) == 2) {
+        cv_summary$auc <- as.numeric(pROC::auc(
+          pROC::roc(loro_ok$y_true, loro_ok$rr_pred, quiet = TRUE)
+        ))
+      }
+      
+      cat("\nLORO-CV summary for", output_path, ":\n")
+      cat("  Converged folds:      ", cv_summary$n_converged, "/", cv_summary$n_folds, "\n")
+      cat("  ELPD (model):         ", cv_summary$elpd, "\n")
+      cat("  ELPD (baseline):      ", cv_summary$baseline_elpd, "\n")
+      cat("  Mean log score:       ", cv_summary$mean_log_score, "\n")
+      cat("  Baseline log score:   ", cv_summary$baseline_mean_log_score, "\n")
+      cat("  Log score gain:       ", cv_summary$log_score_gain_vs_baseline,
+          "  (>0 means model beats prevalence-only baseline)\n")
+      cat("  Brier (model):        ", cv_summary$brier, "\n")
+      cat("  Brier (baseline):     ", cv_summary$baseline_brier, "\n")
+      cat("  Brier skill score:    ", cv_summary$brier_skill_score,
+          "  (1=perfect, 0=no better than baseline, <0=worse)\n")
+      if (!is.null(cv_summary$auc)) cat("  AUC:                  ", cv_summary$auc, "\n")
+      
+      save(loro_df, cv_summary,
+           file = paste0(output_path,"/",as.character(date),"_loro_cv.RData"))
+    }
+    
+    
+  }else {
+    load(paste0(output_path,"/",as.character(date),"_report.RData"))
+    load(paste0(output_path,"/",as.character(date),"_report_vals.RData"))
+    fixed = summary(rep, "fixed") 
+    
+  }
+
   
   data$phi_w = rep$par.random
   data$phi_w_plogis = plogis(rep$par.random)
@@ -107,13 +156,56 @@ run_model_loro <- function(date,
   if(length(betas)>1){
     betas_minus_intercept = betas[2:length(betas)]
     X_minus_intercept = data_lst$X[, -1, drop = FALSE]
-    data$relative_risk = plogis(X_minus_intercept %*% as.vector(betas_minus_intercept) + data$phi_w)
+    data$risk = plogis(X_minus_intercept %*% as.vector(betas_minus_intercept) + data$phi_w)
   } else{
-    data$relative_risk = plogis(data$phi_w)
+    data$risk = plogis(data$phi_w)
   }
   
   
   data$p_w = plogis(betas+data$phi_w)
+  
+  
+  
+  compare_ipis = T
+  if (compare_ipis){
+    
+    if(date == "202405"){
+      ipis_map = read_sf("./data/IPIS_maps/2024/2024_05_may_M23_aoi_ipis.gpkg")
+    } else if (date =="202411"){
+      
+      ipis_map = read_sf("./data/IPIS_maps/2024/2024_11_nov_M23_aoi_ipis.gpkg")
+    } else {
+      ipis_map <- NULL
+    }
+    
+    if (!is.null(ipis_map)) {
+    
+    
+      ipis_map = st_transform(st_union(ipis_map),st_crs(data))
+      aoc = st_union(data[which(data$risk>mean(data$risk)),])
+      total_area = st_area(ipis_map)+st_area(aoc)
+      
+      
+      overlapping_area = sum(st_area(st_intersection(ipis_map, aoc)))
+      overlapping_percent = 2*overlapping_area / total_area
+      cat(output_path)
+      saveRDS(overlapping_percent,paste0(output_path,"/overlapping_area_",as.character(date),".rds"))
+      
+      p <- ggplot2::ggplot() +
+        geom_sf(
+          data = st_as_sf(data),
+          fill = NA,
+          color = "black",
+          linewidth = 0.2
+        ) +
+        geom_sf(data = st_as_sf(aoc), fill = "blue", alpha = 0.5) +
+        geom_sf(data = st_as_sf(ipis_map), fill = "red", alpha = 0.5) +
+        theme_minimal() 
+      
+      ggsave(paste0(output_path,"/plots/",date,"_overlapping_area.png"),p)
+    }
+      
+  }
   
   
   # data_only_aoc= data[which(data$p_w>mean(data$p_w)),]
@@ -131,87 +223,31 @@ run_model_loro <- function(date,
   # data[data$p_mean > mean(data$p_mean),]$bol_area = 1
   
   tau = exp(fixed[,"Estimate"]["log_tau"])
-  
+  rho = plogis(fixed[,"Estimate"]["logit_rho"])
+  cat("rho: ",rho)
   
   library(ggplot2)
   p <- ggplot2::ggplot(data) +
     geom_sf(aes(fill =  phi_mean)) +
     scale_fill_viridis_c() +
     theme_minimal()  +
-    ggtitle(paste0("tau: ",tau,"; rho: ",data_lst$rho))
+    ggtitle(paste0("tau: ",tau,"; rho: ",rho))
   
   ggsave(paste0(output_path,"/plots/",date,"_phi.png"),p)
   
   
   p <- ggplot2::ggplot(data) +
-    geom_sf(aes(fill =  relative_risk )) +
+    geom_sf(aes(fill =  risk )) +
     scale_fill_viridis_c() +
     theme_minimal()  +
-    ggtitle(paste0("tau: ",tau,"; rho: ",data_lst$rho))
+    ggtitle(paste0("tau: ",tau,"; rho: ",rho))
   
   ggsave(paste0(output_path,"/plots/",date,"_relative_risk.png"),p)
   
   
-  # ── 12. Leave-one-region-out CV (optional) ────────────────────────────────
-  # Only regions in data_lst$obs_idx are ever held out -- missing areas were
-  # never in the likelihood and stay untouched. Reuses the DLL already
-  # loaded above, and warm-starts every fold from the full-data optimum
-  # `fit$par` to keep refitting fast.
-  if (do_loro_cv) {
-    
-    loro_df <- run_loro_cv(
-      data_lst         = data_lst,
-      parameters       = parameters,
-      cpp_obj          = cpp_obj,
-      warm_start_fixed = fit$par,
-      lower            = c(lower_bounds_beta, -12),
-      upper            = c(upper_bounds_beta,  6)
-    )
-    
-    #loro_ok <- loro_df[loro_df$converged, ]
-    loro_ok <- loro_df
-    
-    cv_summary <- list(
-      n_folds       = nrow(loro_df),
-      n_converged   = nrow(loro_ok),
-      elpd          = sum(loro_ok$log_score),
-      mean_log_score = mean(loro_ok$log_score),
-      brier         = mean((loro_ok$y_true - loro_ok$rr_pred)^2),
-      # baseline: leave-one-out prevalence, no covariates, no spatial term
-      baseline_elpd           = sum(loro_ok$baseline_log_score),
-      baseline_mean_log_score = mean(loro_ok$baseline_log_score),
-      baseline_brier          = mean((loro_ok$y_true - loro_ok$baseline_pred)^2)
-    )
-    # positive = model beats baseline; negative = model is worse than just
-    # knowing the prevalence
-    cv_summary$log_score_gain_vs_baseline <- cv_summary$mean_log_score - cv_summary$baseline_mean_log_score
-    # Brier skill score: 1 = perfect, 0 = no better than baseline, <0 = worse than baseline
-    cv_summary$brier_skill_score <- 1 - (cv_summary$brier / cv_summary$baseline_brier)
-    
-    if (requireNamespace("pROC", quietly = TRUE) &&
-        length(unique(loro_ok$y_true)) == 2) {
-      cv_summary$auc <- as.numeric(pROC::auc(
-        pROC::roc(loro_ok$y_true, loro_ok$rr_pred, quiet = TRUE)
-      ))
-    }
-    
-    cat("\nLORO-CV summary for", output_path, ":\n")
-    cat("  Converged folds:      ", cv_summary$n_converged, "/", cv_summary$n_folds, "\n")
-    cat("  ELPD (model):         ", cv_summary$elpd, "\n")
-    cat("  ELPD (baseline):      ", cv_summary$baseline_elpd, "\n")
-    cat("  Mean log score:       ", cv_summary$mean_log_score, "\n")
-    cat("  Baseline log score:   ", cv_summary$baseline_mean_log_score, "\n")
-    cat("  Log score gain:       ", cv_summary$log_score_gain_vs_baseline,
-        "  (>0 means model beats prevalence-only baseline)\n")
-    cat("  Brier (model):        ", cv_summary$brier, "\n")
-    cat("  Brier (baseline):     ", cv_summary$baseline_brier, "\n")
-    cat("  Brier skill score:    ", cv_summary$brier_skill_score,
-        "  (1=perfect, 0=no better than baseline, <0=worse)\n")
-    if (!is.null(cv_summary$auc)) cat("  AUC:                  ", cv_summary$auc, "\n")
-    
-    save(loro_df, cv_summary,
-         file = paste0(output_path,"/",as.character(date),"_loro_cv.RData"))
-  }
+
+  
+
   
 }
 
@@ -336,16 +372,20 @@ run_model_wrapper_loro <- function(data,
                               do_loro_cv = FALSE){
   
   
-  # ── 3. Build W over ALL areas (including NA areas) ───────────────────────────
-  W <- as.matrix(data_mat_w)
-  W <- (W + t(W)) / 2    # enforce symmetry
-  diag(W) <- 0           # no self-loops
-  W_sp <- as(W, "dgCMatrix")
+  # Keep W sparse from the beginning
+  W_sp <- as(data_mat_w, "dgCMatrix")
   
+  # Enforce symmetry without creating a dense matrix
+  W_sp <- (W_sp + t(W_sp)) / 2
   
-  # ── 4. Eigenvalues of Laplacian (D - W) ──────────────────────────────────────
-  D       <- Diagonal(x = rowSums(W))
-  L       <- D - W_sp
+  # Remove self-loops
+  diag(W_sp) <- 0
+  
+  # ── 4. Laplacian (D - W) ─────────────────────────────────────────────────────
+  
+  D <- Diagonal(x = rowSums(W_sp))
+  
+  L <- D - W_sp
   
   
   # load or calculate eigenvalues of W
@@ -357,7 +397,9 @@ run_model_wrapper_loro <- function(data,
     
   } else {
     
-    eig_DmW <- eigen(as.matrix(L), symmetric = TRUE, only.values = TRUE)$values
+    eig_DmW <- eigen(L, symmetric = TRUE, only.values = TRUE)$values
+    
+    #eig_DmW <- eigen(as.matrix(L), symmetric = TRUE, only.values = TRUE)$values
     save(eig_DmW,file = path_of_eigenvalue)
     
   }
@@ -404,7 +446,7 @@ run_model_wrapper_loro <- function(data,
   y_filled <- data$control_binom
   y_filled[is.na(y_filled)] <- 0  
   
-  weights_list = mat2listw(W,style ="W",zero.policy=TRUE)
+  weights_list = spdep::mat2listw(W_sp,style ="W",zero.policy=TRUE)
   moran_result <- spdep::moran.test(y_filled, weights_list, adjust = T)
   cat(moran_result[["estimate"]],"\n")
   
@@ -430,16 +472,17 @@ run_model_wrapper_loro <- function(data,
     beta_prior_sd        = 2.5,
     tau_prior_shape   = 0.5,
     tau_prior_scale     = 2,
-    #logit_rho_prior_mean = 10,
-    #logit_rho_prior_sd   = 1,
-    rho = model_rho
+    logit_rho_prior_mean = 0.5,
+    logit_rho_prior_sd   = 0.32
+    #rho = model_rho
   )
   
   
   parameters <- list(
     beta      = rep(0, ncol(X)),
     phi       = rep(0, N),
-    log_tau   = 0#,    # tau = 1
+    log_tau   = 0,    # tau = 1
+    logit_rho = 0
   )
   
   
@@ -447,9 +490,11 @@ run_model_wrapper_loro <- function(data,
   run_model_loro(date = date,
             data_lst, 
             parameters,
-            cpp_file = paste0("./05_model/leroux_with_priors_wo_constraint_alldata"),
+            cpp_file = paste0("./05_model/leroux_with_priors_wo_constraint_all_data_estimate_rho"),
             output_path = output_path,
-            do_loro_cv = do_loro_cv)
+            do_loro_cv = do_loro_cv,
+            run_if_exists = TRUE)
+  
   cat("model saved at", output_path)
   
   

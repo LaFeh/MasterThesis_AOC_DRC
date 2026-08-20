@@ -7,8 +7,7 @@ prepare_data_for_prediction <- function(frontline_data,
   # frontline data _control needs to be boolean - only 0 or 1
   
   tm = zoo::as.yearmon(as.Date(date_to_predict),format = "%Y%M")
-  data = frontline_data%>%
-    filter(time == tm)
+  data = frontline_data[which(frontline_data$time == tm),]
   stopifnot(nrow(data)==N)
   data = cbind(data,st_coordinates(st_centroid(data$geometry)))
   data = data[order(data$cell_id),]
@@ -106,6 +105,7 @@ prepare_adj_matrix_for_prediction <- function(frontline_data,
   
   if (is.null(date)){
     date <- paste0(unique(frontline_data$year_mnth)[1], "01")
+    tm <- zoo::as.yearmon(as.Date(date, format = "%Y%m%d"), format = "%Y%M")
   } else if (class(date)!="yearmon"){
     tm <- zoo::as.yearmon(as.Date(date, format = "%Y%m%d"), format = "%Y%M")
   }else{
@@ -113,7 +113,8 @@ prepare_adj_matrix_for_prediction <- function(frontline_data,
   }
   
 
-  data <- frontline_data %>% filter(time == tm)
+  data <- frontline_data[which(frontline_data$time ==tm),]
+  rm(frontline_data)
   stopifnot(nrow(data) == N)
   
   data <- cbind(data, st_coordinates(st_centroid(data$geometry)))
@@ -164,10 +165,11 @@ prepare_adj_matrix_for_prediction <- function(frontline_data,
       weights_neightbours_decay[[id_n_set]] <- w
       
     }
-    
+    cat("all weights have been calculated")
     data_adj_nb <- nb2listw(data_adj, zero.policy = TRUE)
     data_adj_nb$weights <- weights_neightbours_decay
-    data_mat_w_decay <- listw2mat(data_adj_nb)
+    #data_mat_w_decay <- listw2mat(data_adj_nb)
+    data_mat_w_decay <- sphet::listw2dgCMatrix(data_adj_nb, zero.policy = TRUE)
 
   } else { # if second degree neighbours
     
@@ -237,6 +239,7 @@ prepare_adj_matrix_for_prediction <- function(frontline_data,
       weights_all_neightbours[[start_point]] = weights
      
     }
+    cat("all weights have been calculated")
     
     data_adj_nb <- nb2listw(data_adj_all$neighbours, zero.policy = TRUE)
     data_adj_nb$weights <- weights_all_neightbours
@@ -244,6 +247,8 @@ prepare_adj_matrix_for_prediction <- function(frontline_data,
     
   }
   
+  
+  cat("All weights have been added to the matrix")
   # file naming ##########
   if(bol_second_degree_neighbours){
     degree = "second"

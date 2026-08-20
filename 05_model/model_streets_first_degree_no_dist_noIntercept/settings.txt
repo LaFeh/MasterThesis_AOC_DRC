@@ -1,14 +1,9 @@
-c(`Moran I statistic standard deviate` = 16.7302766639715)
-3.94355393853838e-63
-c(`Moran I statistic` = 0.11484179441971, Expectation = -0.000122835032551284, Variance = 0.0000472195932850488)
+c(`Moran I statistic standard deviate` = 15.983055056274)
+8.38602260728275e-58
+c(`Moran I statistic` = 0.109939327996297, Expectation = -0.000122835032551284, Variance = 0.000047419448246936)
 greater
 Moran I test under randomisation
 y_filled  
 weights: weights_list  
 n reduced by no-neighbour observations  
 
-
-
-
-
-list(name = "streets_first_degree_no_dist", grid = list(add_streets = TRUE, add_nationalparks = TRUE, add_waterways = TRUE, cell_size = 5000), model = list(dates_to_run = "202405", degree_of_neighbour = "first", bol_distance = FALSE, bol_border = FALSE, covariates_title = "NoIntercept", rho = 0.6))

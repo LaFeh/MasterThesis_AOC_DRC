@@ -1,0 +1,5 @@
+
+
+
+
+list(name = "streets_first_degree_dist_cov_total_lag_lead_events_fatalities", grid = list(add_streets = FALSE, add_nationalparks = TRUE, add_waterways = TRUE, cell_size = 3000), model = list(dates_to_run = "202411", degree_of_neighbour = "second", bol_distance = TRUE, bol_border = FALSE, covariates_title = "total_lag_lead_events_fatalities", rho = 0.6))

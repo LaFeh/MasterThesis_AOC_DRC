@@ -2,7 +2,7 @@ setwd("~/MasterThesis_AOC_DRC")
 library(here)
 getwd()
 
-do_preparational_calculations = F
+do_preparational_calculations = T
 
 # settings for grid
 
@@ -10,7 +10,7 @@ add_streets = F
 add_nationalparks =T
 add_waterways = T
 
-cell_size     <- 5000
+cell_size     <- 3000
 
 source("./00b_helper_create_grid_name.R")
 name_of_grid = create_grid_name(add_waterways = add_waterways,
@@ -28,10 +28,11 @@ name_of_grid = create_grid_name(add_waterways = add_waterways,
 
 if(do_preparational_calculations){
   
-  source("./00_01_create_base_provinces.R")
-  source("./00_02_travelspeed_remove_streams.R")
+  #source("./00_01_create_base_provinces.R")
+  #source("./00_02_travelspeed_remove_streams.R")
   if(add_streets){
     source("./00_03_prepare_street_data.R")
+    create_street_splitted(target_length = cell_size)
   }
   
 }
@@ -43,7 +44,7 @@ if(do_preparational_calculations){
 rm(list = setdiff(ls(), c("name_of_grid",
                           "add_nationalparks",
                           "add_waterways",
-                          "add_streets")))
+                          "add_streets","cell_size")))
 
 
 gc()
