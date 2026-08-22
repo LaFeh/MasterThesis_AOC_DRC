@@ -42,9 +42,9 @@ for(date in all_dates){
 
 
 
-date = "20241101"
-time = zoo::as.yearmon(as.Date(date,format ="%Y%m%d"))
-frontline_data = frontline_data[which(frontline_data$time == time),]
+# date = "20241101"
+# time = zoo::as.yearmon(as.Date(date,format ="%Y%m%d"))
+# frontline_data = frontline_data[which(frontline_data$time == time),]
 gc()
 # needs to be done only once because grid stays the same for the whole time span
 prepare_adj_matrix_for_prediction(frontline_data,N,

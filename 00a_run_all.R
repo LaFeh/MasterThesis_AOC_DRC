@@ -61,6 +61,10 @@ source("./01b_prepare_travelspeed.R")
 rm(list = setdiff(ls(), "name_of_grid"))
 gc()
 
+source("./01c_prepare_distance_to_rwa.R")
+rm(list = setdiff(ls(), "name_of_grid"))
+gc()
+
 source("./01e_prepare_acled.R")
 rm(list = setdiff(ls(), "name_of_grid"))
 gc()

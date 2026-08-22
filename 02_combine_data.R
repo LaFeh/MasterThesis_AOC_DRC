@@ -36,9 +36,9 @@ acled_territory_mnth$year_mnth = as.numeric(acled_territory_mnth$year_mnth)
 acled_conflict_mnth$year_mnth = as.numeric(acled_conflict_mnth$year_mnth)
 
 # rwa distance ###########################
-# dist_rwa = data.table::fread("./data/distance_rwanda.csv")
-# grid = left_join(grid,dist_rwa, by="cell_id")
-# 
+dist_rwa = data.table::fread("./data/distance_rwanda.csv")
+grid = left_join(grid,dist_rwa, by="cell_id")
+
 
 
 # 1st. create data per month year ####################################################
