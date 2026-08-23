@@ -28,8 +28,8 @@ name_of_grid = create_grid_name(add_waterways = add_waterways,
 
 if(do_preparational_calculations){
   
-  #source("./00_01_create_base_provinces.R")
-  #source("./00_02_travelspeed_remove_streams.R")
+  source("./00_01_create_base_provinces.R")
+  source("./00_02_travelspeed_remove_streams.R")
   if(add_streets){
     source("./00_03_prepare_street_data.R")
     create_street_splitted(target_length = cell_size)
@@ -52,9 +52,9 @@ source("./01_create_data.R")
 rm(list = setdiff(ls(), "name_of_grid"))
 gc()
 
-source("./01a_prepare_settlements.R")
-rm(list = setdiff(ls(), "name_of_grid"))
-gc()
+# source("./01a_prepare_settlements.R")
+# rm(list = setdiff(ls(), "name_of_grid"))
+# gc()
 
 
 source("./01b_prepare_travelspeed.R")

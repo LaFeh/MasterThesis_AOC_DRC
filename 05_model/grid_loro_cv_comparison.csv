@@ -1,2 +1,0 @@
-"model_name","n_folds","n_converged","elpd","mean_log_score","brier","auc","baseline_elpd","baseline_mean_log_score","baseline_brier","log_score_gain_vs_baseline","brier_skill_score"
-"streets_first_degree_no_dist_noIntercept",153,153,-38.0820405027378,-0.24890222550809,0.057804679225356,NA,-92.8086108424236,-0.606592227728259,0.207583102493075,0.357690002220169,0.721534756292196

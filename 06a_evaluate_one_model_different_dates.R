@@ -194,73 +194,6 @@ for (date in dates) {
     )
   }
   
-  
-  # ----------------------------------------------------------
-  # LORO-CV summary
-  # ----------------------------------------------------------
-  
-  RUN_LORO_CV <- F
-  
-  
-  if (RUN_LORO_CV) {
-    
-    cv_file <- paste0(
-      model_dir,
-      "/",
-      as.character("202405"),
-      "_loro_cv.RData"
-    )
-    
-    
-    if (file.exists(cv_file)) {
-      
-      load(cv_file)
-      
-      
-      grid_cv_summary[[model_dir]] <- data.frame(
-        model_name = model_dir,
-        n_folds = cv_summary$n_folds,
-        n_converged = cv_summary$n_converged,
-        elpd = cv_summary$elpd,
-        mean_log_score = cv_summary$mean_log_score,
-        brier = cv_summary$brier,
-        auc = ifelse(
-          is.null(cv_summary$auc),
-          NA,
-          cv_summary$auc
-        )
-      )
-      
-      
-      grid.text(
-        paste(
-          capture.output(
-            print(
-              grid_cv_summary[[model_dir]]
-            )
-          ),
-          collapse = "\n"
-        ),
-        x = 0.5,
-        y = 0.2,
-        just = "center",
-        gp = gpar(
-          fontfamily = "mono",
-          fontsize = 5
-        )
-      )
-      
-      
-    } else {
-      
-      warning(
-        paste(
-          "No LORO-CV file found for",
-          model_dir
-        )
-      )
-    }
-  }
 }
 
 
@@ -275,95 +208,16 @@ dev.off()
 # Read CV summaries and overlapping area
 # ============================================================
 
-grid_cv_summary <- list()
-
+rho_list = c()
 
 for (date in dates) {
   
-  # ----------------------------------------------------------
-  # LORO-CV
-  # ----------------------------------------------------------
-  
-  cv_file <- paste0(
-    model_dir,
-    "/",
-    as.character(date),
-    "_loro_cv.RData"
-  )
-  
-  
-  if (file.exists(cv_file)) {
-    
-    print(model_dir)
-    
-    load(cv_file)
-    
-    
-    grid_cv_summary[[model_dir]] <- data.frame(
-      model_name = model_dir,
-      n_folds = cv_summary$n_folds,
-      n_converged = cv_summary$n_converged,
-      elpd = cv_summary$elpd,
-      mean_log_score = cv_summary$mean_log_score,
-      brier = cv_summary$brier,
-      auc = ifelse(
-        is.null(cv_summary$auc),
-        NA,
-        cv_summary$auc
-      )
-    )
-  }
-  
-  
-  # ----------------------------------------------------------
-  # Overlapping area
-  # ----------------------------------------------------------
-  
-  area_file <- paste0(
-    model_dir,
-    "/overlapping_area_",
-    as.character("202405"),
-    ".rds"
-  )
-  
-  
-  if (file.exists(area_file)) {
-    
-    print(model_dir)
-    
-    area <- readRDS(area_file)
-    
-    
-    # Only add overlapping_area if this model
-    # already has a CV summary
-    if (!is.null(grid_cv_summary[[model_dir]])) {
-      
-      grid_cv_summary[[model_dir]]$overlapping_area <-
-        as.numeric(area)
-    }
-  }
+  load(paste0(model_dir,"/",date,"_report.RData"))
+  fixed = summary(rep, "fixed")    
+  rho = plogis(fixed[,"Estimate"]["logit_rho"])
+  rho_list = c(rho_list,rho)
 }
 
-
-# ============================================================
-# Combine summaries
-# ============================================================
-
-grid_cv_summary_df <- dplyr::bind_rows(
-  grid_cv_summary
-)
-
-
-# ============================================================
-# Save Excel summary
-# ============================================================
-
-openxlsx::write.xlsx(
-  grid_cv_summary_df,
-  paste0(
-    model_dir,"/",
-    "model_summary_all_dates.xlsx"
-  )
-)
-
-
+save(rho_list, paste0(model_dir,"/rho_list.RData"))
+mean_rho = mean(rho_list)
+save(mean_rho, paste0(model_dir,"/mean_rho.RData"))

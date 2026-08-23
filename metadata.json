@@ -1,0 +1,506 @@
+{
+  "feature_count": 658446,
+  "geometry_types": {
+    "LINESTRING": 657284,
+    "POINT": 922,
+    "POLYGON": 240
+  },
+  "bbox": [
+    12.205749,
+    -13.4669493,
+    31.2833574,
+    5.3483299
+  ],
+  "columns": [
+    {
+      "name": "id",
+      "type": "VARCHAR",
+      "null_count": 0,
+      "null_percent": 0.0,
+      "distinct_count": 658446,
+      "top_values": []
+    },
+    {
+      "name": "name",
+      "type": "VARCHAR",
+      "null_count": 641346,
+      "null_percent": 97.4,
+      "distinct_count": 8852,
+      "top_values": []
+    },
+    {
+      "name": "name_en",
+      "type": "VARCHAR",
+      "null_count": 658440,
+      "null_percent": 100.0,
+      "distinct_count": 6,
+      "top_values": [
+        {
+          "value": "Poko Road",
+          "count": 1
+        },
+        {
+          "value": "Ruzizi International Bridge",
+          "count": 1
+        },
+        {
+          "value": "Karisimbi Summit Path",
+          "count": 1
+        },
+        {
+          "value": "Mubimbi bridge",
+          "count": 1
+        },
+        {
+          "value": "Ruzizi I Bridge",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "name_fr",
+      "type": "VARCHAR",
+      "null_count": 658425,
+      "null_percent": 100.0,
+      "distinct_count": 16,
+      "top_values": [
+        {
+          "value": "Avenue de la Corniche",
+          "count": 3
+        },
+        {
+          "value": "Avenue du 20 Mai",
+          "count": 3
+        },
+        {
+          "value": "Avenue Bitini",
+          "count": 2
+        },
+        {
+          "value": "Rue du Lac Moero",
+          "count": 1
+        },
+        {
+          "value": "Arr\u00eat Ferme B\u00e9liar",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "highway",
+      "type": "VARCHAR",
+      "null_count": 0,
+      "null_percent": 0.0,
+      "distinct_count": 42,
+      "top_values": [
+        {
+          "value": "residential",
+          "count": 232331
+        },
+        {
+          "value": "path",
+          "count": 155578
+        },
+        {
+          "value": "track",
+          "count": 119801
+        },
+        {
+          "value": "unclassified",
+          "count": 98118
+        },
+        {
+          "value": "service",
+          "count": 19271
+        }
+      ]
+    },
+    {
+      "name": "surface",
+      "type": "VARCHAR",
+      "null_count": 444817,
+      "null_percent": 67.56,
+      "distinct_count": 45,
+      "top_values": [
+        {
+          "value": "unpaved",
+          "count": 183681
+        },
+        {
+          "value": "dirt",
+          "count": 18236
+        },
+        {
+          "value": "compacted",
+          "count": 3265
+        },
+        {
+          "value": "ground",
+          "count": 3119
+        },
+        {
+          "value": "asphalt",
+          "count": 2386
+        }
+      ]
+    },
+    {
+      "name": "smoothness",
+      "type": "VARCHAR",
+      "null_count": 657328,
+      "null_percent": 99.83,
+      "distinct_count": 8,
+      "top_values": [
+        {
+          "value": "intermediate",
+          "count": 302
+        },
+        {
+          "value": "horrible",
+          "count": 242
+        },
+        {
+          "value": "bad",
+          "count": 231
+        },
+        {
+          "value": "very_bad",
+          "count": 147
+        },
+        {
+          "value": "good",
+          "count": 113
+        }
+      ]
+    },
+    {
+      "name": "width",
+      "type": "VARCHAR",
+      "null_count": 656430,
+      "null_percent": 99.69,
+      "distinct_count": 24,
+      "top_values": [
+        {
+          "value": "1",
+          "count": 1821
+        },
+        {
+          "value": "2",
+          "count": 67
+        },
+        {
+          "value": "3",
+          "count": 28
+        },
+        {
+          "value": "4",
+          "count": 16
+        },
+        {
+          "value": "10",
+          "count": 14
+        }
+      ]
+    },
+    {
+      "name": "lanes",
+      "type": "VARCHAR",
+      "null_count": 657395,
+      "null_percent": 99.84,
+      "distinct_count": 6,
+      "top_values": [
+        {
+          "value": "2",
+          "count": 662
+        },
+        {
+          "value": "1",
+          "count": 266
+        },
+        {
+          "value": "4",
+          "count": 74
+        },
+        {
+          "value": "3",
+          "count": 44
+        },
+        {
+          "value": "0",
+          "count": 3
+        }
+      ]
+    },
+    {
+      "name": "oneway",
+      "type": "VARCHAR",
+      "null_count": 654983,
+      "null_percent": 99.47,
+      "distinct_count": 3,
+      "top_values": [
+        {
+          "value": "yes",
+          "count": 2968
+        },
+        {
+          "value": "no",
+          "count": 493
+        },
+        {
+          "value": "reversible",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "name": "bridge",
+      "type": "VARCHAR",
+      "null_count": 651550,
+      "null_percent": 98.95,
+      "distinct_count": 7,
+      "top_values": [
+        {
+          "value": "yes",
+          "count": 6868
+        },
+        {
+          "value": "low_water_crossing",
+          "count": 22
+        },
+        {
+          "value": "abandoned",
+          "count": 2
+        },
+        {
+          "value": "boardwalk",
+          "count": 1
+        },
+        {
+          "value": "aqueduct",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "layer",
+      "type": "VARCHAR",
+      "null_count": 651339,
+      "null_percent": 98.92,
+      "distinct_count": 5,
+      "top_values": [
+        {
+          "value": "1",
+          "count": 6948
+        },
+        {
+          "value": "-1",
+          "count": 130
+        },
+        {
+          "value": "2",
+          "count": 23
+        },
+        {
+          "value": "3",
+          "count": 4
+        },
+        {
+          "value": "-2",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "name": "source",
+      "type": "VARCHAR",
+      "null_count": 658446,
+      "null_percent": 100.0,
+      "distinct_count": 0,
+      "top_values": []
+    },
+    {
+      "name": "adm0_pcode",
+      "type": "VARCHAR",
+      "null_count": 0,
+      "null_percent": 0.0,
+      "distinct_count": 1,
+      "top_values": [
+        {
+          "value": "COD",
+          "count": 658446
+        }
+      ]
+    },
+    {
+      "name": "adm0_name",
+      "type": "VARCHAR",
+      "null_count": 0,
+      "null_percent": 0.0,
+      "distinct_count": 1,
+      "top_values": [
+        {
+          "value": "Democratic Republic of the Congo",
+          "count": 658446
+        }
+      ]
+    },
+    {
+      "name": "adm1_pcode",
+      "type": "VARCHAR",
+      "null_count": 79,
+      "null_percent": 0.01,
+      "distinct_count": 26,
+      "top_values": [
+        {
+          "value": "CD54",
+          "count": 133930
+        },
+        {
+          "value": "CD61",
+          "count": 106068
+        },
+        {
+          "value": "CD62",
+          "count": 68463
+        },
+        {
+          "value": "CD10",
+          "count": 45507
+        },
+        {
+          "value": "CD32",
+          "count": 45119
+        }
+      ]
+    },
+    {
+      "name": "adm1_name",
+      "type": "VARCHAR",
+      "null_count": 79,
+      "null_percent": 0.01,
+      "distinct_count": 26,
+      "top_values": [
+        {
+          "value": "Ituri",
+          "count": 133930
+        },
+        {
+          "value": "Nord-Kivu",
+          "count": 106068
+        },
+        {
+          "value": "Sud-Kivu",
+          "count": 68463
+        },
+        {
+          "value": "Kinshasa",
+          "count": 45507
+        },
+        {
+          "value": "Kwilu",
+          "count": 45119
+        }
+      ]
+    },
+    {
+      "name": "adm2_pcode",
+      "type": "VARCHAR",
+      "null_count": 79,
+      "null_percent": 0.01,
+      "distinct_count": 187,
+      "top_values": [
+        {
+          "value": "CD5409",
+          "count": 76867
+        },
+        {
+          "value": "CD1000",
+          "count": 45507
+        },
+        {
+          "value": "CD6105",
+          "count": 26289
+        },
+        {
+          "value": "CD6107",
+          "count": 22877
+        },
+        {
+          "value": "CD5407",
+          "count": 21286
+        }
+      ]
+    },
+    {
+      "name": "adm2_name",
+      "type": "VARCHAR",
+      "null_count": 79,
+      "null_percent": 0.01,
+      "distinct_count": 187,
+      "top_values": [
+        {
+          "value": "Aru",
+          "count": 76867
+        },
+        {
+          "value": "Kinshasa",
+          "count": 45507
+        },
+        {
+          "value": "Lubero",
+          "count": 26289
+        },
+        {
+          "value": "O\u00efcha",
+          "count": 22877
+        },
+        {
+          "value": "Mahagi",
+          "count": 21286
+        }
+      ]
+    },
+    {
+      "name": "adm3_pcode",
+      "type": "VARCHAR",
+      "null_count": 658446,
+      "null_percent": 100.0,
+      "distinct_count": 0,
+      "top_values": []
+    },
+    {
+      "name": "adm3_name",
+      "type": "VARCHAR",
+      "null_count": 658446,
+      "null_percent": 100.0,
+      "distinct_count": 0,
+      "top_values": []
+    },
+    {
+      "name": "adm4_pcode",
+      "type": "VARCHAR",
+      "null_count": 658446,
+      "null_percent": 100.0,
+      "distinct_count": 0,
+      "top_values": []
+    },
+    {
+      "name": "adm4_name",
+      "type": "VARCHAR",
+      "null_count": 658446,
+      "null_percent": 100.0,
+      "distinct_count": 0,
+      "top_values": []
+    },
+    {
+      "name": "name_latin",
+      "type": "VARCHAR",
+      "null_count": 641346,
+      "null_percent": 97.4,
+      "distinct_count": 8805,
+      "top_values": []
+    }
+  ],
+  "summary": "658,446 features. geometry types: 657,284 LINESTRING, 922 POINT, 240 POLYGON. 16 of 24 columns are >=50% null (name, name_en, name_fr, surface, smoothness, width, lanes, oneway, bridge, layer, source, adm3_pcode, adm3_name, adm4_pcode, adm4_name, name_latin).",
+  "temporal": null
+}

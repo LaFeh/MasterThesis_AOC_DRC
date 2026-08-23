@@ -1,5 +1,0 @@
-
-
-
-
-list(name = "streets_scnd_degree_dist", grid = list(add_streets = TRUE, add_nationalparks = TRUE, add_waterways = TRUE, cell_size = 3000), model = list(dates_to_run = "202411", degree_of_neighbour = "second", bol_distance = TRUE, bol_border = FALSE, covariates_title = "Intercept", rho = 0.6))

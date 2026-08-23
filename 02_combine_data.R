@@ -14,13 +14,13 @@ acled_conflict_mnth = st_transform(acled_conflict_mnth,st_crs(acled_territory_mn
 
 
 ##### settlements ########################
-grid_settlements = data.table::fread("./data/grid_settlements.csv")
-grid_settlements = grid_settlements[,c("cell_id","building_count","building_area")]
-
-grid = left_join(grid,grid_settlements,by ="cell_id")
-grid[which(is.na(grid$building_count)),]$building_count = 0
-grid[which(is.na(grid$building_area)),]$building_area = 0
-rm(grid_settlements)
+# grid_settlements = data.table::fread("./data/grid_settlements.csv")
+# grid_settlements = grid_settlements[,c("cell_id","building_count","building_area")]
+# 
+# grid = left_join(grid,grid_settlements,by ="cell_id")
+# grid[which(is.na(grid$building_count)),]$building_count = 0
+# grid[which(is.na(grid$building_area)),]$building_area = 0
+# rm(grid_settlements)
 
 #### mix time walk time ########################
 grid_mix_time = data.table::fread("./data/grid_mix_time.csv",sep =",")

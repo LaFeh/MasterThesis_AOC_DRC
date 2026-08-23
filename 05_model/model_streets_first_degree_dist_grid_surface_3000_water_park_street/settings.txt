@@ -1,9 +1,0 @@
-c(`Moran I statistic standard deviate` = 9.3081182213172)
-6.50585592521977e-21
-c(`Moran I statistic` = 0.0637918507761597, Expectation = -0.000060306356289953, Variance = 0.0000470573391363834)
-greater
-Moran I test under randomisation
-y_filled  
-weights: weights_list  
-n reduced by no-neighbour observations  
-
