@@ -2,11 +2,11 @@ setwd("~/MasterThesis_AOC_DRC")
 library(here)
 getwd()
 
-do_preparational_calculations = T
+do_preparational_calculations = F
 
 # settings for grid
 
-add_streets = F
+add_streets = T
 add_nationalparks =T
 add_waterways = T
 

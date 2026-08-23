@@ -11,8 +11,8 @@ source("./05_model/05a_a_helper_run_model.R")
 source("./05_model/05a_b_helper_parameter_grid.R")
 source("./04b_a_helper_functions.R")
 
-max_width = 8
-model_name = "streets_first_degree_no_dist_grid_surface_3000_water_park_street_estimate_rho"
+max_width = 4
+model_name = "streets_first_degree_no_dist_noIntercept_grid_surface_3000_water_park_street_estimate_rho"
 
 yrs =2022:2025
 mnths = c(paste0("0",1:9),10:12)

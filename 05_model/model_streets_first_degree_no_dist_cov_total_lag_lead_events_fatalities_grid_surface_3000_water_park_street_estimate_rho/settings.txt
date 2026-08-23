@@ -1,6 +1,6 @@
-c(`Moran I statistic standard deviate` = 20.2412237010939)
-2.12248828027367e-91
-c(`Moran I statistic` = 0.0450841203401441, Expectation = -0.000060306356289953, Variance = 0.0000049743318534355)
+c(`Moran I statistic standard deviate` = 17.6939240050835)
+2.33533257913293e-70
+c(`Moran I statistic` = 0.0976781178043665, Expectation = -0.0000938174312787316, Variance = 0.0000305337473360794)
 greater
 Moran I test under randomisation
 y_filled  

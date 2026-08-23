@@ -4,6 +4,7 @@ setwd(here::here())
 
 library(sf)
 library(dplyr)
+library(terra)
 
 # ============================================================
 # 1. LOAD AND PROJECT STUDY AREA

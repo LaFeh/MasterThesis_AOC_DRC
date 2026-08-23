@@ -11,7 +11,7 @@ source("./05_model/05a_a_helper_run_model.R")
 source("./05_model/05a_b_helper_parameter_grid.R")
 source("./04b_a_helper_functions.R")
 
-max_width = 8
+max_width = 4
 
 # ============================================================
 # Prepare data
@@ -31,19 +31,19 @@ model_dirs <- paste0(
   gsub(".shp", "", gridname)
 )
 
-
-gridname2 <- create_grid_name(
-  add_streets = F,
-  add_nationalparks = T,
-  add_waterways = T,
-  cell_size = 3000
-)
-
+# 
+# gridname2 <- create_grid_name(
+#   add_streets = F,
+#   add_nationalparks = T,
+#   add_waterways = T,
+#   cell_size = 3000
+# )
+# 
 model_dirs2 <- paste0(
   "~/MasterThesis_AOC_DRC/05_model/model_",
   names(parameter_grid),
   "_",
-  gsub(".shp", "", gridname2)
+  gsub(".shp", "", gridname),"_estimate_rho"
 )
 
 
@@ -121,7 +121,7 @@ pdf(
   paste0(
     date,
     "_model_comparison_",
-    gridname,
+    gsub(".shp", "", gridname),
     ".pdf"
   ),
   width = 8.5,
@@ -147,7 +147,7 @@ for (model_dir in model_dirs) {
     x = 0.5,
     y = 0.97,
     gp = gpar(
-      fontsize = 18,
+      fontsize = 11,
       fontface = "bold"
     )
   )

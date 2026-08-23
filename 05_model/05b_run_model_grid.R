@@ -16,19 +16,18 @@ grid_add_waterways = T
 grid_cell_size = 3000
 
 
-parameter_grid = parameter_grid["streets_first_degree_no_dist_noIntercept"]
-
-
-
-date_combinations = cross_join(as_tibble(2022:2025),as_tibble(c(paste0("0",1:9),as.character(10:12))))
-date_combinations$date = paste0(date_combinations$value.x,date_combinations$value.y)
-parameter_grid[["streets_first_degree_no_dist_noIntercept"]][["model"]][["dates_to_run"]] = date_combinations$date
+# parameter_grid = parameter_grid["streets_first_degree_no_dist_noIntercept"]
 # 
+# 
+# 
+# date_combinations = cross_join(as_tibble(2022:2025),as_tibble(c(paste0("0",1:9),as.character(10:12))))
+# date_combinations$date = paste0(date_combinations$value.x,date_combinations$value.y)
+# parameter_grid[["streets_first_degree_no_dist_noIntercept"]][["model"]][["dates_to_run"]] = date_combinations$date
+# # 
 
 for (model_name in names(parameter_grid)){
   
-  
-  
+
   print(model_name)
   
   name_parameter_grid = model_name

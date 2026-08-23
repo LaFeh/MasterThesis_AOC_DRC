@@ -157,12 +157,14 @@ run_model_loro <- function(date,
     betas_minus_intercept = betas[2:length(betas)]
     X_minus_intercept = data_lst$X[, -1, drop = FALSE]
     data$risk = plogis(X_minus_intercept %*% as.vector(betas_minus_intercept) + data$phi_w)
+    data$p_w = plogis(betas+data$phi_w)
   } else{
     data$risk = plogis(data$phi_w)
+    data$p_w = data$risk
   }
   
   
-  data$p_w = plogis(betas+data$phi_w)
+
   
   
   
@@ -387,22 +389,33 @@ run_model_wrapper_loro <- function(data,
   
   L <- D - W_sp
   
+
   
+  N <- nrow(data)
   # load or calculate eigenvalues of W
   
   
   if (file.exists(path_of_eigenvalue)){
     
     load(file =  path_of_eigenvalue)
+
     
-  } else {
+  } 
+  
+  if (!file.exists(path_of_eigenvalue)) {
     
     eig_DmW <- eigen(L, symmetric = TRUE, only.values = TRUE)$values
-    
-    #eig_DmW <- eigen(as.matrix(L), symmetric = TRUE, only.values = TRUE)$values
     save(eig_DmW,file = path_of_eigenvalue)
     
+  } else if(length(eig_DmW)   != N){
+    
+    eig_DmW <- eigen(L, symmetric = TRUE, only.values = TRUE)$values
+    save(eig_DmW,file = path_of_eigenvalue)
+    
+    
   }
+  
+  stopifnot(length(eig_DmW)   == N)
   
   cat("Min eigenvalue of (D-W):", min(eig_DmW), "\n")  # expect >= 0 (or tiny negative)
   cat("Negative eigenvalues (> -1e-8 is fine):", sum(eig_DmW < -1e-8), "\n")
@@ -421,16 +434,11 @@ run_model_wrapper_loro <- function(data,
   
   
   
+
   
-  
-  N <- nrow(data)
-  
-  if(is.null(model_covariates)){
-    X <- matrix(0,nrow = nrow(data) ) 
+  X <- model.matrix(model_covariates, data) 
     
-  }else{
-    X <- model.matrix(model_covariates, data) 
-  }
+
   # intercept only -- replace with your formula
   
   lower_bounds_beta = rep(-Inf, ncol(X))
@@ -439,7 +447,7 @@ run_model_wrapper_loro <- function(data,
   stopifnot(nrow(X) == N)
   stopifnot(nrow(W_sp) == N)
   stopifnot(ncol(W_sp) == N)
-  stopifnot(length(eig_DmW)   == N)
+
   
   # ── 6. Handle NAs in response ────────────────────────────────────────────────
   obs_idx  <- which(!is.na(data$control_binom)) - 1L   # 0-based for C++
