@@ -203,7 +203,7 @@ for (d in 1:nrow(date_combinations)){
   print(tm)
   
   
-  frnt_data_controle_num_all_previous_time = grid_cntrl_mnth%>%filter(year_mnth_date <= tm & name =="Nord-Kivu") %>%  
+  frnt_data_controle_num_all_previous_time = grid_cntrl_mnth%>%filter(year_mnth_date <= tm )# )%>% & name =="Nord-Kivu") %>%  
     group_by(geometry)%>%
     filter(!(is.na(controle_num) & any(!is.na(controle_num)))) %>%
     slice_max(year_mnth_date, n = 1, with_ties = FALSE) %>%
