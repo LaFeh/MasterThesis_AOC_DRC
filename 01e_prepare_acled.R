@@ -22,6 +22,31 @@ gdf <- gdf %>%
   ) %>%
   filter(actor1 == "M23: March 23 Movement" | actor2 == "M23: March 23 Movement")%>%rename(geometry = geom)
 
+gdf$id = 1:nrow(gdf)
+
+############################ remove unplausible data rows, given provinces does not correspond with coordinates:
+gdf$poor_quality = FALSE
+
+regions = st_read("./data/cod_admin_boundaries.shp",layer="cod_admin3")
+regions = st_transform(regions,st_crs(gdf))
+regions_for_join = regions%>%select(adm1_name,adm2_name,adm2_pcode,geometry)
+
+
+gdf_with_regions = st_join(gdf,regions_for_join,st_within)
+
+gdf_with_regions$admin2_location_check = ifelse(gdf_with_regions$admin2==gdf_with_regions$adm2_name,TRUE,FALSE)
+admin2_false = gdf_with_regions[!gdf_with_regions$admin2_location_check,c("id","notes","admin1","adm1_name","admin2","adm2_name")]
+admin2_false$distance = NA
+
+for( x in 1:nrow(admin2_false)){
+  region_bound = st_boundary(st_union(regions_for_join[regions_for_join$adm2_name == admin2_false[x,]$adm2_name,]))
+  admin2_false[x,"distance"] = st_distance(region_bound,admin2_false[x,]$geometry)
+}
+
+admin2_false$poor_quality = admin2_false$distance > grid_cell
+admin2_false = admin2_false[admin2_false$poor_quality,]
+
+gdf[which(gdf$id %in% admin2_false$id),]$poor_quality = TRUE
 
 # -----------------------------
 # TERRITORY EVENTS

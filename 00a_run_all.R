@@ -51,7 +51,7 @@ rm(list = setdiff(ls(), c("name_of_grid",
 
 gc()
 source("./01_create_data.R")
-rm(list = setdiff(ls(), "name_of_grid"))
+rm(list = setdiff(ls(), c("name_of_grid","cell_size")))
 gc()
 
 # source("./01a_prepare_settlements.R")
@@ -60,15 +60,15 @@ gc()
 
 
 source("./01b_prepare_travelspeed.R")
-rm(list = setdiff(ls(), "name_of_grid"))
+rm(list = setdiff(ls(),c("name_of_grid","cell_size")))
 gc()
 
 source("./01c_prepare_distance_to_rwa.R")
-rm(list = setdiff(ls(), "name_of_grid"))
+rm(list = setdiff(ls(), c("name_of_grid","cell_size")))
 gc()
 
 source("./01e_prepare_acled.R")
-rm(list = setdiff(ls(), "name_of_grid"))
+rm(list = setdiff(ls(), c("name_of_grid","cell_size")))
 gc()
 # source("./01f_prepare_rain.R")
 # rm(list = ls())

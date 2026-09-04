@@ -3,15 +3,15 @@
 
 library(dplyr)
 library(data.table)
-library(R.utils)
+#library(R.utils)
 library(sf)
 
-setwd("D:/DRC/gaussian_process_AOC")
+#setwd("D:/DRC/gaussian_process_AOC")
 
 regions = st_read("./data/cod_admin_boundaries.shp",layer="cod_admin3")
 
-gdf <- st_read("D:/DRC/01_prepare_acled_data/data/acled_event_data.gpkg")
-
+gdf <- st_read("./data/acled_event_data.gpkg")
+gdf$id = 1:nrow(gdf)
 regions = st_transform(regions,st_crs(gdf))
 
 ################################
@@ -42,11 +42,45 @@ sum(!gdf$admin3_note_check)
 
 regions_for_join = regions%>%select(adm1_name,adm2_name,adm2_pcode,geometry)
 
+
 gdf = st_join(gdf,regions_for_join,st_within)
 gdf$admin2_location_check = ifelse(gdf$admin2==gdf$adm2_name,TRUE,FALSE)
 gdf$admin1_location_check = ifelse(gdf$admin1==gdf$adm1_name,TRUE,FALSE)
 sum(!gdf$admin2_location_check)
 
+
+admin2_false = gdf[!gdf$admin2_location_check,c("id","notes","admin1","adm1_name","admin2","adm2_name")]
+admin1_false = gdf[!gdf$admin1_location_check,c("id","notes","admin1","adm1_name","admin2","adm2_name")]
+admin1_false$distance = NA
+admin2_false$distance = NA
+
+all_false = rbind(admin1_false,admin2_false)
+all_false$double = duplicated(all_false)
+
+for( x in 1:nrow(admin1_false)){
+  
+  region_bound = st_boundary(st_union(regions_for_join[regions_for_join$adm1_name == admin1_false[x,]$adm1_name,]))
+  st_crs(region_bound)
+  
+  admin1_false[x,"distance"] = st_distance(region_bound,admin1_false[x,]$geometry)
+}
+
+
+for( x in 1:nrow(admin2_false)){
+  
+  region_bound = st_boundary(st_union(regions_for_join[regions_for_join$adm2_name == admin2_false[x,]$adm2_name,]))
+
+  
+  admin2_false[x,"distance"] = st_distance(region_bound,admin2_false[x,]$geometry)
+}
+# all admin1 false are also admin 2 false.
+
+admin2_false$delete = admin2_false$distance < 3000
+
+
+reg_plot = regions_for_join%>%filter(adm1_name %in% c("Nord-Kivu","Ituri","Sud-Kivu"))
+plot(reg_plot[,"adm1_name"]$geometry)
+plot(admin2_false[,"delete"],add =T)
 
 # bukombo
 bukombo = gdf%>%filter(!admin1_location_check & admin1_note_check)
@@ -76,6 +110,11 @@ plot(nduma$geometry,add =T,col = "red")
 ## bukombo
 plot(bukombo$geometry,add =T,col = "green")
 plot(both_not_true$geometry,add =T,col = "purple")
+
+
+
+
+
 
 
 ##### double cities variance preprocessing
