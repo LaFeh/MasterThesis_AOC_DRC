@@ -1,12 +1,13 @@
+detach("package:here", unload = TRUE)
 setwd("~/MasterThesis_AOC_DRC")
 library(here)
-getwd()
+here::here()
 
 do_preparational_calculations = F
 
 # settings for grid
 
-add_streets = T
+add_streets = F
 add_nationalparks =T
 add_waterways = T
 
@@ -17,6 +18,7 @@ name_of_grid = create_grid_name(add_waterways = add_waterways,
                  add_nationalparks = add_nationalparks,
                  add_streets = add_streets,
                  cell_size = cell_size)
+
 
 # ============================================================
 # 1. IMPLEMENT SETTINGS

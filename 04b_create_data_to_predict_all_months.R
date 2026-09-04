@@ -37,7 +37,10 @@ N = length(unique(frontline_data$cell_id))
 
 for(date in all_dates){
   print(as.Date(date))
-  prepare_data_for_prediction(frontline_data,date,N,grid_file_name = name_of_grid_file_name)
+  prepare_data_for_prediction(frontline_data,
+                              date,
+                              N,
+                              grid_file_name = name_of_grid_file_name)
 }
 
 

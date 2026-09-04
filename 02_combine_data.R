@@ -25,7 +25,7 @@ acled_conflict_mnth = st_transform(acled_conflict_mnth,st_crs(acled_territory_mn
 #### mix time walk time ########################
 grid_mix_time = data.table::fread("./data/grid_mix_time.csv",sep =",")
 grid = left_join(grid,grid_mix_time,by ="cell_id")
-#plot(grid[which(is.na(grid$mix_time_mean)),])
+#plot(grid[which(is.na(grid$mix_time_mean)),"geometry"])
 grid = grid[-which(is.na(grid$mix_time_mean)),]
 rm(grid_mix_time)
 
@@ -68,9 +68,13 @@ aoc_per_cell = acled_territory_grid%>%
 aoc_per_cell = aoc_per_cell[,!colnames(aoc_per_cell) %in% c("non_state_actor","government")]
 aoc_per_cell = st_drop_geometry(aoc_per_cell)
 
+
+warning("following are NA ", which(is.na(aoc_per_cell$cell_id)))
+aoc_per_cell = aoc_per_cell[which(!is.na(aoc_per_cell$cell_id)),]
+
 grid_cntrl_mnth = full_join(grid_yr_mnth,aoc_per_cell, by =c("cell_id","year_mnth"))
 
-grid_cntrl_mnth[which(is.na(grid_cntrl_mnth$controle)),]$controle=0.5 #"neutral"
+#grid_cntrl_mnth[which(is.na(grid_cntrl_mnth$controle)),"controle"] = 0.5 #"neutral"
 
 acled_conflict_mnth= st_join(acled_conflict_mnth,grid,join = st_within, left = FALSE)
 
@@ -179,6 +183,7 @@ grid_cntrl_mnth <- grid_cntrl_mnth %>%
 # 
 
 # as year month dateformat
+
 library(zoo)
 
 grid_cntrl_mnth$year_mnth_date = as.yearmon(as.character(grid_cntrl_mnth$year_mnth),format = "%Y%m")
@@ -203,7 +208,7 @@ for (d in 1:nrow(date_combinations)){
   print(tm)
   
   
-  frnt_data_controle_num_all_previous_time = grid_cntrl_mnth%>%filter(year_mnth_date <= tm )# )%>% & name =="Nord-Kivu") %>%  
+  frnt_data_controle_num_all_previous_time = grid_cntrl_mnth%>%filter(year_mnth_date <= tm )%>%# & name =="Nord-Kivu") %>%  
     group_by(geometry)%>%
     filter(!(is.na(controle_num) & any(!is.na(controle_num)))) %>%
     slice_max(year_mnth_date, n = 1, with_ties = FALSE) %>%
@@ -221,36 +226,4 @@ data_to_be_saved_to = paste0("./data/frontline_data_all_mnths_",name_of_grid_fil
 
 save(frontline_data_controle_num_all_previous_time,file = data_to_be_saved_to)
 message(paste0("./data/frontline_data_all_mnths_",name_of_grid_file_name,".RData is saved!"))
-
-
-
-
-
-##
-
-########################
-#create plots frontline
-###########################
-
-# for (d in 1:nrow(date_combinations)){
-#   tm = date_combinations$year_mnth_date[d]
-#   print(tm)
-#   
-#   plt_grid = grid_cntrl_mnth%>%filter(year_mnth_date <= tm & year_mnth_date >= (tm-2/12) & name =="Nord-Kivu") %>%
-#     group_by(geometry)%>%
-#     filter(!(controle == 0.5 & any(controle != 0.5))) %>%
-#     slice_max(year_mnth_date, n = 1, with_ties = FALSE) %>%
-#     ungroup()%>%mutate(time = tm)
-#   
-#   
-#   
-#   gp = ggplot2::ggplot(plt_grid) +
-#     ggplot2::geom_sf(aes(fill = controle_num))#+
-#   
-#   
-#   ggsave(paste0("./plots/frontline_mnth_year_change_aoc/",as.numeric(format(as.Date(tm), "%Y%m")),".png"),gp)
-#   
-#   
-# }
-
 

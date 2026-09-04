@@ -81,7 +81,7 @@ create_street_splitted <- function(target_length){
   # Choose target_length based on your accessibility use case:
   #   ~25-50m  -> pedestrian-scale accessibility
   #   ~100-200m -> road/driving-scale accessibility
-  target_length <- 1000  # metres
+  #target_length <- cell_size  # metres
   
   streets_split <- line_segment(streets_without_cities2, 
                                 segment_length = target_length)
@@ -157,7 +157,7 @@ create_street_splitted <- function(target_length){
   # 
   # 
   # ---- 5. Save outputs ---------------------------------------------------
-  sf::st_write(street_split_noholes, "./data/streets_split.gpkg", append = F)
+  sf::st_write(street_split_noholes, paste0("./data/streets_split_",target_length,".gpkg"), append = F)
   
 
   # streets_split.gpkg   -> uniform segments with segment_id (for joining results)

@@ -10,10 +10,10 @@ source("./04b_a_helper_functions.R")
 
 ## prepare data
 
-grid_add_streets = T
-grid_add_nationalparks = T
-grid_add_waterways = T
-grid_cell_size = 3000
+# grid_add_streets = T
+# grid_add_nationalparks = T
+# grid_add_waterways = T
+# grid_cell_size = 5000
 
 
 # parameter_grid = parameter_grid["streets_first_degree_no_dist_noIntercept"]
@@ -126,6 +126,15 @@ for (model_name in names(parameter_grid)){
     }
     
   }
+
+  list_rho = list()
+  if (is.null(model_rho)){
+    list_rho[["mean"]] = model_logit_rho_prior_mean
+    list_rho[["sd"]] = model_logit_rho_prior_sd
+    
+  }else{
+    list_rho[["rho_fixed"]] = model_rho
+  }
   
   for(date in model_dates_to_run){
     
@@ -135,6 +144,7 @@ for (model_name in names(parameter_grid)){
     run_model_wrapper_loro(data,
                            data_mat_w,
                            model_covariates,
+                           estimate_rho = list_rho, 
                            date = date,
                            output_path = output_path,
                            path_of_eigenvalue = path_of_eigenvalue)
@@ -155,7 +165,7 @@ for (model_name in names(parameter_grid)){
   
 }
 
-
+# streets_first_degree_no_dist_noIntercept estimate rho failed
 
 
 

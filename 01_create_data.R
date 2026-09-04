@@ -14,15 +14,22 @@ source("./01_xb_remove_from_grid.R")
 # 2. LOAD AND PROJECT STUDY AREA
 # ============================================================
 
-relevant_regions <- read_sf("./data/congo_relevant_provinces/")
-relevant_regions <- relevant_regions |>
-  filter(name %in% c("Ituri", "Sud-Kivu", "Nord-Kivu")) |>
-  distinct()
+admin <- read_sf("./data/cod_admin_boundaries.shp", layer = "cod_admin2") |>
+  dplyr::select(adm2_name, adm2_pcode, adm1_name, adm1_pcode) |>
+  st_transform(st_crs("ESRI:102022"))|>
+  filter(adm1_name %in% c("Ituri", "Sud-Kivu", "Nord-Kivu"))
 
-relevant_regions = st_transform(relevant_regions,sf::st_crs("ESRI:102022"))
-drc_m <- relevant_regions |>
-  vect()# |>
-  #project("EPSG:102022")
+# relevant_regions <- read_sf("./data/congo_relevant_provinces/")
+# relevant_regions <- relevant_regions |>
+#   filter(name %in% c("Ituri", "Sud-Kivu", "Nord-Kivu")) |>
+#   distinct()
+
+#relevant_regions = st_union(st_transform(relevant_regions,sf::st_crs("ESRI:102022")))
+
+
+drc_m <- admin |> st_union() |>
+  vect()  |> project("ESRI:102022") |>buffer(1000) 
+  #
 
 
 # ============================================================
@@ -41,15 +48,16 @@ grid$cell_id <- seq_len(nrow(grid))
 # 3. ADD ADMIN NAMES
 # ============================================================
 
-admin <- read_sf("./data/cod_admin_boundaries.shp", layer = "cod_admin2") |>
-  dplyr::select(adm2_name, adm2_pcode, adm1_name, adm1_pcode) |>
-  st_transform(st_crs(grid))
+# admin <- read_sf("./data/cod_admin_boundaries.shp", layer = "cod_admin2") |>
+#   dplyr::select(adm2_name, adm2_pcode, adm1_name, adm1_pcode) |>
+#   st_transform(st_crs(grid))
 
 grid <- st_join(grid, admin, join = st_intersects, largest = TRUE, left = TRUE)
 
 grid <- grid |>
   st_make_valid() |>
   st_buffer(0)
+
 # ============================================================
 # 4. ADD NATIONAL PARKS
 # ============================================================
@@ -58,7 +66,8 @@ if(add_nationalparks){
   national_parks <- read_sf(
     "./data/WDPA_WDOECM_May2026_Public_COD_nationalparks/WDPA_WDOECM_May2026_Public_COD.gdb",
     layer = "WDPA_WDOECM_poly_May2026_COD"
-  ) |>
+  ) |> 
+    filter( SITE_ID != 555625801)|> # This site id is not valid, but also not in area that is under investigation
     dplyr::select(DESIG_ENG) |>
     filter(DESIG_ENG %in% c("National Park","Wetland of International Importance (Ramsar Site)","Nature reserve")) |>
     st_transform(st_crs(grid)) |>
@@ -209,12 +218,12 @@ if(add_waterways){
 if (add_streets){
   
  
-  if(!file.exists("./data/streets_split.gpkg")){
+  if(!file.exists(paste0("./data/streets_split_",cell_size,".gpkg"))){
     source("./01_xa_prepare_street_data.R")
     create_street_splitted()
   }
   
-  streets = read_sf("./data/streets_split.gpkg")
+  streets = read_sf(paste0("./data/streets_split_",cell_size,".gpkg"))
   streets_transformed = st_transform(streets,st_crs(grid))
   streets_transformed_valid1=st_make_valid(streets_transformed)
   line_string_idx = which(st_geometry_type(streets_transformed_valid1)=="LINESTRING")

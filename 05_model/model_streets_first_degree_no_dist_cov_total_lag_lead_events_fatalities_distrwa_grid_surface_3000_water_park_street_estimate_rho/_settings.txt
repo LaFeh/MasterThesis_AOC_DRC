@@ -2,14 +2,4 @@
 
 
 
-list(name = "streets_first_degree_no_dist_cov_total_lag_lead_events_fatalities_distrwa", grid = list(add_streets = TRUE, add_nationalparks = TRUE, add_waterways = TRUE, cell_size = 3000), model = list(dates_to_run = "202411", degree_of_neighbour = "first", bol_distance = FALSE, bol_border = FALSE, covariates_title = "total_lag_lead_events_fatalities_distrwa", rho = 0.6))
-
-
-
-
-list(name = "streets_first_degree_no_dist_cov_total_lag_lead_events_fatalities_distrwa", grid = list(add_streets = TRUE, add_nationalparks = TRUE, add_waterways = TRUE, cell_size = 3000), model = list(dates_to_run = "202411", degree_of_neighbour = "first", bol_distance = FALSE, bol_border = FALSE, covariates_title = "total_lag_lead_events_fatalities_distrwa", rho = 0.6))
-
-
-
-
-list(name = "streets_first_degree_no_dist_cov_total_lag_lead_events_fatalities_distrwa", grid = list(add_streets = TRUE, add_nationalparks = TRUE, add_waterways = TRUE, cell_size = 3000), model = list(dates_to_run = "202411", degree_of_neighbour = "first", bol_distance = FALSE, bol_border = FALSE, covariates_title = "total_lag_lead_events_fatalities_distrwa", rho = 0.6))
+list(name = "streets_first_degree_no_dist_cov_total_lag_lead_events_fatalities_distrwa", grid = list(add_streets = TRUE, add_nationalparks = TRUE, add_waterways = TRUE, cell_size = 3000), model = list(dates_to_run = "202411", degree_of_neighbour = "first", bol_distance = FALSE, bol_border = FALSE, covariates_title = "total_lag_lead_events_fatalities_distrwa", rho = NULL, prior_logit_rho_mean = 0, prior_logit_rho_sd = 1))

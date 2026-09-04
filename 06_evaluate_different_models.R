@@ -11,7 +11,7 @@ source("./05_model/05a_a_helper_run_model.R")
 source("./05_model/05a_b_helper_parameter_grid.R")
 source("./04b_a_helper_functions.R")
 
-max_width = 4
+max_width = 8
 
 # ============================================================
 # Prepare data
@@ -124,7 +124,7 @@ pdf(
     gsub(".shp", "", gridname),
     ".pdf"
   ),
-  width = 8.5,
+  width = 9,
   height = 11
 )
 
@@ -147,8 +147,7 @@ for (model_dir in model_dirs) {
     x = 0.5,
     y = 0.97,
     gp = gpar(
-      fontsize = 11,
-      fontface = "bold"
+      fontsize = 8
     )
   )
   
@@ -186,6 +185,7 @@ for (model_dir in model_dirs) {
 
   
   if (length(plot_files) >= 2) {
+ 
     draw_png(
       plot_files[2],
       x = 0.73,
