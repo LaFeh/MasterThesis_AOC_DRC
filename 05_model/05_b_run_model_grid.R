@@ -72,11 +72,7 @@ for (model_name in names(parameter_grid)){
   
   
   
-  
-  # if(file.exists(paste0(output_path,"/plots/202405_phi.png"))){
-  #   next()
-  # }
-  
+ 
   
   ##########################################
   
@@ -136,42 +132,16 @@ for (model_name in names(parameter_grid)){
                       )
   estimate_rho = estimate_rho[sapply(estimate_rho,function(x) !is.null(x))]
   
-  run_model_wrapper_loro(data,
+  run_model_wrapper(data,
                     data_mat_w,
                     model_covariates,
                     estimate_rho = estimate_rho,
                     date = model_dates_to_run,
                     output_path = output_path,
                     path_of_eigenvalue = path_of_eigenvalue,
-                    do_loro_cv = RUN_LORO_CV,
                     run_if_exists = FALSE)
   
-  
-  # pull the CV summary that run_model_wrapper() / run_model() just saved
-  # (if requested) and stash it for the final cross-model table
-  if (RUN_LORO_CV) {
-    cv_file <- paste0(output_path,"/",as.character(model_dates_to_run),"_loro_cv.RData")
-    if (file.exists(cv_file)) {
-      load(cv_file)   # loads loro_df, cv_summary
-      grid_cv_summary[[model_name]] <- data.frame(
-        model_name      = model_name,
-        n_folds         = cv_summary$n_folds,
-        n_converged     = cv_summary$n_converged,
-        elpd            = cv_summary$elpd,
-        mean_log_score  = cv_summary$mean_log_score,
-        brier           = cv_summary$brier,
-        auc             = ifelse(is.null(cv_summary$auc), NA, cv_summary$auc),
-        baseline_elpd            = cv_summary$baseline_elpd,
-        baseline_mean_log_score  = cv_summary$baseline_mean_log_score,
-        baseline_brier           = cv_summary$baseline_brier,
-        log_score_gain_vs_baseline = cv_summary$log_score_gain_vs_baseline,
-        brier_skill_score          = cv_summary$brier_skill_score
-      )
-    } else {
-      warning(paste("No LORO-CV file found for", model_name))
-    }
-  }
-  
+
   
   fileConn <- file(paste0(output_path, "/settings.txt"), open = "a")
   writeLines("\n\n\n", fileConn)
@@ -183,23 +153,6 @@ for (model_name in names(parameter_grid)){
   
 }
 
-
-
-# ── Cross-model comparison table ──────────────────────────────────────────────
-# Rank grid models by held-out predictive performance. Higher ELPD / mean log
-# score is better; lower Brier is better.
-if (RUN_LORO_CV && length(grid_cv_summary) > 0) {
-  
-  grid_cv_table <- do.call(rbind, grid_cv_summary)
-  grid_cv_table <- grid_cv_table[order(-grid_cv_table$elpd), ]
-  
-  print(grid_cv_table)
-  
-  write.csv(grid_cv_table, "./05_model/grid_loro_cv_comparison.csv", row.names = FALSE)
-  save(grid_cv_table, file = "./05_model/grid_loro_cv_comparison.RData")
-  
-  cat("\nBest model by LORO-CV ELPD:", grid_cv_table$model_name[1], "\n")
-}
 
 
 
