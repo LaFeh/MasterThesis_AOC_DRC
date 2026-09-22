@@ -49,8 +49,8 @@ gdf$admin1_location_check = ifelse(gdf$admin1==gdf$adm1_name,TRUE,FALSE)
 sum(!gdf$admin2_location_check)
 
 
-admin2_false = gdf[!gdf$admin2_location_check,c("id","notes","admin1","adm1_name","admin2","adm2_name")]
-admin1_false = gdf[!gdf$admin1_location_check,c("id","notes","admin1","adm1_name","admin2","adm2_name")]
+admin2_false = gdf[!gdf$admin2_location_check,c("id","notes","admin1","adm1_name","admin2","adm2_name","location","event_date")]
+admin1_false = gdf[!gdf$admin1_location_check,c("id","notes","admin1","adm1_name","admin2","adm2_name","location","event_date")]
 admin1_false$distance = NA
 admin2_false$distance = NA
 
@@ -69,8 +69,6 @@ for( x in 1:nrow(admin1_false)){
 for( x in 1:nrow(admin2_false)){
   
   region_bound = st_boundary(st_union(regions_for_join[regions_for_join$adm2_name == admin2_false[x,]$adm2_name,]))
-
-  
   admin2_false[x,"distance"] = st_distance(region_bound,admin2_false[x,]$geometry)
 }
 # all admin1 false are also admin 2 false.
@@ -80,7 +78,7 @@ admin2_false$delete = admin2_false$distance < 3000
 
 reg_plot = regions_for_join%>%filter(adm1_name %in% c("Nord-Kivu","Ituri","Sud-Kivu"))
 plot(reg_plot[,"adm1_name"]$geometry)
-plot(admin2_false[,"delete"],add =T)
+plot(admin2_false[!admin2_false$delete,"delete"],add =T,col = "yellow")
 
 # bukombo
 bukombo = gdf%>%filter(!admin1_location_check & admin1_note_check)
@@ -100,7 +98,7 @@ both_not_true =gdf%>%filter(!admin1_location_check & !admin1_note_check)
 
 # plot
 regions_for_plot = regions_for_join %>%filter(adm1_name %in% c("Ituri","Sud-Kivu","Nord-Kivu"))
-plot(regions_for_plot[,c("adm1_name")]$geometry)
+
 #nduma
 
 
@@ -187,7 +185,7 @@ gdf_leaflet = gdf_leaflet%>%filter(sub_event %in% c("Government regains territor
                                            "<b>admin2_acled</b> ", admin2, "<br>",
                                            "<b>note:</b> ", notes, "<br>"
                                          )
-                                       )
+                                       )%>%filter(year_mnth<="202411")
 
 
 bb <- as.list(st_bbox(regions_leaflet))
@@ -212,7 +210,6 @@ outlier_intro <- leaflet() %>%
                    color ="red",
                    radius = 2,
                    popup = ~popup_text) %>%
-
   fitBounds(bb$xmin, bb$ymin, bb$xmax, bb$ymax)
 
 outlier_intro
