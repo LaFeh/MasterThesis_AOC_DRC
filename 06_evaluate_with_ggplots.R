@@ -21,20 +21,33 @@ max_width = 8
 # ============================================================
 covariates_list = create_covariates_list()
 gridname <- create_grid_name(
-  add_streets = F,
+  add_streets = T,
   add_nationalparks = T,
   add_waterways = T,
   cell_size = 3000
 )
 
 estimate_rho = T
+quality_strict = T
 
-model_dirs <- paste0(
-  "~/MasterThesis_AOC_DRC/05_model/model_",
-  names(parameter_grid),
-  "_",
-  gsub(".shp", "", gridname)#,"_estimate_rho"
-)
+if(quality_strict ==""){
+  model_dirs <- paste0(
+    "~/MasterThesis_AOC_DRC/05_model/model_",
+    names(parameter_grid),
+    "_",
+    gsub(".shp", "", gridname)#,"_estimate_rho"
+  )
+  
+}else{
+  model_dirs <- paste0(
+    "~/MasterThesis_AOC_DRC/05_model/model_quality_",quality_strict,"_",
+    names(parameter_grid),
+    "_",
+    gsub(".shp", "", gridname)#,"_estimate_rho"
+  )
+  
+  
+}
 
 
 if(estimate_rho){
@@ -61,7 +74,13 @@ if(estimate_rho){
 #model_dirs = gsub("estimaterho_","",model_dirs)
 
 date <- "202411"
-load(paste0("./data/data_for_prediction/",gsub(".shp","",gridname),"/",date,"_events.RData"))
+
+if(quality_strict==""){
+  load(paste0("./data/data_for_prediction/",gsub(".shp","",gridname),"/",date,"_events.RData"))
+}else{
+  load(paste0("./data/data_for_prediction/",gsub(".shp","",gridname),"_quality_", quality_strict,"/",date,"_events.RData"))
+}
+
 
 # ============================================================
 # Find existing model directories
@@ -71,6 +90,8 @@ files <- paste0(
   "~/MasterThesis_AOC_DRC/05_model/",
   list.files("~/MasterThesis_AOC_DRC/05_model")
 )
+
+
 model_dirs <- model_dirs[
   which(model_dirs %in% files)
 ]
@@ -98,7 +119,7 @@ model_dirs <- model_dirs[
 cairo_pdf(
   paste0(
     date,
-    "_model_comparison_",
+    "_model_comparison_quality_",quality_strict, "_",
     gsub(".shp", "", gridname),"_ggplot2_",ifelse(estimate_rho,"estimate_rho","fixed_rho"),
     ".pdf"
   ),
@@ -222,7 +243,7 @@ for (model_idx in 1:length(names(parameter_grid))) {
     grid.text(
       paste(
         names(betas),
-        round(betas, 4),
+        plogis(round(betas, 4)),
         collapse = "\n"
       ),
       x = 0.5,

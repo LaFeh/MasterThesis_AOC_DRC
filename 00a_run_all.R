@@ -1,4 +1,4 @@
-detach("package:here", unload = TRUE)
+#detach("package:here", unload = TRUE)
 setwd("~/MasterThesis_AOC_DRC")
 library(here)
 here::here()
@@ -7,11 +7,13 @@ do_preparational_calculations = F
 
 # settings for grid
 
-add_streets = F
+add_streets = T
 add_nationalparks =T
 add_waterways = T
 
 cell_size     <- 3000
+
+quality_strict = TRUE
 
 source("./00b_helper_create_grid_name.R")
 name_of_grid = create_grid_name(add_waterways = add_waterways,
@@ -51,7 +53,7 @@ rm(list = setdiff(ls(), c("name_of_grid",
 
 gc()
 source("./01_create_data.R")
-rm(list = setdiff(ls(), c("name_of_grid","cell_size")))
+rm(list = setdiff(ls(), c("name_of_grid","cell_size","quality_strict")))
 gc()
 
 # source("./01a_prepare_settlements.R")
@@ -60,22 +62,22 @@ gc()
 
 
 source("./01b_prepare_travelspeed.R")
-rm(list = setdiff(ls(),c("name_of_grid","cell_size")))
+rm(list = setdiff(ls(),c("name_of_grid","cell_size","quality_strict")))
 gc()
 
 source("./01c_prepare_distance_to_rwa.R")
-rm(list = setdiff(ls(), c("name_of_grid","cell_size")))
+rm(list = setdiff(ls(), c("name_of_grid","cell_size","quality_strict")))
 gc()
 
 source("./01e_prepare_acled.R")
-rm(list = setdiff(ls(), c("name_of_grid","cell_size")))
+rm(list = setdiff(ls(), c("name_of_grid","cell_size","quality_strict")))
 gc()
 # source("./01f_prepare_rain.R")
 # rm(list = ls())
 # gc()
 
 source("./02_combine_data.R")
-rm(list = setdiff(ls(), "name_of_grid"))
+rm(list = setdiff(ls(), c("name_of_grid","quality_strict")))
 gc()
 
 source("./04b_create_data_to_predict_all_months.R")

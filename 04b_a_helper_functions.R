@@ -2,7 +2,7 @@
 
 
 prepare_data_for_prediction <- function(frontline_data,
-                                        date_to_predict, N, grid_file_name){
+                                        date_to_predict, N,quality_strict, grid_file_name){
   
   # frontline data _control needs to be boolean - only 0 or 1
   
@@ -16,7 +16,7 @@ prepare_data_for_prediction <- function(frontline_data,
   date = substr(as.Date(date_to_predict),1,7)
   date = as.character(gsub("-","",date))
 
-  dir_name = paste0("./data/data_for_prediction/",grid_file_name,"/")
+  dir_name = paste0("./data/data_for_prediction/",grid_file_name,"_quality_",quality_strict,"/")
   if (!dir.exists(dir_name)){
     dir.create(dir_name)
   }
@@ -124,7 +124,7 @@ prepare_adj_matrix_for_prediction <- function(frontline_data,
   # Plain vectors -> no sf/data.frame dispatch overhead inside loops
 
   decay  <- data$mix_time_mean_decay
-  
+  data = st_as_sf(data)
   data_adj <- poly2nb(data, queen = TRUE, snap = snap)
   stopifnot(dim(data_adj)[1] == N)
   bol_nghbr <- vapply(data_adj, function(x) x[1] != 0, logical(1))

@@ -10,7 +10,8 @@ source("./04b_a_helper_functions.R")
 
 
 name_of_grid_file_name = gsub(".shp","",name_of_grid)
-data_path_to_be_read = paste0("./data/frontline_data_all_mnths_",name_of_grid_file_name,".RData")
+
+data_path_to_be_read = paste0("./data/frontline_data_all_mnths_quality_",quality_strict,"_",name_of_grid_file_name,".RData")
 
 
 
@@ -33,13 +34,14 @@ all_dates = as.Date(all_dates,format = "%Y%m%d")
 
 
 N = length(unique(frontline_data$cell_id))
-
+print(nrow(frontline_data)/length(all_dates))
 
 for(date in all_dates){
   print(as.Date(date))
   prepare_data_for_prediction(frontline_data,
                               date,
                               N,
+                              quality_strict,
                               grid_file_name = name_of_grid_file_name)
 }
 

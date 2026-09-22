@@ -23,9 +23,10 @@ gridname <- create_grid_name(
   add_waterways = T,
   cell_size = 3000
 )
+quality_strict = T
 
 model_dirs <- paste0(
-  "~/MasterThesis_AOC_DRC/05_model/model_",
+  "~/MasterThesis_AOC_DRC/05_model/model_quality_",quality_strict,"_",
   names(parameter_grid),
   "_",
   gsub(".shp", "", gridname)

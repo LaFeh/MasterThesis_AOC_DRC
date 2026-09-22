@@ -12,6 +12,10 @@ load(file="./data/acled_territory_mnth.RData")
 grid = st_transform(grid,st_crs(acled_territory_mnth))
 acled_conflict_mnth = st_transform(acled_conflict_mnth,st_crs(acled_territory_mnth))
 
+if(quality_strict){
+  acled_conflict_mnth = acled_conflict_mnth %>%filter((!poor_quality) & (!outlier))
+  acled_territory_mnth = acled_territory_mnth %>%filter((!poor_quality) & (!outlier))
+}
 
 ##### settlements ########################
 # grid_settlements = data.table::fread("./data/grid_settlements.csv")
@@ -25,6 +29,7 @@ acled_conflict_mnth = st_transform(acled_conflict_mnth,st_crs(acled_territory_mn
 #### mix time walk time ########################
 grid_mix_time = data.table::fread("./data/grid_mix_time.csv",sep =",")
 grid = left_join(grid,grid_mix_time,by ="cell_id")
+
 #plot(grid[which(is.na(grid$mix_time_mean)),"geometry"])
 grid = grid[-which(is.na(grid$mix_time_mean)),]
 rm(grid_mix_time)
@@ -46,14 +51,22 @@ grid = left_join(grid,dist_rwa, by="cell_id")
 yrs = unique(substr(acled_conflict_mnth$year_mnth,1,4))
 mnths = unique(substr(acled_conflict_mnth$year_mnth,5,7))
 
+min_date <- min(acled_territory_mnth$year_mnth)
+min_date <- as.Date(paste0(min_date,"01"),format = "%Y%M%d")-base::months(4)
+min_month = ifelse(lubridate::month(min_date)<10,paste0("0",lubridate::month(min_date)),lubridate::month(min_date))
+min_date = paste0(lubridate::year(min_date),min_month)
+
 date_combinations = cross_join(as_tibble(yrs),as_tibble(mnths))
+
 
 date_combinations$time_step = 1:nrow(date_combinations)
 date_combinations$year_mnth = as.numeric(paste0(date_combinations$value.x,date_combinations$value.y))
 
+date_combinations = date_combinations[date_combinations$year_mnth > min_date,]
 grid_yr_mnth <- merge(grid, date_combinations[c("year_mnth","time_step")], by = NULL)
 
 # acled territory
+
 
 acled_territory_grid = st_join(acled_territory_mnth,grid,join = st_within, left = TRUE)
 
@@ -200,30 +213,90 @@ date_combinations$year_mnth_date = as.yearmon(as.character(date_combinations$yea
 # create the data frontline - fortschreibung des Gebiete
 # - all previous months 
 ###################################################################
-
+# 
 frontline_data_controle_num_all_previous_time = data.frame()
 
-for (d in 1:nrow(date_combinations)){
-  tm = date_combinations$year_mnth_date[d]
-  print(tm)
-  
-  
-  frnt_data_controle_num_all_previous_time = grid_cntrl_mnth%>%filter(year_mnth_date <= tm )%>%# & name =="Nord-Kivu") %>%  
-    group_by(geometry)%>%
-    filter(!(is.na(controle_num) & any(!is.na(controle_num)))) %>%
-    slice_max(year_mnth_date, n = 1, with_ties = FALSE) %>%
-    ungroup()%>%mutate(time = tm)
-  
-  frontline_data_controle_num_all_previous_time = rbind(frontline_data_controle_num_all_previous_time,frnt_data_controle_num_all_previous_time)
+# for (d in 1:nrow(date_combinations)){
+#   tm = date_combinations$year_mnth_date[d]
+#   print(tm)
+# 
+# 
+#   frnt_data_controle_num_all_previous_time = grid_cntrl_mnth%>%filter(year_mnth_date <= tm )%>%# & name =="Nord-Kivu") %>%
+#     group_by(cell_id)%>%
+#     filter(!(is.na(controle_num) & any(!is.na(controle_num)))) %>%
+#     slice_max(year_mnth_date, n = 1, with_ties = FALSE) %>%
+#     ungroup()%>%mutate(time = tm)
+# 
+#   frontline_data_controle_num_all_previous_time = rbind(frontline_data_controle_num_all_previous_time,frnt_data_controle_num_all_previous_time)
+# 
+# 
+# 
+# }
 
 
-  
-}
+library(future.apply)
+library(dplyr)
+library(future)
+# --------------------------------------------------
+# Set number of parallel workers
+# --------------------------------------------------
+
+
+
+geometry_lookup <- grid %>%
+  select(cell_id, geometry)
+
+grid_cntrl_mnth_no_geom <- st_drop_geometry(grid_cntrl_mnth)
+
+n_workers <- max(1, min(3,parallel::detectCores() - 1))
+plan(multicore, workers = n_workers)
+
+
+results <- future_lapply(
+  1:nrow(date_combinations),
+  function(d) {
+    
+    tm <- date_combinations$year_mnth_date[d]
+    
+    message("Processing: ", tm)
+    
+    frnt_data_controle_num_all_previous_time <-
+      grid_cntrl_mnth_no_geom %>%
+      filter(year_mnth_date <= tm) %>%
+      group_by(cell_id) %>%
+      filter(!(is.na(controle_num) & any(!is.na(controle_num)))) %>%
+      slice_max(
+        year_mnth_date,
+        n = 1,
+        with_ties = FALSE
+      ) %>%
+      ungroup() %>%
+      mutate(time = tm)
+    
+    frnt_data_controle_num_all_previous_time
+  }
+)
+
+
+
+frontline_data_controle_num_all_previous_time <-
+  bind_rows(results)
+
+
+frontline_data_controle_num_all_previous_time <-
+  frontline_data_controle_num_all_previous_time %>%
+  left_join(
+    geometry_lookup,
+    by = "cell_id"
+  ) %>%
+  st_as_sf()
+
+
+plan(sequential)
 
 
 name_of_grid_file_name = gsub(".shp","",name_of_grid)
-data_to_be_saved_to = paste0("./data/frontline_data_all_mnths_",name_of_grid_file_name,".RData")
+data_to_be_saved_to = paste0("./data/frontline_data_all_mnths_quality_",quality_strict,"_",name_of_grid_file_name,".RData")
 
 save(frontline_data_controle_num_all_previous_time,file = data_to_be_saved_to)
-message(paste0("./data/frontline_data_all_mnths_",name_of_grid_file_name,".RData is saved!"))
-
+message(paste0("./data/frontline_data_all_mnths_quality_",quality_strict,"_",name_of_grid_file_name,".RData is saved!"))

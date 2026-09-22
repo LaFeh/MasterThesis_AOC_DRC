@@ -19,7 +19,7 @@ create_grid_name <- function(add_streets,add_nationalparks,add_waterways,cell_si
   }else {
     grid_name_water = ""
   }
-  
+
   name_of_grid = paste0("grid_surface_",cell_size,
                         grid_name_water,
                         grid_name_park,

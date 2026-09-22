@@ -65,7 +65,7 @@ non_violent_transfers = non_violent_transfers[order(non_violent_transfers$event_
 for(row_idx in 1:nrow(non_violent_transfers)){
   instance = non_violent_transfers[row_idx,]
   max_date = instance$event_date
-
+  
   past_instance = gdf_territory%>%filter((event_date<max_date) & (geometry ==instance$geometry))%>%
     slice_max(order_by = event_date, with_ties =FALSE)
   
@@ -76,7 +76,7 @@ for(row_idx in 1:nrow(non_violent_transfers)){
   }else if (past_instance$sub_event =="Government regains territory"){# territory war before under gov controle
     
     non_violent_transfers[row_idx,]$sub_event ="Non-state actor overtakes territory"
- 
+    
   } else if (past_instance$sub_event =="Non-state actor overtakes territory"){
     
     non_violent_transfers[row_idx,]$sub_event ="Government regains territory"
@@ -85,7 +85,7 @@ for(row_idx in 1:nrow(non_violent_transfers)){
     
     past_instance = non_violent_transfers%>%filter((event_date<max_date) & (geometry ==instance$geometry))%>%
       slice_max(order_by = event_date, with_ties =FALSE)
-      
+    
     if (past_instance$sub_event =="Government regains territory"){# territory war before under gov controle
       
       non_violent_transfers[row_idx,]$sub_event ="Non-state actor overtakes territory"
@@ -98,8 +98,8 @@ for(row_idx in 1:nrow(non_violent_transfers)){
       warning(paste0(row_idx,": we need a double loop, two times after each other peaceful transition"))
       
     }
-
-
+    
+    
   }
   
 }
@@ -132,19 +132,12 @@ acled_conflict <- gdf %>%
   ))%>%mutate(controle = NA)
 
 
+
+acled_conflict$event_type_clean = tolower(gsub(" |/","_",acled_conflict$event_type))
 acled_conflict_wide_sum = as.data.frame(acled_conflict)%>%
   mutate(events = 1)%>%
   tidyr::pivot_wider(id_cols =c("year_mnth","longitude","latitude"),
-                     names_from =c("event_type"),values_from= c("events","fatalities"),values_fn = sum,values_fill = 0)
-
-
-names(acled_conflict_wide_sum)[names(acled_conflict_wide_sum) == "events_Violence against civilians"] <- "events_violence_civilian"
-names(acled_conflict_wide_sum)[names(acled_conflict_wide_sum) == "events_Strategic developments"] <- "events_strategic_developments"
-names(acled_conflict_wide_sum)[names(acled_conflict_wide_sum) == "events_Explosions/Remote violence"] <- "events_remote_violence"
-
-names(acled_conflict_wide_sum)[names(acled_conflict_wide_sum) == "fatalities_Violence against civilians"] <- "fatalities_violence_civilian"
-names(acled_conflict_wide_sum)[names(acled_conflict_wide_sum) == "fatalities_Strategic developments"] <- "fatalities_strategic_developments"
-names(acled_conflict_wide_sum)[names(acled_conflict_wide_sum) == "fatalities_Explosions/Remote violence"] <- "fatalities_remote_violence"
+                     names_from =c("event_type_clean"),values_from= c("events","fatalities"),values_fn = sum,values_fill = 0)
 
 
 
@@ -159,160 +152,132 @@ acled_conflict_summarise_avg = as.data.frame(acled_conflict)%>%group_by(year_mnt
 
 acled_conflict_mnth = acled_conflict_wide_sum%>%left_join(acled_conflict_summarise_avg, by =c("year_mnth","longitude","latitude") )
 
-# acled_conflict_per_cell = acled_conflict_mnth%>%st_drop_geometry()%>%ungroup()%>%
-#   dplyr::group_by(year_mnth,cell_id)%>%
-#   dplyr::summarise(events_violence_civilian = sum(events_violence_civilian,na.rm =T),
-#                    events_battles = sum(events_Battles,na.rm =T),
-#                    events_strategic_developments = sum(events_strategic_developments,na.rm =T),
-#                    events_remote_violence = sum(events_remote_violence,na.rm =T),
-#                    fatalities_violence_civilian = sum(fatalities_violence_civilian,na.rm =T),
-#                    fatalities_battles = sum(fatalities_Battles,na.rm =T),
-#                    fatalities_strategic_developments = sum(fatalities_strategic_developments,na.rm =T),
-#                    fatalities_remote_violence = sum(fatalities_remote_violence,na.rm =T),
-#                    )
-
-# acled_conflict_mnth = acled_conflict_mnth %>%
-#   st_drop_geometry() %>%
-#   ungroup() %>%
-#   dplyr::group_by(year_mnth, cell_id) %>%
-#   dplyr::summarise(
-#     events_violence_civilian = sum(events_violence_civilian, na.rm = TRUE),
-#     events_battles = sum(events_Battles, na.rm = TRUE),
-#     events_strategic_developments = sum(events_strategic_developments, na.rm = TRUE),
-#     events_remote_violence = sum(events_remote_violence, na.rm = TRUE),
-#     fatalities_violence_civilian = sum(fatalities_violence_civilian, na.rm = TRUE),
-#     fatalities_battles = sum(fatalities_Battles, na.rm = TRUE),
-#     fatalities_strategic_developments = sum(fatalities_strategic_developments, na.rm = TRUE),
-#     fatalities_remote_violence = sum(fatalities_remote_violence, na.rm = TRUE),
-#     .groups = "drop"
-#   ) %>%
-#   dplyr::arrange(cell_id, year_mnth) %>%
-#   dplyr::group_by(cell_id) %>%
-#   mutate(
-#     across(
-#       c(starts_with("events_"), starts_with("fatalities_")),
-#       list(
-#         lag = ~lag(.x),
-#         lead = ~lead(.x)
-#       ),
-#       .names = "{.col}_{.fn}"
-#     )
-#   ) %>%
-#   dplyr::ungroup()
-
-# 
-# # Current period
-# acled_conflict_mnth$total_fatalities =
-#   rowSums(acled_conflict_mnth[, grep("^fatalities_(?!.*_(lag|lead)$)",
-#                                          colnames(acled_conflict_mnth),
-#                                          perl = TRUE)],
-#           na.rm = TRUE)
-# 
-# acled_conflict_mnth$total_events =
-#   rowSums(acled_conflict_mnth[, grep("^events_(?!.*_(lag|lead)$)",
-#                                          colnames(acled_conflict_mnth),
-#                                          perl = TRUE)],
-#           na.rm = TRUE)
-# 
-# # Lag totals
-# acled_conflict_mnth$total_fatalities_lag =
-#   rowSums(acled_conflict_mnth[, grep("^fatalities_.*_lag$",
-#                                          colnames(acled_conflict_mnth))],
-#           na.rm = TRUE)
-# 
-# acled_conflict_mnth$total_events_lag =
-#   rowSums(acled_conflict_mnth[, grep("^events_.*_lag$",
-#                                          colnames(acled_conflict_mnth))],
-#           na.rm = TRUE)
-# 
-# # Lead totals
-# acled_conflict_mnth$total_fatalities_lead =
-#   rowSums(acled_conflict_mnth[, grep("^fatalities_.*_lead$",
-#                                          colnames(acled_conflict_mnth))],
-#           na.rm = TRUE)
-# 
-# acled_conflict_mnth$total_events_lead =
-#   rowSums(acled_conflict_mnth[, grep("^events_.*_lead$",
-#                                          colnames(acled_conflict_per_cell))],
-#           na.rm = TRUE)
-# 
-# 
-# acled_conflict_mnth <- acled_conflict_mnth %>%
-#   dplyr::mutate(
-#     dplyr::across(
-#       matches("^(events_|fatalities_|total_events|total_fatalities)"),
-#       ~ ifelse(is.na(.x), 0, .x)
-#     )
-#   )
-
-
 #------------------------------------------------
-# MERGE FATALITIES THAT HAPPENED AFTER CONTROL
+# MERGE FATALITIES THAT HAPPENED AFTER CONTROL with in 10 days
 # ------------------------------------------------
-controle_per_conflict = left_join(acled_conflict,as.data.frame(acled_territory_mnth),by =c("latitude","longitude","year_mnth"),suffix = c("","_territory"))
-conflict_after_controle= controle_per_conflict %>%
-  filter(is.na(event_date_territory) | event_date_territory<event_date)
 
-fatalities_after_controle = as.data.frame(conflict_after_controle)%>%
-  mutate(events = 1)%>%
-  tidyr::pivot_wider(id_cols =c("year_mnth","longitude","latitude"),
-                     names_from =c("event_type"),values_from= c("events","fatalities"),values_fn = sum,values_fill = 0)
+conflict_per_control = left_join(acled_territory_mnth,as.data.frame(acled_conflict),by =c("latitude","longitude"),suffix = c("","_conflict"),relationship = "many-to-many")
+# conflict 10 days after control. 
+conflict_after_control= conflict_per_control %>%
+  mutate(difference_in_days = event_date_conflict-event_date)%>%
+  filter(difference_in_days<10 & difference_in_days>0 ) # bigger than zero, not considering battles of the day of territory control takeover
 
-
-names(fatalities_after_controle)[names(fatalities_after_controle) == "events_Violence against civilians"] <- "events_violence_civilian"
-names(fatalities_after_controle)[names(fatalities_after_controle) == "events_Strategic developments"] <- "events_strategic_developments"
-names(fatalities_after_controle)[names(fatalities_after_controle) == "events_Explosions/Remote violence"] <- "events_remote_violence"
-
-names(fatalities_after_controle)[names(fatalities_after_controle) == "fatalities_Violence against civilians"] <- "fatalities_violence_civilian"
-names(fatalities_after_controle)[names(fatalities_after_controle) == "fatalities_Strategic developments"] <- "fatalities_strategic_developments"
-names(fatalities_after_controle)[names(fatalities_after_controle) == "fatalities_Explosions/Remote violence"] <- "fatalities_remote_violence"
-
-fatalities_after_controle$fatalities_total = apply(fatalities_after_controle[,grep("fatalities",colnames(fatalities_after_controle))],1,sum)
-
-
-conflict_after_controle  = conflict_after_controle %>%
-  left_join(fatalities_after_controle, by = c("year_mnth","longitude","latitude"))
-
-fatalities_and_territory_after_controle  = acled_territory_mnth %>%
-  left_join(fatalities_after_controle, by = c("year_mnth","longitude","latitude"),
-            suffix = c("","_conflict"))
-days_in_month(fatalities_and_territory_after_controle$event_date)
+conflict_after_control$event_type_clean = paste0(tolower(gsub(" |/","_",conflict_after_control$event_type_conflict)),"_after_control")
+conflict_after_control$sub_event_type_clean = paste0(tolower(gsub(" |/","_",conflict_after_control$sub_event_conflict)),"_after_control")
+events_after_control = as.data.frame(conflict_after_control)%>%
+  mutate(events = 1)%>% # one occurence of event = one event
+  group_by(id,event_date,longitude,latitude,
+           event_type_clean,
+           #sub_event_type_clean
+  )%>%
+  summarise(events = sum(events),
+            fatalities = sum(fatalities))%>%
+  tidyr::pivot_wider(id_cols =c("id","event_date","longitude","latitude"),
+                     names_from =c("event_type_clean",
+                                   #"sub_event_type_clean"
+                     ),values_from= c("events","fatalities"),values_fn = sum,values_fill = 0)
 
 
-fatalities_and_territory_after_controle$days_till_end_of_month = as.numeric(days_in_month(fatalities_and_territory_after_controle$event_date))-as.numeric(format(fatalities_and_territory_after_controle$event_date,"%d"))
-fatalities_and_territory_after_controle$fatalities_per_day = fatalities_and_territory_after_controle$fatalities_total/fatalities_and_territory_after_controle$days_till_end_of_month
+prefixes <- c(
+  "fatalities",
+  "events"#,
+  # "fatalities_battles",
+  # "fatalities_violence_against_civilians",
+  # "fatalities_strategic_developments",
+  # "fatalities_explosions_remote_violence",
+  # "events_battles",
+  # "events_violence_against_civilians",
+  # "events_strategic_developments",
+  # "events_explosions_remote_violence",
+  # "events_protests",
+  # "events_riots"
+)
 
-government_controle = 0
-rebell_controle = 1
-government_controle_disputed = 0.25
-rebell_controle_disputed = 0.75
-disputed = 0.5
+for (prefix in prefixes) {
+  cols <- grep(
+    paste0("^", prefix, "_"),
+    names(events_after_control),
+    value = TRUE
+  )
+  
+  cols <- cols[!grepl("_total_after_control$", cols)]
+  
+  events_after_control[[paste0(prefix, "_total_after_control")]] <-
+    rowSums(events_after_control[cols], na.rm = TRUE)
+}
+
+#### conflict 10 days before control
+conflict_before_control= conflict_per_control %>%
+  mutate(difference_in_days = event_date_conflict-event_date)%>%
+  filter(difference_in_days>10 & difference_in_days>0 ) # bigger than zero, not considering battles of the day of territory control takeover
 
 
-fatalities_and_territory_after_controle$controle_num = NA
+conflict_before_control$event_type_clean = paste0(tolower(gsub(" |/","_",conflict_before_control$event_type_conflict)),"_before_control")
+conflict_before_control$sub_event_type_clean = paste0(tolower(gsub(" |/","_",conflict_before_control$sub_event_conflict)),"_before_control")
+events_before_control = as.data.frame(conflict_before_control)%>%
+  mutate(events = 1)%>% # one occurence of event = one event
+  group_by(id,event_date,longitude,latitude,
+           event_type_clean,
+           #sub_event_type_clean
+  )%>%
+  summarise(events = sum(events),
+            fatalities = sum(fatalities))%>%
+  tidyr::pivot_wider(id_cols =c("id","event_date","longitude","latitude"),
+                     names_from =c("event_type_clean",
+                                   #"sub_event_type_clean"
+                     ),values_from= c("events","fatalities"),values_fn = sum,values_fill = 0)
 
 
 
-fatalities_and_territory_after_controle[which(fatalities_and_territory_after_controle$controle == "government"),]$controle_num = government_controle
-fatalities_and_territory_after_controle[which(fatalities_and_territory_after_controle$controle == "government" & 
-                                                fatalities_and_territory_after_controle$fatalities_per_day  >=1 ),]$controle_num = government_controle_disputed
+prefixes <- c(
+  "fatalities",
+  "events"#,
+  # "fatalities_battles",
+  # "fatalities_violence_against_civilians",
+  # "fatalities_strategic_developments",
+  # "fatalities_explosions_remote_violence",
+  # "events_battles",
+  # "events_violence_against_civilians",
+  # "events_strategic_developments",
+  # "events_explosions_remote_violence",
+  # "events_protests",
+  # "events_riots"
+)
 
-fatalities_and_territory_after_controle[which(fatalities_and_territory_after_controle$controle == "non-state actor"),]$controle_num = rebell_controle
-fatalities_and_territory_after_controle[which(fatalities_and_territory_after_controle$controle == "non-state actor" & 
-                                                fatalities_and_territory_after_controle$fatalities_per_day  >=1 ),]$controle_num = rebell_controle_disputed
+for (prefix in prefixes) {
+  cols <- grep(
+    paste0("^", prefix, "_"),
+    names(events_before_control),
+    value = TRUE
+  )
+  
+  cols <- cols[!grepl("_total_before_control$", cols)]
+  
+  events_before_control[[paste0(prefix, "_total_before_control")]] <-
+    rowSums(events_before_control[cols], na.rm = TRUE)
+}
 
-fatalities_and_territory_after_controle[which(fatalities_and_territory_after_controle$controle == "unknown"),]$controle_num = disputed
 
 
+###### join everything back together
+acled_territory_mnth = left_join(acled_territory_mnth,events_before_control, by=c("id","event_date","longitude","latitude"))
+acled_territory_mnth = left_join(acled_territory_mnth,events_after_control, by=c("id","event_date","longitude","latitude"))
 
-acled_territory_mnth = st_as_sf(fatalities_and_territory_after_controle,crs =st_crs(gdf))
+
+# create numeric control indicator
+government_control = 0
+rebell_control = 1
+
+acled_territory_mnth$control_num = NA
+
+acled_territory_mnth[which(acled_territory_mnth$controle == "government"),]$control_num = government_control
+acled_territory_mnth[which(acled_territory_mnth$controle == "non-state actor"),]$control_num = rebell_control
+
+
+acled_territory_mnth = st_as_sf(acled_territory_mnth,crs =st_crs(gdf))
 acled_conflict_mnth = st_as_sf(acled_conflict_mnth,coords = c("longitude","latitude"),crs ="EPSG:4326")
 acled_conflict_mnth = st_transform(acled_conflict_mnth,st_crs(gdf))
 
 
-
-
-
 save(acled_territory_mnth, file="./data/acled_territory_mnth.RData")
-
 save(acled_conflict_mnth, file="./data/acled_conflict_mnth.RData")

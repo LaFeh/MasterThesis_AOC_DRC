@@ -2,20 +2,11 @@
 
 library(Matrix)
 source("./00b_helper_create_grid_name.R")
-source("./05_model/05a_a_helper_run_model_loro.R")
+source("./05_model/05a_a_helper_run_model.R")
 source("./05_model/05a_b_helper_parameter_grid.R")
 
 source("./04b_a_helper_functions.R")
 
-## prepare data
-
-# Set to TRUE to run leave-one-region-out CV (restricted to observed regions)
-# for every model in the grid. This is the recommended way to compare models
-# across the grid (different rho, different covariate sets, etc.) since it
-# evaluates genuine held-out predictive performance rather than an
-# in-sample fit criterion. It refits the model once per observed region, so
-# expect this to multiply total runtime by roughly length(obs_idx) per model.
-RUN_LORO_CV <- FALSE
 
 # collects one row of CV summary stats per grid model, for the final
 # cross-model comparison table
@@ -24,8 +15,12 @@ grid_cv_summary <- list()
 
 
 all_months = c(paste0("0",1:9),10:12)
-all_years = c(2024,2025)
-all_dates= c(paste0(all_years[1], all_months),paste0(all_years[2], all_months))
+all_years = c(2023,2024,2025)
+all_dates= c(paste0(all_years[1], all_months),paste0(all_years[2], all_months),paste0(all_years[3], all_months))
+
+quality_strict = T
+parameter_grid = lapply(parameter_grid, function(x){x$model$dates_to_run = all_dates; return(x)})
+
 #parameter_grid = parameter_grid[grepl("estimaterho",names(parameter_grid))]
 #parameter_grid = parameter_grid[names(parameter_grid) != "wostreets_first_degree_no_dist_cov_lead_events_fatalities_estimaterho"]
 for (model_name in names(parameter_grid)){
@@ -55,7 +50,7 @@ for (model_name in names(parameter_grid)){
   name_of_grid_clean = gsub(".shp","",name_of_grid)
   
   
-  output_path = paste0("./05_model/model_",name_parameter_grid,"_",name_of_grid_clean)
+  output_path = paste0("./05_model/model_quality_",quality_strict,"_",name_parameter_grid,"_",name_of_grid_clean)
   dir.create(output_path)
   dir.create(paste0(output_path,"/plots"))
   
@@ -77,12 +72,12 @@ for (model_name in names(parameter_grid)){
   ##########################################
   
   name_of_grid_file_name = gsub(".shp","",name_of_grid)
-  data_file_name  = paste0("./data/data_for_prediction/",name_of_grid_file_name,"/",model_dates_to_run,"_events.RData")
+  data_file_name  = paste0("./data/data_for_prediction/",name_of_grid_file_name,"_quality_",quality_strict,"/",model_dates_to_run,"_events.RData")
   
   if (!any(file.exists(data_file_name))){
     
     
-    data_path_to_be_read = paste0("./data/frontline_data_all_mnths_",name_of_grid_file_name,".RData")
+    data_path_to_be_read = paste0("./data/frontline_data_all_mnths_quality",quality_strict,"_",name_of_grid_file_name,".RData")
     load(data_path_to_be_read)
     
     frontline_data = frontline_data_controle_num_all_previous_time
@@ -104,10 +99,6 @@ for (model_name in names(parameter_grid)){
     
   }
   
-  load(data_file_name)
-  
-  
-  
   if(!file.exists(path_of_adjacency_matrix)){
     
     message(paste0(path_of_adjacency_matrix," doesnt exist! It is being calcuated now"))
@@ -124,31 +115,42 @@ for (model_name in names(parameter_grid)){
     message("adjacency matris was successfully calculated!")
   }
   
-  data_mat_w <- readRDS(path_of_adjacency_matrix)
   
-  estimate_rho = list("model_rho" =  model_rho,
-                      "model_logit_rho_prior_mean" = model_logit_rho_prior_mean,
-                      "model_logit_rho_prior_sd" = model_logit_rho_prior_sd
-                      )
-  estimate_rho = estimate_rho[sapply(estimate_rho,function(x) !is.null(x))]
-  
-  run_model_wrapper(data,
-                    data_mat_w,
-                    model_covariates,
-                    estimate_rho = estimate_rho,
-                    date = model_dates_to_run,
-                    output_path = output_path,
-                    path_of_eigenvalue = path_of_eigenvalue,
-                    run_if_exists = FALSE)
-  
+  for (date in model_dates_to_run){
+    
+    data_file_name_one_date  = paste0("./data/data_for_prediction/",name_of_grid_file_name,"_quality_",quality_strict,"/",date,"_events.RData")
+    load(data_file_name_one_date)
+    
+    
+    data_mat_w <- readRDS(path_of_adjacency_matrix)
+    
+    estimate_rho = list("model_rho" =  model_rho,
+                        "model_logit_rho_prior_mean" = model_logit_rho_prior_mean,
+                        "model_logit_rho_prior_sd" = model_logit_rho_prior_sd
+    )
+    estimate_rho = estimate_rho[sapply(estimate_rho,function(x) !is.null(x))]
+    
+    run_model_wrapper(data,
+                      data_mat_w,
+                      model_covariates,
+                      estimate_rho = estimate_rho,
+                      date = date,
+                      output_path = output_path,
+                      path_of_eigenvalue = path_of_eigenvalue,
+                      run_if_exists = FALSE)
+    
+    
+    
+    fileConn <- file(paste0(output_path, "/settings.txt"), open = "a")
+    writeLines("\n\n\n", fileConn)
+    writeLines(as.character(parameter_grid[name_parameter_grid]), fileConn)
+    close(fileConn)
+    
+    
+    
+    
+  } 
 
-  
-  fileConn <- file(paste0(output_path, "/settings.txt"), open = "a")
-  writeLines("\n\n\n", fileConn)
-  writeLines(as.character(parameter_grid[name_parameter_grid]), fileConn)
-  close(fileConn)
-  
-  
   
   
 }
