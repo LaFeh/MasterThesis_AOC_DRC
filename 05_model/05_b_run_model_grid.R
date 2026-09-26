@@ -17,7 +17,7 @@ grid_cv_summary <- list()
 all_months = c(paste0("0",1:9),10:12)
 all_years = c(2023,2024,2025)
 all_dates= c(paste0(all_years[1], all_months),paste0(all_years[2], all_months),paste0(all_years[3], all_months))
-
+all_dates = "202411"
 quality_strict = T
 parameter_grid = lapply(parameter_grid, function(x){x$model$dates_to_run = all_dates; return(x)})
 

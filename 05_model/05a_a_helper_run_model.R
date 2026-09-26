@@ -146,20 +146,20 @@ run_model <- function(date,
     
       ipis_map = st_transform(st_union(ipis_map),st_crs(data))
       aoc = st_union(data[which(data$risk>mean(data$risk)),])
-      aoc_boundary_without_holes = nngeo::st_remove_holes(st_boundary(aoc))
+      #aoc_boundary_without_holes = nngeo::st_remove_holes(st_boundary(aoc))
       
       total_area = st_area(ipis_map)+st_area(aoc)
       overlapping_area = sum(st_area(st_intersection(ipis_map, aoc)))
       overlapping_percent = 2*overlapping_area / total_area
       
-      total_area_no_holes = st_area(ipis_map)+st_area(aoc_boundary_without_holes)
-      overlapping_area_no_holes = sum(st_area(st_intersection(ipis_map, aoc_boundary_without_holes)))
-      overlapping_percent_no_holes = 2*overlapping_area_no_holes / overlapping_percent_no_holes
+      #total_area_no_holes = st_area(ipis_map)+st_area(aoc_boundary_without_holes)
+      #overlapping_area_no_holes = sum(st_area(st_intersection(ipis_map, aoc_boundary_without_holes)))
+      #overlapping_percent_no_holes = 2*overlapping_area_no_holes / overlapping_percent_no_holes
       
       
       cat(output_path)
       saveRDS(overlapping_percent,paste0(output_path,"/overlapping_area_",as.character(date),".rds"))
-      saveRDS(overlapping_percent_no_holes,paste0(output_path,"/overlapping_area_no_holes",as.character(date),".rds"))
+      #saveRDS(overlapping_percent_no_holes,paste0(output_path,"/overlapping_area_no_holes",as.character(date),".rds"))
       
       p <- ggplot2::ggplot() +
         ggplot2::geom_sf(

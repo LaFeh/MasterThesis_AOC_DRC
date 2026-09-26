@@ -67,15 +67,20 @@ grid_yr_mnth <- merge(grid, date_combinations[c("year_mnth","time_step")], by = 
 
 # acled territory
 
-
-acled_territory_grid = st_join(acled_territory_mnth,grid,join = st_within, left = TRUE)
+acled_territory_grid = st_join(acled_territory_mnth,grid[,"cell_id"],join = st_within, left = TRUE)
 
 aoc_per_cell = acled_territory_grid%>%
   dplyr::group_by(year_mnth,cell_id)%>%
   dplyr::summarise(non_state_actor = sum(controle == "non-state actor"),
                    government = sum(controle == "government"),
-                   controle_num = mean(controle_num)
-                   )%>%
+                   control_num = mean(control_num),
+                   across(
+                     c(starts_with("events_"), starts_with("fatalities_")),
+                     list(
+                       temp = ~sum(.x,na.rm = T)
+                     ),
+                     .names = "{.col}"
+                   ))%>%
   mutate(control = if_else((non_state_actor+government)!=0, non_state_actor/(non_state_actor+government), 0.5))
 
 aoc_per_cell = aoc_per_cell[,!colnames(aoc_per_cell) %in% c("non_state_actor","government")]
@@ -87,35 +92,21 @@ aoc_per_cell = aoc_per_cell[which(!is.na(aoc_per_cell$cell_id)),]
 
 grid_cntrl_mnth = full_join(grid_yr_mnth,aoc_per_cell, by =c("cell_id","year_mnth"))
 
-#grid_cntrl_mnth[which(is.na(grid_cntrl_mnth$controle)),"controle"] = 0.5 #"neutral"
+acled_conflict_mnth= st_join(acled_conflict_mnth,grid[,"cell_id"],join = st_within, left = FALSE)
 
-acled_conflict_mnth= st_join(acled_conflict_mnth,grid,join = st_within, left = FALSE)
-
-# acled_conflict_per_cell = acled_conflict_mnth%>%st_drop_geometry()%>%ungroup()%>%
-#   dplyr::group_by(year_mnth,cell_id)%>%
-#   dplyr::summarise(events_violence_civilian = sum(events_violence_civilian,na.rm =T),
-#                    events_battles = sum(events_Battles,na.rm =T),
-#                    events_strategic_developments = sum(events_strategic_developments,na.rm =T),
-#                    events_remote_violence = sum(events_remote_violence,na.rm =T),
-#                    fatalities_violence_civilian = sum(fatalities_violence_civilian,na.rm =T),
-#                    fatalities_battles = sum(fatalities_Battles,na.rm =T),
-#                    fatalities_strategic_developments = sum(fatalities_strategic_developments,na.rm =T),
-#                    fatalities_remote_violence = sum(fatalities_remote_violence,na.rm =T),
-#                    )
 
 acled_conflict_per_cell = acled_conflict_mnth %>%
   st_drop_geometry() %>%
   ungroup() %>%
   dplyr::group_by(year_mnth, cell_id) %>%
   dplyr::summarise(
-    events_violence_civilian = sum(events_violence_civilian, na.rm = TRUE),
-    events_battles = sum(events_Battles, na.rm = TRUE),
-    events_strategic_developments = sum(events_strategic_developments, na.rm = TRUE),
-    events_remote_violence = sum(events_remote_violence, na.rm = TRUE),
-    fatalities_violence_civilian = sum(fatalities_violence_civilian, na.rm = TRUE),
-    fatalities_battles = sum(fatalities_Battles, na.rm = TRUE),
-    fatalities_strategic_developments = sum(fatalities_strategic_developments, na.rm = TRUE),
-    fatalities_remote_violence = sum(fatalities_remote_violence, na.rm = TRUE),
+    across(
+      c(starts_with("events_"), starts_with("fatalities_")),
+      list(
+        temp = ~sum(.x,na.rm = T)
+      ),
+      .names = "{.col}"
+    ),
     .groups = "drop"
   ) %>%
   dplyr::arrange(cell_id, year_mnth) %>%
@@ -214,20 +205,20 @@ date_combinations$year_mnth_date = as.yearmon(as.character(date_combinations$yea
 # - all previous months 
 ###################################################################
 # 
-frontline_data_controle_num_all_previous_time = data.frame()
+frontline_data_control_num_all_previous_time = data.frame()
 
 # for (d in 1:nrow(date_combinations)){
 #   tm = date_combinations$year_mnth_date[d]
 #   print(tm)
 # 
 # 
-#   frnt_data_controle_num_all_previous_time = grid_cntrl_mnth%>%filter(year_mnth_date <= tm )%>%# & name =="Nord-Kivu") %>%
+#   frnt_data_control_num_all_previous_time = grid_cntrl_mnth%>%filter(year_mnth_date <= tm )%>%# & name =="Nord-Kivu") %>%
 #     group_by(cell_id)%>%
-#     filter(!(is.na(controle_num) & any(!is.na(controle_num)))) %>%
+#     filter(!(is.na(control_num) & any(!is.na(control_num)))) %>%
 #     slice_max(year_mnth_date, n = 1, with_ties = FALSE) %>%
 #     ungroup()%>%mutate(time = tm)
 # 
-#   frontline_data_controle_num_all_previous_time = rbind(frontline_data_controle_num_all_previous_time,frnt_data_controle_num_all_previous_time)
+#   frontline_data_control_num_all_previous_time = rbind(frontline_data_control_num_all_previous_time,frnt_data_control_num_all_previous_time)
 # 
 # 
 # 
@@ -260,11 +251,11 @@ results <- future_lapply(
     
     message("Processing: ", tm)
     
-    frnt_data_controle_num_all_previous_time <-
+    frnt_data_control_num_all_previous_time <-
       grid_cntrl_mnth_no_geom %>%
       filter(year_mnth_date <= tm) %>%
       group_by(cell_id) %>%
-      filter(!(is.na(controle_num) & any(!is.na(controle_num)))) %>%
+      filter(!(is.na(control_num) & any(!is.na(control_num)))) %>%
       slice_max(
         year_mnth_date,
         n = 1,
@@ -273,18 +264,18 @@ results <- future_lapply(
       ungroup() %>%
       mutate(time = tm)
     
-    frnt_data_controle_num_all_previous_time
+    frnt_data_control_num_all_previous_time
   }
 )
 
 
 
-frontline_data_controle_num_all_previous_time <-
+frontline_data_control_num_all_previous_time <-
   bind_rows(results)
 
 
-frontline_data_controle_num_all_previous_time <-
-  frontline_data_controle_num_all_previous_time %>%
+frontline_data_control_num_all_previous_time <-
+  frontline_data_control_num_all_previous_time %>%
   left_join(
     geometry_lookup,
     by = "cell_id"
@@ -298,5 +289,5 @@ plan(sequential)
 name_of_grid_file_name = gsub(".shp","",name_of_grid)
 data_to_be_saved_to = paste0("./data/frontline_data_all_mnths_quality_",quality_strict,"_",name_of_grid_file_name,".RData")
 
-save(frontline_data_controle_num_all_previous_time,file = data_to_be_saved_to)
+save(frontline_data_control_num_all_previous_time,file = data_to_be_saved_to)
 message(paste0("./data/frontline_data_all_mnths_quality_",quality_strict,"_",name_of_grid_file_name,".RData is saved!"))

@@ -17,7 +17,7 @@ data_path_to_be_read = paste0("./data/frontline_data_all_mnths_quality_",quality
 
 load(data_path_to_be_read)
 
-frontline_data = frontline_data_controle_num_all_previous_time
+frontline_data = frontline_data_control_num_all_previous_time
 frontline_data = frontline_data[order(frontline_data$cell_id),]
 
 rm(frontline_data_controle_num_all_previous_time)

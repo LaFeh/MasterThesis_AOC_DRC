@@ -121,7 +121,7 @@ grid_cv_summary <- list()
 pdf(
   paste0(
     date,
-    "_model_comparison_",
+    "_model_comparison_afer_before",
     gsub(".shp", "", gridname),
     ".pdf"
   ),

@@ -281,3 +281,4 @@ acled_conflict_mnth = st_transform(acled_conflict_mnth,st_crs(gdf))
 
 save(acled_territory_mnth, file="./data/acled_territory_mnth.RData")
 save(acled_conflict_mnth, file="./data/acled_conflict_mnth.RData")
+

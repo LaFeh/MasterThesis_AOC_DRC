@@ -35,13 +35,24 @@ drc_m <- admin |> st_union() |>
 # ============================================================
 # 2. CREATE 5KM GRID
 # ============================================================
+library(sf)
+
+drc_sf <- st_as_sf(drc_m)
+
+# build grid over the bounding box
+grid <- st_make_grid(drc_sf, cellsize = cell_size, what = "polygons")
+grid <- st_sf(cell_id = seq_along(grid), geometry = grid)
+
+# clip grid to the actual polygon boundary
+grid <- st_intersection(grid, drc_sf)
 
 #cell_size     <- 5000
-grid_template <- rast(ext(drc_m), resolution = cell_size, crs = crs(drc_m))
-drc_raster    <- rasterize(drc_m, grid_template, field = 1)
-drc_cells_v   <- as.polygons(drc_raster, aggregate = FALSE, touches = TRUE)
+# grid_template <- rast(ext(drc_m), resolution = cell_size, crs = crs(drc_m))
+# drc_raster    <- rasterize(drc_m, grid_template, field = 1)
+# drc_cells_v   <- as.polygons(drc_raster, aggregate = FALSE, touches = TRUE)
+# 
+# grid <- st_as_sf(drc_cells_v)
 
-grid <- st_as_sf(drc_cells_v)
 grid$cell_id <- seq_len(nrow(grid))
 
 # ============================================================
