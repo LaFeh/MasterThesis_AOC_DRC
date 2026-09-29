@@ -14,6 +14,10 @@ add_waterways = T
 cell_size     <- 3000
 
 quality_strict = TRUE
+if(quality_strict){
+  poor_quality = F
+  outlier =F
+}
 
 source("./00b_helper_create_grid_name.R")
 name_of_grid = create_grid_name(add_waterways = add_waterways,
@@ -48,12 +52,12 @@ if(do_preparational_calculations){
 rm(list = setdiff(ls(), c("name_of_grid",
                           "add_nationalparks",
                           "add_waterways",
-                          "add_streets","cell_size")))
+                          "add_streets","cell_size","quality_strict","poor_quality")))
 
 
 gc()
 source("./01_create_data.R")
-rm(list = setdiff(ls(), c("name_of_grid","cell_size","quality_strict")))
+rm(list = setdiff(ls(), c("name_of_grid","cell_size","quality_strict","poor_quality")))
 gc()
 
 # source("./01a_prepare_settlements.R")
@@ -65,19 +69,19 @@ source("./01b_prepare_travelspeed.R")
 rm(list = setdiff(ls(),c("name_of_grid","cell_size","quality_strict")))
 gc()
 
-source("./01c_prepare_distance_to_rwa.R")
-rm(list = setdiff(ls(), c("name_of_grid","cell_size","quality_strict")))
-gc()
+# source("./01c_prepare_distance_to_rwa.R")
+# rm(list = setdiff(ls(), c("name_of_grid","cell_size","quality_strict")))
+# gc()
 
 source("./01e_prepare_acled.R")
-rm(list = setdiff(ls(), c("name_of_grid","cell_size","quality_strict")))
+rm(list = setdiff(ls(), c("name_of_grid","cell_size","quality_strict","poor_quality")))
 gc()
 # source("./01f_prepare_rain.R")
 # rm(list = ls())
 # gc()
 
 source("./02_combine_data.R")
-rm(list = setdiff(ls(), c("name_of_grid","quality_strict")))
+rm(list = setdiff(ls(), c("name_of_grid","quality_strict","poor_quality")))
 gc()
 
 source("./04b_create_data_to_predict_all_months.R")

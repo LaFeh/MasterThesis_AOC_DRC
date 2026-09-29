@@ -1,6 +1,9 @@
 #05a run model
 
 library(Matrix)
+library(foreach)
+library(doParallel)
+
 source("./00b_helper_create_grid_name.R")
 source("./05_model/05a_a_helper_run_model.R")
 source("./05_model/05a_b_helper_parameter_grid.R")
@@ -17,9 +20,12 @@ grid_cv_summary <- list()
 all_months = c(paste0("0",1:9),10:12)
 all_years = c(2023,2024,2025)
 all_dates= c(paste0(all_years[1], all_months),paste0(all_years[2], all_months),paste0(all_years[3], all_months))
-all_dates = "202411"
+#all_dates = "202411"
 quality_strict = T
 parameter_grid = lapply(parameter_grid, function(x){x$model$dates_to_run = all_dates; return(x)})
+
+
+run_if_exists = FALSE
 
 #parameter_grid = parameter_grid[grepl("estimaterho",names(parameter_grid))]
 #parameter_grid = parameter_grid[names(parameter_grid) != "wostreets_first_degree_no_dist_cov_lead_events_fatalities_estimaterho"]
@@ -28,6 +34,8 @@ for (model_name in names(parameter_grid)){
   
   
   print(model_name)
+  print("\n")
+  
   name_parameter_grid = model_name
   get_parameter_from_grid(parameter_grid,name_parameter_grid)
   
@@ -54,6 +62,8 @@ for (model_name in names(parameter_grid)){
   dir.create(output_path)
   dir.create(paste0(output_path,"/plots"))
   
+
+  
   path_of_adjacency_matrix = paste0("./data/data_for_prediction/mat_w_mixedtime_neighbour",
                                     model_degree_of_neighbour,
                                     "_distance_", model_bol_distance,
@@ -73,6 +83,7 @@ for (model_name in names(parameter_grid)){
   
   name_of_grid_file_name = gsub(".shp","",name_of_grid)
   data_file_name  = paste0("./data/data_for_prediction/",name_of_grid_file_name,"_quality_",quality_strict,"/",model_dates_to_run,"_events.RData")
+  
   
   if (!any(file.exists(data_file_name))){
     
@@ -115,41 +126,72 @@ for (model_name in names(parameter_grid)){
     message("adjacency matris was successfully calculated!")
   }
   
+  #n_cores <- detectCores()
+  n_cores = 4
+  cluster <- makeCluster(n_cores - 1)
+  registerDoParallel(cluster)
   
-  for (date in model_dates_to_run){
+  cpp_estimate <- "./05_model/leroux_with_priors_wo_constraint_all_data_estimate_rho_no_eigenvalues"
+  
+  
+  TMB::compile(paste0(cpp_estimate, ".cpp"))
+  
+  
+  cl <- makeCluster(1)
+  
+  clusterEvalQ(cl, {
+    library(TMB)
+    library(Matrix)
+  })
+  
+  #1:length(model_dates_to_run)
+  foreach(date_idx = 1:length(model_dates_to_run) ) %dopar%{
     
-    data_file_name_one_date  = paste0("./data/data_for_prediction/",name_of_grid_file_name,"_quality_",quality_strict,"/",date,"_events.RData")
-    load(data_file_name_one_date)
+    date = model_dates_to_run[date_idx]
     
-    
-    data_mat_w <- readRDS(path_of_adjacency_matrix)
-    
-    estimate_rho = list("model_rho" =  model_rho,
-                        "model_logit_rho_prior_mean" = model_logit_rho_prior_mean,
-                        "model_logit_rho_prior_sd" = model_logit_rho_prior_sd
-    )
-    estimate_rho = estimate_rho[sapply(estimate_rho,function(x) !is.null(x))]
-    
-    run_model_wrapper(data,
-                      data_mat_w,
-                      model_covariates,
-                      estimate_rho = estimate_rho,
-                      date = date,
-                      output_path = output_path,
-                      path_of_eigenvalue = path_of_eigenvalue,
-                      run_if_exists = FALSE)
+    if(!((!run_if_exists) & (file.exists(paste0(output_path,"/",as.character(date),"_report.RData"))))){
+
     
     
+      print(date)
+      print("\n")
+      
+      data_file_name_one_date  = paste0("./data/data_for_prediction/",name_of_grid_file_name,"_quality_",quality_strict,"/",date,"_events.RData")
+      load(data_file_name_one_date)
+      
+      
+      data_mat_w <- readRDS(path_of_adjacency_matrix)
+      
+      estimate_rho = list("model_rho" =  model_rho,
+                          "model_logit_rho_prior_mean" = model_logit_rho_prior_mean,
+                          "model_logit_rho_prior_sd" = model_logit_rho_prior_sd
+      )
+      estimate_rho = estimate_rho[sapply(estimate_rho,function(x) !is.null(x))]
+      
+      run_model_wrapper(data,
+                        data_mat_w,
+                        model_covariates,
+                        estimate_rho = estimate_rho,
+                        date = date,
+                        output_path = output_path,
+                        path_of_eigenvalue = path_of_eigenvalue,
+                        run_if_exists = FALSE)
+      
+      
+      
+      # fileConn <- file(paste0(output_path, "/settings.txt"), open = "a")
+      # writeLines("\n\n\n", fileConn)
+      # writeLines(as.character(parameter_grid[name_parameter_grid]), fileConn)
+      # close(fileConn)
     
-    fileConn <- file(paste0(output_path, "/settings.txt"), open = "a")
-    writeLines("\n\n\n", fileConn)
-    writeLines(as.character(parameter_grid[name_parameter_grid]), fileConn)
-    close(fileConn)
+    }
+
     
     
     
     
   } 
+  stopCluster(cl = cluster)
 
   
   

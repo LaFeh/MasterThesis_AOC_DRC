@@ -43,7 +43,7 @@ for( x in 1:nrow(admin2_false)){
   admin2_false[x,"distance"] = st_distance(region_bound,admin2_false[x,]$geometry)
 }
 
-admin2_false$poor_quality = admin2_false$distance > grid_cell
+admin2_false$poor_quality = admin2_false$distance > cell_size
 admin2_false = admin2_false[admin2_false$poor_quality,]
 
 gdf[which(gdf$id %in% admin2_false$id),]$poor_quality = TRUE

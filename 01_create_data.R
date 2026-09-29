@@ -35,7 +35,6 @@ drc_m <- admin |> st_union() |>
 # ============================================================
 # 2. CREATE 5KM GRID
 # ============================================================
-library(sf)
 
 drc_sf <- st_as_sf(drc_m)
 
@@ -86,8 +85,7 @@ if(add_nationalparks){
     st_make_valid() |>
     st_buffer(0)
   
-  
-  
+
   # Intersection: grid cells that overlap parks
   national_parks_shape <- st_intersection(grid, national_parks) |>
     st_buffer(0)
@@ -258,12 +256,12 @@ if (add_streets){
   
   streets_transformed$surface ="road"
   streets_transformed$code =NA
-  streets_transformed$layer =4
+  streets_transformed$layer = 4
   streets_transformed$cell_id = streets_transformed$segment_id
   st_geometry(streets_transformed) <- "geometry"
   
   strt = streets_transformed[,c("osm_id","adm1_pcode","adm1_name","adm2_pcode","adm2_name",
-             "fclass","code","layer","cell_id","surface")]
+             "fclass","code","cell_id","surface")]
   strt$name = NA
   grid = rbind(grid_without_streets,strt)
   
@@ -284,7 +282,86 @@ if (add_streets){
 grid$name      <- grid$adm1_name
 grid$adm1_name <- NULL
 
-grid_final = smoothr::drop_crumbs(grid, threshold = units::set_units((15*15),"m^2"))
+threshold <- set_units(15 * 15, "m^2")
+grid$area <- st_area(grid)
+
+grid$cell_id   <- seq_len(nrow(grid))
+small <- grid[grid$area < threshold, ]
+keep  <- grid[grid$area >= threshold, ]
+
+# sort small cells ascending so merges cascade sensibly if one small
+# cell only touches other small cells
+small <- small[order(small$area), ]
+
+intersections_raw = st_intersects(small,keep)
+smalls_to_be_buffered = which(!unlist(lapply(intersections_raw,function(x){length(x)>0})))
+small[smalls_to_be_buffered,] = st_buffer(small[smalls_to_be_buffered,],2)
+
+intersections = st_intersects(small,keep)
+#bounds_small = st_boundary(small)
+#bounds_keep = st_boundary(keep)
+shared_lengths = st_intersection(small,keep)
+
+smalls = c()
+keeps = c()
+#small = small[1:300,]
+for (i in seq_len(nrow(small))) {
+  print(i)
+  cell <- small[i, ]
+  touching = intersections[[i]]
+  #touching <- st_touches(cell, keep)[[1]]
+  if (length(touching) == 0) next  # isolated sliver, no neighbor to merge into
+  
+  
+  shared_len <- st_length(shared_lengths[which(shared_lengths$cell_id == cell$cell_id & shared_lengths$cell_id.1 %in% keep[touching,]$cell_id),])
+  # # shared boundary length with each touching neighbor
+  # shared_lenx <- vapply(touching, function(j) {
+  #   inter <- suppressWarnings(st_intersection(st_boundary(cell), st_boundary(keep[j, ])))
+  #   sum(st_length(inter))
+  # }, numeric(1))
+  
+  best <- touching[which.max(shared_len)]
+  if(is.na(best)){
+    print(i)
+  }
+  
+  smalls = append(smalls, i)
+  keeps = append(keeps, best)
+  # absorb the small cell into its biggest-border neighbor
+  #st_geometry(keep)[best] <- st_union(st_geometry(keep)[best], st_geometry(cell))
+}
+
+
+assign_df <- data.frame(small_idx = smalls, keep_idx = keeps)
+
+small_unions <- small[assign_df$small_idx, ] |>
+  st_geometry() |>
+  st_sf(keep_idx = assign_df$keep_idx, geometry = _) |>
+  group_by(keep_idx) |>
+  summarise(geometry = st_union(geometry), .groups = "drop")
+
+# Step 2: union each combined-smalls geometry into its keep cell
+# (one row per keep_idx now, so no duplicate indices in the assignment)
+idx <- small_unions$keep_idx
+
+st_geometry(keep)[idx] <- st_union(
+  st_geometry(keep)[idx],
+  st_geometry(small_unions),
+  by_feature = TRUE
+)
+
+grid_final <- keep
+grid_final = grid_final%>%st_collection_extract("POLYGON")%>%st_cast(.,"POLYGON")#st_collection_extract("POLYGON")
+
+grid_final$area = st_area(grid_final)
+grid_final$area
+grid_final = grid_final[which(grid_final$area>as_units(10,"m^2")),]
+
+
+plot(st_boundary(st_union(grid_final)))
+
+
+#grid_final = smoothr::drop_crumbs(grid, threshold = units::set_units((15*15),"m^2"))
 
 grid_final$cell_id   <- seq_len(nrow(grid_final))
 length(unique(grid_final$cell_id))==nrow(grid_final)

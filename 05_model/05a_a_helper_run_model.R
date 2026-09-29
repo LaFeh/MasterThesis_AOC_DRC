@@ -48,11 +48,11 @@ run_model <- function(date,
     # instead of `for (int k = 0; k < N; k++)`. Otherwise NA rows (filled with
     # y=0) are silently scored as observed failures, which corrupts both the
     # fit and any downstream CV/IC comparison.
-    try(dyn.unload(dynlib(cpp_file)), silent = TRUE)
-    file.remove(paste0(cpp_file,".o"))
-    file.remove(paste0(cpp_file,".dll"))
+    #try(dyn.unload(dynlib(cpp_file)), silent = TRUE)
+    #file.remove(paste0(cpp_file,".o"))
+    #file.remove(paste0(cpp_file,".dll"))
     
-    compile(paste0(cpp_file,".cpp"))
+    #compile(paste0(cpp_file,".cpp"))
     cpp_file_load = gsub("//.","",cpp_file)
     dyn.load(dynlib(cpp_file_load))
     cpp_obj = basename(cpp_file)
@@ -109,112 +109,107 @@ run_model <- function(date,
 
     
     
-  }else {
-    load(paste0(output_path,"/",as.character(date),"_report.RData"))
-    load(paste0(output_path,"/",as.character(date),"_report_vals.RData"))
-    fixed = summary(rep, "fixed") 
-    
   }
 
   
-  data$phi_w = rep$par.random
-  data$phi_w_plogis = plogis(rep$par.random)
-  betas = rep$par.fixed[names(rep$par.fixed)=="beta"]
-  if(length(betas)>1){
-    betas_minus_intercept = betas[2:length(betas)]
-    X_minus_intercept = data_lst$X[, -1, drop = FALSE]
-    data$risk = plogis(X_minus_intercept %*% as.vector(betas_minus_intercept) + data$phi_w)
-    data$p_w = plogis(betas[1]+data$phi_w)
-  } else{
-    data$risk = plogis(data$phi_w)
-    data$p_w = data$risk
-  }
-  
-  
-
-  
-  
-  
-  compare_ipis = T
-  if (compare_ipis){
-    
-    ipis_map <- get_ipis_map(date)
-
-    
-    if (!is.null(ipis_map)) {
-    
-    
-      ipis_map = st_transform(st_union(ipis_map),st_crs(data))
-      aoc = st_union(data[which(data$risk>mean(data$risk)),])
-      #aoc_boundary_without_holes = nngeo::st_remove_holes(st_boundary(aoc))
-      
-      total_area = st_area(ipis_map)+st_area(aoc)
-      overlapping_area = sum(st_area(st_intersection(ipis_map, aoc)))
-      overlapping_percent = 2*overlapping_area / total_area
-      
-      #total_area_no_holes = st_area(ipis_map)+st_area(aoc_boundary_without_holes)
-      #overlapping_area_no_holes = sum(st_area(st_intersection(ipis_map, aoc_boundary_without_holes)))
-      #overlapping_percent_no_holes = 2*overlapping_area_no_holes / overlapping_percent_no_holes
-      
-      
-      cat(output_path)
-      saveRDS(overlapping_percent,paste0(output_path,"/overlapping_area_",as.character(date),".rds"))
-      #saveRDS(overlapping_percent_no_holes,paste0(output_path,"/overlapping_area_no_holes",as.character(date),".rds"))
-      
-      p <- ggplot2::ggplot() +
-        ggplot2::geom_sf(
-          data = st_as_sf(data),
-          fill = NA,
-          color = "black",
-          linewidth = 0.2
-        ) +
-        geom_sf(data = st_as_sf(aoc), fill = "blue", alpha = 0.5) +
-        geom_sf(data = st_as_sf(ipis_map), fill = "red", alpha = 0.5) +
-        theme_minimal() 
-      
-      ggsave(paste0(output_path,"/plots/",date,"_overlapping_area.png"),p)
-    }
-      
-  }
-  
-  
-  # data_only_aoc= data[which(data$p_w>mean(data$p_w)),]
-  # data_only_aoc= data[which(data$phi_w >mean(data$phi_w )),]
-  # data_only_aoc = st_union(data_only_aoc)
-  # data_only_aoc = st_boundary(data_only_aoc)
+  # data$phi_w = rep$par.random
+  # data$phi_w_plogis = plogis(rep$par.random)
+  # betas = rep$par.fixed[names(rep$par.fixed)=="beta"]
+  # if(length(betas)>1){
+  #   betas_minus_intercept = betas[2:length(betas)]
+  #   X_minus_intercept = data_lst$X[, -1, drop = FALSE]
+  #   data$risk = plogis(X_minus_intercept %*% as.vector(betas_minus_intercept) + data$phi_w)
+  #   data$p_w = plogis(betas[1]+data$phi_w)
+  # } else{
+  #   data$risk = plogis(data$phi_w)
+  #   data$p_w = data$risk
+  # }
   # 
-  
-  data$p_mean   <- as.numeric(report_vals$p)
-  data$phi_mean   <- as.numeric(plogis(report_vals$phi))
-  data$eta_mean <- as.numeric(report_vals$eta)
-  
-  
-  
-  tau = exp(fixed[,"Estimate"]["log_tau"])
-  rho = plogis(fixed[,"Estimate"]["logit_rho"])
-  cat("rho: ",rho)
-  
-  library(ggplot2)
-  p <- ggplot2::ggplot(data) +
-    geom_sf(aes(fill =  phi_mean)) +
-    scale_fill_viridis_c() +
-    theme_minimal()  +
-    ggtitle(paste0("tau: ",tau,"; rho: ",rho))
-  
-  ggsave(paste0(output_path,"/plots/",date,"_phi.png"),p)
-  
-  
-  p <- ggplot2::ggplot(data) +
-    geom_sf(aes(fill =  risk )) +
-    scale_fill_viridis_c() +
-    theme_minimal()  +
-    ggtitle(paste0("tau: ",tau,"; rho: ",rho))
-  
-  ggsave(paste0(output_path,"/plots/",date,"_relative_risk.png"),p)
-  
-  
-
-  
+  # 
+  # 
+  # 
+  # 
+  # 
+  # compare_ipis = T
+  # if (compare_ipis){
+  #   
+  #   ipis_map <- get_ipis_map(date)
+  # 
+  #   
+  #   if (!is.null(ipis_map)) {
+  #   
+  #   
+  #     ipis_map = st_transform(st_union(ipis_map),st_crs(data))
+  #     aoc = st_union(data[which(data$risk>mean(data$risk)),])
+  #     #aoc_boundary_without_holes = nngeo::st_remove_holes(st_boundary(aoc))
+  #     
+  #     total_area = st_area(ipis_map)+st_area(aoc)
+  #     overlapping_area = sum(st_area(st_intersection(ipis_map, aoc)))
+  #     overlapping_percent = 2*overlapping_area / total_area
+  #     
+  #     #total_area_no_holes = st_area(ipis_map)+st_area(aoc_boundary_without_holes)
+  #     #overlapping_area_no_holes = sum(st_area(st_intersection(ipis_map, aoc_boundary_without_holes)))
+  #     #overlapping_percent_no_holes = 2*overlapping_area_no_holes / overlapping_percent_no_holes
+  #     
+  #     
+  #     cat(output_path)
+  #     saveRDS(overlapping_percent,paste0(output_path,"/overlapping_area_",as.character(date),".rds"))
+  #     #saveRDS(overlapping_percent_no_holes,paste0(output_path,"/overlapping_area_no_holes",as.character(date),".rds"))
+  #     
+  #     p <- ggplot2::ggplot() +
+  #       ggplot2::geom_sf(
+  #         data = st_as_sf(data),
+  #         fill = NA,
+  #         color = "black",
+  #         linewidth = 0.2
+  #       ) +
+  #       geom_sf(data = st_as_sf(aoc), fill = "blue", alpha = 0.5) +
+  #       geom_sf(data = st_as_sf(ipis_map), fill = "red", alpha = 0.5) +
+  #       theme_minimal() 
+  #     
+  #     ggsave(paste0(output_path,"/plots/",date,"_overlapping_area.png"),p)
+  #   }
+  #     
+  # }
+  # 
+  # 
+  # # data_only_aoc= data[which(data$p_w>mean(data$p_w)),]
+  # # data_only_aoc= data[which(data$phi_w >mean(data$phi_w )),]
+  # # data_only_aoc = st_union(data_only_aoc)
+  # # data_only_aoc = st_boundary(data_only_aoc)
+  # # 
+  # 
+  # data$p_mean   <- as.numeric(report_vals$p)
+  # data$phi_mean   <- as.numeric(plogis(report_vals$phi))
+  # data$eta_mean <- as.numeric(report_vals$eta)
+  # 
+  # 
+  # 
+  # tau = exp(fixed[,"Estimate"]["log_tau"])
+  # rho = plogis(fixed[,"Estimate"]["logit_rho"])
+  # cat("rho: ",rho)
+  # 
+  # library(ggplot2)
+  # p <- ggplot2::ggplot(data) +
+  #   geom_sf(aes(fill =  phi_mean)) +
+  #   scale_fill_viridis_c() +
+  #   theme_minimal()  +
+  #   ggtitle(paste0("tau: ",tau,"; rho: ",rho))
+  # 
+  # ggsave(paste0(output_path,"/plots/",date,"_phi.png"),p)
+  # 
+  # 
+  # p <- ggplot2::ggplot(data) +
+  #   geom_sf(aes(fill =  risk )) +
+  #   scale_fill_viridis_c() +
+  #   theme_minimal()  +
+  #   ggtitle(paste0("tau: ",tau,"; rho: ",rho))
+  # 
+  # ggsave(paste0(output_path,"/plots/",date,"_relative_risk.png"),p)
+  # 
+  # 
+  # 
+  # 
 
   
 }

@@ -128,7 +128,7 @@ parameter_grid <- list(
     model_logit_rho_prior_mean = 0
   ),
   streets_first_degree_no_distafter_before_rv_battles_estimaterho = add_to_parameter_grid(
-    name = "streets_first_degree_no_distafter_before_rv_battles_estimaterho",
+    name = "streets_first_degree_no_dist_after_before_rv_battles_estimaterho",
     grid_add_streets = TRUE,
     grid_add_nationalparks = TRUE,
     grid_add_waterways = TRUE,
