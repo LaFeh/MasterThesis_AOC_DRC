@@ -10,6 +10,17 @@ source("./05_model/05a_b_helper_parameter_grid.R")
 
 source("./04b_a_helper_functions.R")
 
+# cutoff = "2026-10-01"
+# folder = "~/MasterThesis_AOC_DRC/05_model/model_quality_TRUE_streets_first_degree_no_dist_lag_events_fatalities_estimaterho_grid_surface_3000_water_park_street"
+# files <- list.files(folder, full.names = TRUE)
+#  
+# info <- file.info(files)
+#  
+# old_files <- files[info$mtime < cutoff]
+# 
+# file.remove(old_files)
+
+
 
 # collects one row of CV summary stats per grid model, for the final
 # cross-model comparison table
@@ -127,30 +138,29 @@ for (model_name in names(parameter_grid)){
   }
   
   #n_cores <- detectCores()
-  n_cores = 4
-  cluster <- makeCluster(n_cores - 1)
-  registerDoParallel(cluster)
+
   
   cpp_estimate <- "./05_model/leroux_with_priors_wo_constraint_all_data_estimate_rho_no_eigenvalues"
   
   
   TMB::compile(paste0(cpp_estimate, ".cpp"))
   
+
+  n_cores = 6
+  cluster <- makeCluster(n_cores - 1)
+  registerDoParallel(cluster)
   
-  cl <- makeCluster(1)
-  
-  clusterEvalQ(cl, {
+  clusterEvalQ(cluster, {
     library(TMB)
     library(Matrix)
   })
   
   #1:length(model_dates_to_run)
-  foreach(date_idx = 1:length(model_dates_to_run) ) %dopar%{
+  foreach(date_idx = 1:length(model_dates_to_run) ,.packages = "Matrix") %dopar%{
     
     date = model_dates_to_run[date_idx]
     
     if(!((!run_if_exists) & (file.exists(paste0(output_path,"/",as.character(date),"_report.RData"))))){
-
     
     
       print(date)
@@ -196,6 +206,7 @@ for (model_name in names(parameter_grid)){
   
   
 }
+
 
 
 

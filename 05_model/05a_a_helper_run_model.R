@@ -5,8 +5,8 @@ get_ipis_map <- function(date) {
   
   month_names <- c(
     "01" = "jan", "02" = "feb", "03" = "mar",
-    "04" = "apr", "05" = "may", "06" = "jun",
-    "07" = "jul", "08" = "aug", "09" = "sep",
+    "04" = "apr", "05" = "may", "06" = "june",
+    "07" = "july", "08" = "aug", "09" = "sep",
     "10" = "oct", "11" = "nov", "12" = "dec"
   )
   
@@ -230,92 +230,92 @@ run_model_wrapper <- function(data,
   
   # Keep W sparse from the beginning
   W_sp <- as(data_mat_w, "dgCMatrix")
-  
+
   # Enforce symmetry without creating a dense matrix
   W_sp <- (W_sp + t(W_sp)) / 2
-  
+
   # Remove self-loops
   diag(W_sp) <- 0
-  
-  # ── 4. Laplacian (D - W) ─────────────────────────────────────────────────────
-  
-  #D <- Diagonal(x = rowSums(W_sp))
-  
-  #L <- D - W_sp
-  
 
-  
+  # ── 4. Laplacian (D - W) ─────────────────────────────────────────────────────
+
+  #D <- Diagonal(x = rowSums(W_sp))
+
+  #L <- D - W_sp
+
+
+
   N <- nrow(data)
   # load or calculate eigenvalues of W
-  
-  
+
+
   if (file.exists(path_of_eigenvalue)){
-    
+
     load(file =  path_of_eigenvalue)
 
-    
-  } 
-  
+
+  }
+
   # if (!file.exists(path_of_eigenvalue)) {
   #   cat("calculate eigenvalue /n")
-  #   
+  #
   #   # Sys.setenv(OMP_NUM_THREADS = "1")
   #   # Sys.setenv(OPENBLAS_NUM_THREADS = "1")
   #   # Sys.setenv(MKL_NUM_THREADS = "1")
-  #   
+  #
   #   A <- readRDS("~/MasterThesis_AOC_DRC/data/data_for_prediction/mat_w_mixedtime_neighbourfirst_distance_FALSE_FALSE_grid_surface_3000_water_park_street.RData")  # or however you load it
   #   library(RSpectra)
   #   library(Matrix)
-  #   
+  #
   #   n <- nrow(A)
-  #   
+  #
   #   # 1. Get spectral range (cheap)
   #   lambda_max <- eigs_sym(A, k = 1, which = "LA")$values
   #   lambda_min <- eigs_sym(A, k = 1, which = "SA")$values
-  #   
+  #
   #   #lambda_min_all <- eigs_sym(A, k = floor(n/2), which = "SA")$values
   #   # 2. Sweep shifts, using shift-invert near each one
   #   shifts <- seq(lambda_min, lambda_max, length.out = 50)
   #   all_eigs <- c()
-  #   
+  #
   #   for (s in shifts) {
   #     print(s)
   #     eigs_sym(A, k = 1, sigma = s, which = "LM",opts = list("tol" = 0.001,"retvec" = F))  # LM required when sigma is set
-  # 
+  #
   #     if (!is.null(r)) all_eigs <- c(all_eigs, r$values)
   #   }
-  #   
+  #
   #   all_eigs <- sort(unique(round(all_eigs, 8)))
   #   save(all_eigs,file = "~/all_eigs.RData")
-  #   
+  #
   #   eig_DmW <- eigen(L, symmetric = TRUE, only.values = TRUE)$values
   #   save(eig_DmW,file = path_of_eigenvalue)
-  #   
+  #
   # } else if(length(eig_DmW)   != N){
   #   cat("calculate eigenvalue /n")
   #   eig_DmW <- eigen(L, symmetric = TRUE, only.values = TRUE)$values
   #   save(eig_DmW,file = path_of_eigenvalue)
-  #   
-  #   
+  #
+  #
   # }
-  
+
   #stopifnot(length(eig_DmW)   == N)
-  
+
   #cat("Min eigenvalue of (D-W):", min(eig_DmW), "\n")  # expect >= 0 (or tiny negative)
   #cat("Negative eigenvalues (> -1e-8 is fine):", sum(eig_DmW < -1e-8), "\n")
-  
-  
+
+
   # ── 7. Dimension checks ───────────────────────────────────────────────────────
   stopifnot(all(is.finite(W_sp@x)))
   #stopifnot(all(is.finite(eig_DmW)))
   cat("All dimension checks passed.\n")
-  
+
   load(file = "./data/acled_conflict_mnth.RData")
-  
-  
-  
+
+
+
   all_dates = date
-  
+
   
   
 
@@ -324,36 +324,36 @@ run_model_wrapper <- function(data,
     
 
   # intercept only -- replace with your formula
-  
+
   lower_bounds_beta = rep(-Inf, ncol(X))
   upper_bounds_beta = rep(Inf, ncol(X))
-  
+
   stopifnot(nrow(X) == N)
   stopifnot(nrow(W_sp) == N)
   stopifnot(ncol(W_sp) == N)
 
-  
+
   # ── 6. Handle NAs in response ────────────────────────────────────────────────
   obs_idx  <- which(!is.na(data$control_binom)) - 1L   # 0-based for C++
   y_filled <- data$control_binom
-  y_filled[is.na(y_filled)] <- 0  
-  
+  y_filled[is.na(y_filled)] <- 0
+
   #weights_list = spdep::mat2listw(W_sp,style ="W",zero.policy=TRUE)
   #moran_result <- spdep::moran.test(y_filled, weights_list, adjust = T)
   #cat(moran_result[["estimate"]],"\n")
-  
+
   # fileConn<-file(paste0(output_path,"/settings.txt"))
   # writeLines(as.character(names(moran_result)), fileConn)
   # writeLines(as.character(moran_result), fileConn)
   # close(fileConn)
-  
-  
-  
+
+
+
   cat("Observed:", length(obs_idx), "/ Missing:", sum(is.na(data$control_binom)),
       "/ Total:", N, "\n")
-  
+
   stopifnot(length(y_filled)  == N)
-  
+
   data_lst <- list(
     y       = y_filled,
     n       = rep(1, N),
@@ -369,37 +369,37 @@ run_model_wrapper <- function(data,
     #logit_rho_prior_sd   = 0.32
     #rho = model_rho
   )
-  
+
   if ( c("model_rho") %in%names(estimate_rho)){
     data_lst["rho"] = estimate_rho["model_rho"]
-    
+
     cpp_file = paste0("./05_model/leroux_with_priors_wo_constraint_all_data_fixed_rho_no_eigenvalues")
-    
+
   } else{
     data_lst["logit_rho_prior_mean"] = estimate_rho["model_logit_rho_prior_mean"]
     data_lst["logit_rho_prior_sd"] = estimate_rho["model_logit_rho_prior_sd"]
-    
+
     cpp_file = paste0("./05_model/leroux_with_priors_wo_constraint_all_data_estimate_rho_no_eigenvalues")
-    
+
   }
-  
-  
+
+
   parameters <- list(
     beta      = rep(0, ncol(X)),
     phi       = rep(0, N),
     log_tau   = 1,    # tau = 1
     logit_rho = 0
   )
-  
+
   
   
   run_model(date = date,
-            data_lst, 
+            data_lst,
             parameters,
             cpp_file = cpp_file,
             output_path = output_path,
             run_if_exists = run_if_exists)
-  
+
   cat("model saved at", output_path)
   
   
