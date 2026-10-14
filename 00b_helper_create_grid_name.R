@@ -1,4 +1,7 @@
-create_grid_name <- function(add_streets,add_nationalparks,add_waterways,cell_size){
+create_grid_name <- function(add_streets,
+                             add_nationalparks,
+                             add_waterways,
+                             cell_size,street_size){
   
 
 
@@ -19,11 +22,14 @@ create_grid_name <- function(add_streets,add_nationalparks,add_waterways,cell_si
   }else {
     grid_name_water = ""
   }
+  if(street_size !=""){
+    street_size = paste0("_",street_size)
+  }
 
   name_of_grid = paste0("grid_surface_",cell_size,
                         grid_name_water,
                         grid_name_park,
-                        grid_name_street,".shp")
+                        grid_name_street,street_size,".shp")
   
   
   

@@ -13,8 +13,8 @@ grid = st_transform(grid,st_crs(acled_territory_mnth))
 acled_conflict_mnth = st_transform(acled_conflict_mnth,st_crs(acled_territory_mnth))
 
 if(quality_strict){
-  acled_conflict_mnth = acled_conflict_mnth %>%filter((!poor_quality) & (!outlier))
-  acled_territory_mnth = acled_territory_mnth %>%filter((!poor_quality) & (!outlier))
+  acled_conflict_mnth = acled_conflict_mnth %>%filter((!poor_quality))
+  acled_territory_mnth = acled_territory_mnth %>%filter((!poor_quality))
 }
 
 ##### settlements ########################
@@ -108,7 +108,12 @@ acled_conflict_per_cell = acled_conflict_mnth %>%
       .names = "{.col}"
     ),
     .groups = "drop"
-  ) %>%
+  )
+
+h = st_drop_geometry(grid_yr_mnth[,c("cell_id","year_mnth")])
+conflict_per_month_cell = left_join(h,acled_conflict_per_cell, by =c("cell_id","year_mnth"))
+
+acled_conflict_per_cell = conflict_per_month_cell %>%
   dplyr::arrange(cell_id, year_mnth) %>%
   dplyr::group_by(cell_id) %>%
   mutate(

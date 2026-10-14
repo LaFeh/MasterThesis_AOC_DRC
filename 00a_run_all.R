@@ -12,6 +12,7 @@ add_nationalparks =T
 add_waterways = T
 
 cell_size     <- 3000
+street_size = ""
 
 quality_strict = TRUE
 if(quality_strict){
@@ -23,7 +24,8 @@ source("./00b_helper_create_grid_name.R")
 name_of_grid = create_grid_name(add_waterways = add_waterways,
                  add_nationalparks = add_nationalparks,
                  add_streets = add_streets,
-                 cell_size = cell_size)
+                 cell_size = cell_size,
+                 street_size)
 
 
 # ============================================================
@@ -40,7 +42,7 @@ if(do_preparational_calculations){
   source("./00_02_travelspeed_remove_streams.R")
   if(add_streets){
     source("./00_03_prepare_street_data.R")
-    create_street_splitted(target_length = cell_size)
+    create_street_splitted(target_length = street_size)
   }
   
 }
@@ -64,9 +66,8 @@ gc()
 # rm(list = setdiff(ls(), "name_of_grid"))
 # gc()
 
-
 source("./01b_prepare_travelspeed.R")
-rm(list = setdiff(ls(),c("name_of_grid","cell_size","quality_strict")))
+rm(list = setdiff(ls(),c("name_of_grid","cell_size","quality_strict","poor_quality")))
 gc()
 
 # source("./01c_prepare_distance_to_rwa.R")

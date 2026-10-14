@@ -356,9 +356,12 @@ grid_final = grid_final%>%st_collection_extract("POLYGON")%>%st_cast(.,"POLYGON"
 grid_final$area = st_area(grid_final)
 grid_final$area
 grid_final = grid_final[which(grid_final$area>as_units(10,"m^2")),]
+equal_grids = st_equals(grid_final,retain_unique =T)
+equal_bol = sapply(equal_grids, function(x) length(x)>0)
+equal_rows = which(equal_bol)
+grid_final = grid_final[-equal_rows,]
 
-
-plot(st_boundary(st_union(grid_final)))
+#plot(st_boundary(st_union(grid_final)))
 
 
 #grid_final = smoothr::drop_crumbs(grid, threshold = units::set_units((15*15),"m^2"))

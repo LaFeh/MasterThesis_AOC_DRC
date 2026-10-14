@@ -29,14 +29,20 @@ grid_cv_summary <- list()
 
 
 all_months = c(paste0("0",1:9),10:12)
-all_years = c(2023,2024,2025)
-all_dates= c(paste0(all_years[1], all_months),paste0(all_years[2], all_months),paste0(all_years[3], all_months))
+# all_years = c(2023,2024,2025)
+# all_dates= c(paste0(all_years[1], all_months),paste0(all_years[2], all_months),paste0(all_years[3], all_months))
+all_months = c(paste0("0",2:9),10:12)
+all_years = c(2025)
+all_dates= c(paste0(all_years[1], all_months))
+
+
 #all_dates = "202411"
 quality_strict = T
 parameter_grid = lapply(parameter_grid, function(x){x$model$dates_to_run = all_dates; return(x)})
 
 
 run_if_exists = FALSE
+
 
 #parameter_grid = parameter_grid[grepl("estimaterho",names(parameter_grid))]
 #parameter_grid = parameter_grid[names(parameter_grid) != "wostreets_first_degree_no_dist_cov_lead_events_fatalities_estimaterho"]
@@ -64,7 +70,8 @@ for (model_name in names(parameter_grid)){
   name_of_grid = create_grid_name(add_waterways = grid_add_waterways,
                                   add_nationalparks = grid_add_nationalparks,
                                   add_streets = grid_add_streets,
-                                  cell_size = grid_cell_size)
+                                  cell_size = grid_cell_size,
+                                  street_size = grid_street_size)
   
   name_of_grid_clean = gsub(".shp","",name_of_grid)
   
@@ -146,7 +153,7 @@ for (model_name in names(parameter_grid)){
   TMB::compile(paste0(cpp_estimate, ".cpp"))
   
 
-  n_cores = 6
+  n_cores = 5
   cluster <- makeCluster(n_cores - 1)
   registerDoParallel(cluster)
   
@@ -185,7 +192,7 @@ for (model_name in names(parameter_grid)){
                         date = date,
                         output_path = output_path,
                         path_of_eigenvalue = path_of_eigenvalue,
-                        run_if_exists = FALSE)
+                        run_if_exists = run_if_exists)
       
       
       
@@ -206,7 +213,6 @@ for (model_name in names(parameter_grid)){
   
   
 }
-
 
 
 

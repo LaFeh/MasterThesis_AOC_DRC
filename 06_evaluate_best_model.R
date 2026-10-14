@@ -19,29 +19,52 @@ gridname <- create_grid_name(
   add_streets = T,
   add_nationalparks = T,
   add_waterways = T,
+  street_size = 6000,
   cell_size = cell_size
 )
+
+gridname2 <- create_grid_name(
+  add_streets = T,
+  add_nationalparks = T,
+  add_waterways = T,
+  street_size = "",
+  cell_size = cell_size
+)
+
+gridname = c(gridname,gridname2)
 
 estimate_rho = T
 quality_strict = T
 
 
 if(quality_strict ==""){
-  model_dirs <- paste0(
-    "~/MasterThesis_AOC_DRC/05_model/model_",
-    names(parameter_grid),
-    "_",
-    gsub(".shp", "", gridname)#,"_estimate_rho"
+  model_dirs <- with(
+    expand.grid(
+      parameter = names(parameter_grid),
+      grid = gsub("\\.shp$", "", gridname)
+    ),
+    paste0(
+      "~/MasterThesis_AOC_DRC/05_model/model_",
+      parameter,
+      "_",
+      grid
+    )
   )
-  
 }else{
-  model_dirs <- paste0(
-    "~/MasterThesis_AOC_DRC/05_model/model_quality_",quality_strict,"_",
-    names(parameter_grid),
-    "_",
-    gsub(".shp", "", gridname)#,"_estimate_rho"
-  )
   
+  model_dirs <- with(
+    expand.grid(
+      parameter = names(parameter_grid),
+      grid = gsub("\\.shp$", "", gridname)
+    ),
+    paste0(
+      "~/MasterThesis_AOC_DRC/05_model/model_quality_",quality_strict,"_",
+      parameter,
+      "_",
+      grid
+    )
+  )
+
   
 }
 
@@ -127,3 +150,4 @@ ggplot2::ggplot(df_overlap) +
     )
   )
 
+df_overlap%>%group_by(dir,dir_num)%>%summarise(mn_overlap_area = mean(overlap_area,na.rm =T))
