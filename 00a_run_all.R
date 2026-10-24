@@ -4,7 +4,7 @@ library(here)
 here::here()
 
 do_preparational_calculations = F
-
+add_streets_preparation =T
 # settings for grid
 
 add_streets = T
@@ -14,7 +14,7 @@ add_waterways = T
 cell_size     <- 3000
 street_size = ""
 
-quality_strict = TRUE
+quality_strict = F
 if(quality_strict){
   poor_quality = F
   outlier =F
@@ -40,14 +40,14 @@ if(do_preparational_calculations){
   
   source("./00_01_create_base_provinces.R")
   source("./00_02_travelspeed_remove_streams.R")
-  if(add_streets){
-    source("./00_03_prepare_street_data.R")
-    create_street_splitted(target_length = street_size)
-  }
+
   
 }
 
-
+if(add_streets_preparation){
+  source("./00_03_prepare_street_data.R")
+  create_street_splitted(target_length = 3000)
+}
 ####### make base grid calculations ##########
 
 

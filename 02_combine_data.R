@@ -41,9 +41,9 @@ acled_territory_mnth$year_mnth = as.numeric(acled_territory_mnth$year_mnth)
 acled_conflict_mnth$year_mnth = as.numeric(acled_conflict_mnth$year_mnth)
 
 # rwa distance ###########################
-dist_rwa = data.table::fread("./data/distance_rwanda.csv")
-grid = left_join(grid,dist_rwa, by="cell_id")
-
+# dist_rwa = data.table::fread("./data/distance_rwanda.csv")
+# grid = left_join(grid,dist_rwa, by="cell_id")
+# 
 
 
 # 1st. create data per month year ####################################################
@@ -110,8 +110,8 @@ acled_conflict_per_cell = acled_conflict_mnth %>%
     .groups = "drop"
   )
 
-h = st_drop_geometry(grid_yr_mnth[,c("cell_id","year_mnth")])
-conflict_per_month_cell = left_join(h,acled_conflict_per_cell, by =c("cell_id","year_mnth"))
+temp_grid = st_drop_geometry(grid_yr_mnth[,c("cell_id","year_mnth")])
+conflict_per_month_cell = left_join(temp_grid,acled_conflict_per_cell, by =c("cell_id","year_mnth"))
 
 acled_conflict_per_cell = conflict_per_month_cell %>%
   dplyr::arrange(cell_id, year_mnth) %>%
@@ -294,5 +294,5 @@ plan(sequential)
 name_of_grid_file_name = gsub(".shp","",name_of_grid)
 data_to_be_saved_to = paste0("./data/frontline_data_all_mnths_quality_",quality_strict,"_",name_of_grid_file_name,".RData")
 
-save(frontline_data_control_num_all_previous_time,file = data_to_be_saved_to)
+save(frontline_data_control_num_all_previous_time,file = data_to_be_saved_to,compress = "xz")
 message(paste0("./data/frontline_data_all_mnths_quality_",quality_strict,"_",name_of_grid_file_name,".RData is saved!"))

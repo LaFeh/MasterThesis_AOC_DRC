@@ -31,17 +31,17 @@ grid_cv_summary <- list()
 all_months = c(paste0("0",1:9),10:12)
 # all_years = c(2023,2024,2025)
 # all_dates= c(paste0(all_years[1], all_months),paste0(all_years[2], all_months),paste0(all_years[3], all_months))
-all_months = c(paste0("0",2:9),10:12)
-all_years = c(2025)
-all_dates= c(paste0(all_years[1], all_months))
+#all_months = c(paste0("0",2:9),10:12)
+all_years = c(2024,2025)
+all_dates= c(paste0(all_years[1], all_months),paste0(all_years[2], all_months))
 
 
 #all_dates = "202411"
-quality_strict = T
+quality_strict = F
 parameter_grid = lapply(parameter_grid, function(x){x$model$dates_to_run = all_dates; return(x)})
 
 
-run_if_exists = FALSE
+run_if_exists = F
 
 
 #parameter_grid = parameter_grid[grepl("estimaterho",names(parameter_grid))]
@@ -153,7 +153,7 @@ for (model_name in names(parameter_grid)){
   TMB::compile(paste0(cpp_estimate, ".cpp"))
   
 
-  n_cores = 5
+  n_cores = 7
   cluster <- makeCluster(n_cores - 1)
   registerDoParallel(cluster)
   

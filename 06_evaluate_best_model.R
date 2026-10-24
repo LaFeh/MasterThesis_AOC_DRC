@@ -31,7 +31,7 @@ gridname2 <- create_grid_name(
   cell_size = cell_size
 )
 
-gridname = c(gridname,gridname2)
+gridname = c(gridname2)
 
 estimate_rho = T
 quality_strict = T
@@ -69,22 +69,22 @@ if(quality_strict ==""){
 }
 
 
-if(estimate_rho){
-  
-  model_dirs = model_dirs[grepl("estimaterho",model_dirs)]
-  parameter_grid = parameter_grid[grepl("estimaterho",parameter_grid)]
-  
-}else{
-  model_dirs <- paste0(
-    "~/MasterThesis_AOC_DRC/05_model/model_",
-    names(parameter_grid),
-    "_",
-    gsub(".shp", "", gridname)
-  )
-  
-  model_dirs = model_dirs[grepl("fixedrho",model_dirs)]
-  parameter_grid = parameter_grid[grepl("fixedrho",parameter_grid)]
-}
+# if(estimate_rho){
+#   
+#   model_dirs = model_dirs[grepl("estimaterho",model_dirs)]
+#   parameter_grid = parameter_grid[grepl("estimaterho",parameter_grid)]
+#   
+# }else{
+#   model_dirs <- paste0(
+#     "~/MasterThesis_AOC_DRC/05_model/model_",
+#     names(parameter_grid),
+#     "_",
+#     gsub(".shp", "", gridname)
+#   )
+#   
+#   model_dirs = model_dirs[grepl("fixedrho",model_dirs)]
+#   parameter_grid = parameter_grid[grepl("fixedrho",parameter_grid)]
+# }
 
 
 all_months = c(paste0("0",1:9),10:12)
@@ -116,6 +116,8 @@ df_overlap$overlap_area = NA
 model_dirs_names = setNames(model_dirs,seq_along(model_dirs))
 
 df_overlap$dir_num = names(model_dirs_names[df_overlap[,"dir"]])
+df_overlap_uncontested = df_overlap
+
 for(model_dir in model_dirs){
   
   all_files = list.files(file.path(model_dir))
@@ -137,6 +139,23 @@ for(model_dir in model_dirs){
     }
   }
   
+  overlap_files_uncontested = all_files[grepl("overlap_area_percentage_unconstested",all_files)]
+  
+  for ( file in overlap_files_uncontested){
+    
+    area = readRDS(file.path(model_dir,file))
+    date = substring(file,1,6)
+    
+    
+    if(length(area)==0){
+      next
+    }else{
+      
+      df_overlap_uncontested[which(df_overlap_uncontested$date == date & df_overlap_uncontested$dir ==model_dir),"overlap_area"] = area
+      
+    }
+  }
+  
 }
 
 
@@ -149,5 +168,29 @@ ggplot2::ggplot(df_overlap) +
       color = dir_num
     )
   )
+df_overlap%>%group_by(dir,dir_num)%>%summarise(mn_overlap_area = mean(overlap_area,na.rm =T))%>%arrange(mn_overlap_area)
 
-df_overlap%>%group_by(dir,dir_num)%>%summarise(mn_overlap_area = mean(overlap_area,na.rm =T))
+ggplot2::ggplot(df_overlap%>%filter(dir_num %in%c(4,6))) +
+  ggplot2::geom_line(
+    ggplot2::aes(
+      x = date,
+      y = overlap_area,
+      group = dir_num,
+      color = dir_num
+    )
+  )
+
+
+ggplot2::ggplot(df_overlap_uncontested) +
+  ggplot2::geom_line(
+    ggplot2::aes(
+      x = date,
+      y = overlap_area,
+      group = dir_num,
+      color = dir_num
+    )
+  )
+
+df_overlap_uncontested%>%group_by(dir,dir_num)%>%summarise(mn_overlap_area = mean(overlap_area,na.rm =T))%>%arrange(mn_overlap_area)
+
+#df_overlap%>%filter(dir_num==4)%>%select(dir)

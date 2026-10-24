@@ -27,9 +27,11 @@ source("./05_model/05a_a_helper_run_model.R")
 source("./05_model/05a_b_helper_parameter_grid.R")
 source("./04b_a_helper_functions.R")
 
+
 # ============================================================
 # Prepare data
 # ============================================================
+
 covariates_list = create_covariates_list()
 
 cell_size = 3000 
@@ -48,7 +50,7 @@ gridname2 <- create_grid_name(
   street_size = "",
   cell_size = cell_size
 )
-gridname_vec =c(gridname1,gridname2)
+gridname_vec =c(gridname2)
 
 estimate_rho = T
 quality_strict = T
@@ -374,6 +376,11 @@ for(gridname in gridname_vec){
         unioned_lakes_boundary
       )
       
+      aoc_wo_holes <- st_difference(
+        aoc_wo_holes,
+        unioned_lakes_boundary
+      )
+      
       # --------------------------------------------------
       # IPIS map
       # --------------------------------------------------
@@ -381,16 +388,26 @@ for(gridname in gridname_vec){
       ipis_map <- get_ipis_map(date)
       
       if("contested" %in% colnames(ipis_map)){
-        
-        ipis_map = st_make_valid(ipis_map[which(is.na(ipis_map$contested)| ipis_map$contested==0),])
+        if(date =="202511"){
+          ipis_map_uncontested = st_make_valid(ipis_map[which(!(is.na(ipis_map$contested)| ipis_map$contested==0)),])
+        }else{
+          
+          ipis_map_uncontested = st_make_valid(ipis_map[which(is.na(ipis_map$contested)| ipis_map$contested==0),])
+        }
       }else{
-        ipis_map = st_make_valid(ipis_map)
+        ipis_map_uncontested = st_make_valid(ipis_map)
       }
       
       ipis_map <- st_transform(
-        st_union(ipis_map),
+        st_union(st_make_valid(ipis_map)),
         st_crs(data)
       )
+      
+      ipis_map_uncontested <- st_transform(
+        st_union(ipis_map_uncontested),
+        st_crs(data)
+      )
+      
       
       
       tryCatch({
@@ -399,7 +416,15 @@ for(gridname in gridname_vec){
             st_simplify(ipis_map),
             st_simplify(aoc_without_holes)
           )
+        
+        overlap_area_percentage_uncontested <-
+          calculate_overlapping_area_percentage(
+            st_simplify(ipis_map_uncontested),
+            st_simplify(aoc_wo_holes)
+          )
+
         saveRDS(overlap_area_percentage, file = file.path(model_dir,paste0(date,"_overlap_area_percentage.rds")))
+        saveRDS(overlap_area_percentage_uncontested, file = file.path(model_dir,paste0(date,"_overlap_area_percentage_unconstested.rds")))
         
         
         # --------------------------------------------------

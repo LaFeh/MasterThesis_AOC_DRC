@@ -59,6 +59,65 @@ gdf_territory <- gdf %>%
     "Non-violent transfer of territory"
   ))
 
+
+
+# Solve problem with non state actors
+
+nonstate_actor_territory= gdf_territory%>%filter(sub_event =="Non-state actor overtakes territory")
+nonstate_actor_territory$id = 1:nrow(nonstate_actor_territory)
+nonstate_actor_territory$actor1_gov = grepl("Democratic Republic of Congo",nonstate_actor_territory$actor1)
+nonstate_actor_territory$actor2_gov = grepl("Democratic Republic of Congo",nonstate_actor_territory$actor2)
+nonstate_actor_territory_problematic = nonstate_actor_territory[which(!(nonstate_actor_territory$actor1_gov | nonstate_actor_territory$actor2_gov)),]
+
+M23_territory = nonstate_actor_territory[which((nonstate_actor_territory$actor1_gov | nonstate_actor_territory$actor2_gov)),]
+M23_territory$sub_event = "M23 overtakes territory"
+
+nonstate_actor_territory_problematic_input_file =st_drop_geometry(nonstate_actor_territory_problematic[,c("id","event_date","actor1", "actor2", "notes")])
+nonstate_actor_territory_problematic_input_file$actors = apply(nonstate_actor_territory_problematic_input_file[,c("actor1", "actor2")],1, function(x) paste(x,collapse =", "))
+involved_nonstate_actors = unique(c(nonstate_actor_territory_problematic_input_file$actor1,nonstate_actor_territory_problematic_input_file$actor2))
+
+nonstate_actor_territory_problematic_input_file[,c("actor1", "actor2")] = NULL
+
+
+openxlsx::write.xlsx(nonstate_actor_territory_problematic_input_file,file = "./data/nonstate_actor_territory_problematic.xlsx")
+writeLines(involved_nonstate_actors,con = "./data/involved_nonstate_actors.txt")
+
+if(file.exists("./data/nonstate_actor_territory_problematic_solved.csv")){
+  nonstate_actor_territory_problematic_solved = read.csv("./data/nonstate_actor_territory_problematic_solved.csv",sep =",")
+  nonstate_actor_territory_problematic_solved$sub_event = NA
+  
+  if(any(!nonstate_actor_territory_problematic$id %in% nonstate_actor_territory_problematic_solved$Id)){
+    stop("LLM Output not confident everywhere or output is not complete")
+  }
+  
+  if(any(nonstate_actor_territory_problematic_solved$Confidence =="Low")){
+    warning(paste0(sum(nonstate_actor_territory_problematic_solved$Confidence =="Low"), " notes were unclear. They are denoted unknown"))
+    nonstate_actor_territory_problematic_solved[which(nonstate_actor_territory_problematic_solved$Confidence=="Low"),]$sub_event = "Unknown"
+  }
+  other_non_state_actor = !grepl("M23",nonstate_actor_territory_problematic_solved$Actor.that.gained.territory) & nonstate_actor_territory_problematic_solved$Confidence!="Low"
+  nonstate_actor_territory_problematic_solved[which(other_non_state_actor),]$sub_event ="not M23 overtakes territory"
+  
+  m23 = grepl("M23",nonstate_actor_territory_problematic_solved$Actor.that.gained.territory) & nonstate_actor_territory_problematic_solved$Confidence!="Low"
+  nonstate_actor_territory_problematic_solved[which(m23),]$sub_event ="M23 overtakes territory"
+  
+  
+  nonstate_actor_territory_problematic$sub_event = NULL
+  
+  nonstate_actor_territory_problematic_solved = left_join(nonstate_actor_territory_problematic,nonstate_actor_territory_problematic_solved[,c("Id","sub_event")], by=c("id" = "Id"))
+  nonstate_actor_territory = rbind(nonstate_actor_territory_problematic_solved,M23_territory)
+  
+  nonstate_actor_territory[,c("actor1_gov", "actor2_gov")] = NULL
+  
+}else{
+  stop("nonstate_actor_territory problematic not yet solved!")
+}
+
+
+
+gdf_territory <-  gdf_territory%>%filter(sub_event != "Non-state actor overtakes territory")
+gdf_territory <- rbind(gdf_territory,nonstate_actor_territory)
+
+
 non_violent_transfers = gdf_territory[which(gdf_territory$sub_event=="Non-violent transfer of territory"),]
 non_violent_transfers = non_violent_transfers[order(non_violent_transfers$event_date),]
 
@@ -71,28 +130,29 @@ for(row_idx in 1:nrow(non_violent_transfers)){
   
   if (nrow(past_instance)==0){
     
-    non_violent_transfers[row_idx,]$sub_event ="Non-state actor overtakes territory"
+    non_violent_transfers[row_idx,]$sub_event ="M23 overtakes territory"
     
-  }else if (past_instance$sub_event =="Government regains territory"){# territory war before under gov controle
+  }else if (past_instance$sub_event =="Government regains territory" | past_instance$sub_event =="not M23 overtakes territory"){# territory war before under gov controle
     
-    non_violent_transfers[row_idx,]$sub_event ="Non-state actor overtakes territory"
+    non_violent_transfers[row_idx,]$sub_event ="M23 overtakes territory"
     
-  } else if (past_instance$sub_event =="Non-state actor overtakes territory"){
+  } else if (past_instance$sub_event =="M23 overtakes territory"){
     
-    non_violent_transfers[row_idx,]$sub_event ="Government regains territory"
+    non_violent_transfers[row_idx,]$sub_event ="not M23 overtakes territory"
     
-  } else {
+    }
+  else {
     
     past_instance = non_violent_transfers%>%filter((event_date<max_date) & (geometry ==instance$geometry))%>%
       slice_max(order_by = event_date, with_ties =FALSE)
     
-    if (past_instance$sub_event =="Government regains territory"){# territory war before under gov controle
+    if (past_instance$sub_event =="Government regains territory"| past_instance$sub_event =="not M23 overtakes territory"){# territory war before under gov controle
       
-      non_violent_transfers[row_idx,]$sub_event ="Non-state actor overtakes territory"
+      non_violent_transfers[row_idx,]$sub_event ="M23 overtakes territory"
       
-    } else if (past_instance$sub_event =="Non-state actor overtakes territory"){
+    } else if (past_instance$sub_event =="M23 overtakes territory"){
       
-      non_violent_transfers[row_idx,]$sub_event ="Government regains territory"}
+      non_violent_transfers[row_idx,]$sub_event ="not M23 overtakes territory"}
     
     else{
       warning(paste0(row_idx,": we need a double loop, two times after each other peaceful transition"))
@@ -105,17 +165,23 @@ for(row_idx in 1:nrow(non_violent_transfers)){
 }
 
 gdf_territory <-  gdf_territory%>%filter(sub_event != "Non-violent transfer of territory")
+
+
+
 gdf_territory <- rbind(gdf_territory,non_violent_transfers)
+
 
 acled_territory_mnth <- gdf_territory %>%
   group_by(year_mnth, latitude, longitude) %>%
   slice_max(event_date, n = 1, with_ties = FALSE) %>%
   ungroup() %>%
   mutate(
-    controle = case_when(
-      sub_event == "Government regains territory" ~ "government",
-      sub_event == "Non-state actor overtakes territory" ~ "non-state actor",
-      sub_event == "Non-violent transfer of territory" ~ "unknown"
+    control = case_when(
+      sub_event == "Government regains territory" ~ "not M23",
+      sub_event == "not M23 overtakes territory" ~ "not M23",
+      sub_event == "M23 overtakes territory" ~ "M23",
+      sub_event == "Non-violent transfer of territory" ~ "unknown",
+      sub_event == "Unknown" ~ "unknown"
     )
   )
 
@@ -129,7 +195,7 @@ acled_conflict <- gdf %>%
     "Government regains territory",
     "Non-state actor overtakes territory",
     "Non-violent transfer of territory"
-  ))%>%mutate(controle = NA)
+  ))%>%mutate(control = NA)
 
 
 
@@ -265,13 +331,13 @@ acled_territory_mnth = left_join(acled_territory_mnth,events_after_control, by=c
 
 
 # create numeric control indicator
-government_control = 0
-rebell_control = 1
+not_M23 = 0
+M23 = 1
 
 acled_territory_mnth$control_num = NA
 
-acled_territory_mnth[which(acled_territory_mnth$controle == "government"),]$control_num = government_control
-acled_territory_mnth[which(acled_territory_mnth$controle == "non-state actor"),]$control_num = rebell_control
+acled_territory_mnth[which(acled_territory_mnth$control == "not M23"),]$control_num = not_M23
+acled_territory_mnth[which(acled_territory_mnth$control == "M23"),]$control_num = M23
 
 
 acled_territory_mnth = st_as_sf(acled_territory_mnth,crs =st_crs(gdf))

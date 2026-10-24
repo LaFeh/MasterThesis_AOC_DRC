@@ -4,37 +4,49 @@ create_covariates_list<-function(){
   
   
   covariates_list = list()
-  covariates_list[["noIntercept"]] = as.formula("~0")
-  covariates_list[["noIntercept_distrwa"]] = as.formula("~0+min_dist_to_rwa")
+  #covariates_list[["noIntercept"]] = as.formula("~0")
+  #covariates_list[["noIntercept_distrwa"]] = as.formula("~0+min_dist_to_rwa")
+  
   covariates_list[["Intercept"]] = as.formula("~1")
-  covariates_list[["total_lag_lead_events_fatalities"]] =  as.formula("~ total_events+total_events_lag+total_events_lead+total_fatalities+total_fatalities_lead+total_fatalities_lag")
-  covariates_list[["total_lag_lead_battles_remotev_fatalities"]] =  as.formula("~ events_battles+events_battles_lag+events_battles_lead+
-  events_explosions_remote_violence+events_explosions_remote_violence_lag+events_explosions_remote_violence_lead+
-                                                                            total_fatalities+total_fatalities_lead+total_fatalities_lag")
   
-  covariates_list[["lead_events_fatalities"]] =  as.formula("~ total_events_lead+total_fatalities_lead")
-  covariates_list[["total_lag_lead_events_fatalities_distrwa"]] =  as.formula("~ min_dist_to_rwa + total_events+total_events_lag+total_events_lead+total_fatalities+total_fatalities_lead+total_fatalities_lag")
-  covariates_list[["total_lag_lead_battles_remotev_fatalities_distrwa"]] =  as.formula("~ min_dist_to_rwa + events_battles+events_battles_lag+events_battles_lead+
-  events_explosions_remote_violence+events_explosions_remote_violence_lag+events_explosions_remote_violence_lead+
-                                                                            total_fatalities+total_fatalities_lead+total_fatalities_lag")
+  #covariates_list[["total_lag_lead_events_fatalities"]] =  as.formula("~ total_events+total_events_lag+total_events_lead+total_fatalities+total_fatalities_lead+total_fatalities_lag")
+  #covariates_list[["total_lag_lead_battles_remotev_fatalities"]] =  as.formula("~ events_battles+events_battles_lag+events_battles_lead+
+  #events_explosions_remote_violence+events_explosions_remote_violence_lag+events_explosions_remote_violence_lead+
+  #                                                                          total_fatalities+total_fatalities_lead+total_fatalities_lag")
   
-  covariates_list[["lead_events_fatalities_distrwa"]] =  as.formula("~ min_dist_to_rwa + total_events_lead+total_fatalities_lead")
-  covariates_list[["lag_events_fatalities"]] =  as.formula("~  total_events_lag+total_fatalities_lag")
+  #covariates_list[["lead_events_fatalities"]] =  as.formula("~ total_events_lead+total_fatalities_lead")
+  #covariates_list[["total_lag_lead_events_fatalities_distrwa"]] =  as.formula("~ min_dist_to_rwa + total_events+total_events_lag+total_events_lead+total_fatalities+total_fatalities_lead+total_fatalities_lag")
+  #covariates_list[["total_lag_lead_battles_remotev_fatalities_distrwa"]] =  as.formula("~ min_dist_to_rwa + events_battles+events_battles_lag+events_battles_lead+
+  #events_explosions_remote_violence+events_explosions_remote_violence_lag+events_explosions_remote_violence_lead+
+  #                                                                          total_fatalities+total_fatalities_lead+total_fatalities_lag")
+  
+  #covariates_list[["lead_events_fatalities_distrwa"]] =  as.formula("~ min_dist_to_rwa + total_events_lead+total_fatalities_lead")
+  #covariates_list[["lag_events_fatalities"]] =  as.formula("~  total_events_lag+total_fatalities_lag")
+  
+  
   
   covariates_list[["lag_lead_rv_battles_civilians"]] =  as.formula("~  events_explosions_remote_violence_lag+events_explosions_remote_violence_lead+events_battles_lead+events_battles_lag+events_violence_against_civilians_lead++events_violence_against_civilians_lag")
   covariates_list[["lag_lead_rv_battles"]] =  as.formula("~  events_explosions_remote_violence_lag+events_explosions_remote_violence_lead+events_battles_lead+events_battles_lag")
+ 
   covariates_list[["lead_rv_battles"]] =  as.formula("~  events_explosions_remote_violence_lead+events_battles_lead")
+  
+  covariates_list[["total_lead_rv_battles_civilians"]] =  as.formula("~  events_explosions_remote_violence_lead+events_explosions_remote_violence+events_battles_lead+events_violence_against_civilians_lead+events_battles+ events_violence_against_civilians")
+  covariates_list[["total_lead_rv_battles"]] =  as.formula("~  events_explosions_remote_violence_lead+events_battles_lead+events_battles+ events_explosions_remote_violence")
+  covariates_list[["total_lead_battles"]] =  as.formula("~ events_battles_lead+events_battles")
+  
+  covariates_list[["total_rv_battles_civilians"]] =  as.formula("~events_explosions_remote_violence+events_battles+ events_violence_against_civilians")
+  covariates_list[["lead_rv_battles_civilians"]] =  as.formula("~  events_explosions_remote_violence_lead+events_battles_lead+events_violence_against_civilians_lead")
+  covariates_list[["lead_civilians"]] =  as.formula("~ events_violence_against_civilians_lead")
+  
+  
+  covariates_list[["total_battles"]] =  as.formula("~events_battles")
+  covariates_list[["lead_battles"]] =  as.formula(" ~events_battles_lead")
+  
+  
   covariates_list[["lag_rv_battles"]] =  as.formula("~  events_explosions_remote_violence_lag+events_battles_lag")
   
-  covariates_list[["before_rv_battles"]] =  as.formula("~  events_explosions_remote_violence_before_control+events_battles_before_control")
-  covariates_list[["after_rv_battles"]] =  as.formula("~  events_explosions_remote_violence_after_control+events_battles_after_control")
-  covariates_list[["after_before_rv_battles"]] =  as.formula("~  events_explosions_remote_violence_after_control+events_battles_after_control+ events_explosions_remote_violence_before_control+events_battles_before_control")
-  
-  
-  covariates_list[["after_before_vc"]] =  as.formula("~  events_violence_against_civilians_before_control+events_violence_against_civilians_after_control")
-  
-  covariates_list[["after_before_rv_battles"]] =  as.formula("~  events_explosions_remote_violence_after_control+events_battles_after_control+events_battles_before_control+events_explosions_remote_violence_before_control")
-  
+
+
   
   return(covariates_list)
 }
@@ -84,157 +96,109 @@ add_to_parameter_grid <- function(
 }
 
 parameter_grid <- list(
-  streets_first_degree_no_dist_after_before_rv_battles_estimaterho = add_to_parameter_grid(
-    name = "streets_first_degree_no_dist_after_before_rv_battles_estimaterho",
+  streets_first_degree_no_dist_lead_civilians_estimaterho = add_to_parameter_grid(
+    name = "streets_first_degree_no_dist_lead_civilians_estimaterho",
     grid_add_streets = TRUE,
     grid_add_nationalparks = TRUE,
     grid_add_waterways = TRUE,
     grid_cell_size = 3000,
-    grid_street_size = "", #3000
+    grid_street_size = "",
     model_dates_to_run = c("202411"),
     model_degree_of_neighbour = "first",
     model_bol_distance = FALSE,
     model_bol_border = FALSE,
-    model_covariates_title = "after_before_rv_battles",
+    model_covariates_title = "lead_civilians",
     model_rho = NULL,
     model_logit_rho_prior_sd = 1,
     model_logit_rho_prior_mean = 0
   ),
-  streets_first_degree_no_dist_after_before_vcs_estimaterho = add_to_parameter_grid(
-    name = "streets_first_degree_no_dist_after_before_vcs_estimaterho",
+  streets_first_degree_no_dist_lead_battles_estimaterho = add_to_parameter_grid(
+    name = "streets_first_degree_no_dist_lead_battles_estimaterho",
     grid_add_streets = TRUE,
     grid_add_nationalparks = TRUE,
     grid_add_waterways = TRUE,
     grid_cell_size = 3000,
-    grid_street_size = "", #3000
+    grid_street_size = "",
     model_dates_to_run = c("202411"),
     model_degree_of_neighbour = "first",
     model_bol_distance = FALSE,
     model_bol_border = FALSE,
-    model_covariates_title = "after_before_vc",
+    model_covariates_title = "lead_battles",
     model_rho = NULL,
     model_logit_rho_prior_sd = 1,
     model_logit_rho_prior_mean = 0
   ),
-  streets_first_degree_no_dist_after_rv_battles_estimaterho = add_to_parameter_grid(
-    name = "streets_first_degree_no_dist_after_rv_battles_estimaterho",
+  streets_first_degree_no_dist_total_battles_estimaterho = add_to_parameter_grid(
+    name = "streets_first_degree_no_dist_total_battles_estimaterho",
     grid_add_streets = TRUE,
     grid_add_nationalparks = TRUE,
     grid_add_waterways = TRUE,
     grid_cell_size = 3000,
-    grid_street_size = "", #3000
+    grid_street_size = "",
     model_dates_to_run = c("202411"),
     model_degree_of_neighbour = "first",
     model_bol_distance = FALSE,
     model_bol_border = FALSE,
-    model_covariates_title = "after_rv_battles",
+    model_covariates_title = "total_battles",
     model_rho = NULL,
     model_logit_rho_prior_sd = 1,
     model_logit_rho_prior_mean = 0
   ),
-  streets_first_degree_no_dist_after_before_rv_battles_estimaterho = add_to_parameter_grid(
-    name = "streets_first_degree_no_dist_after_before_rv_battles_estimaterho",
+  streets_first_degree_no_dist_total_rv_battles_civilians_estimaterho = add_to_parameter_grid(
+    name = "streets_first_degree_no_dist_total_rv_battles_civilians_estimaterho",
     grid_add_streets = TRUE,
     grid_add_nationalparks = TRUE,
     grid_add_waterways = TRUE,
     grid_cell_size = 3000,
-    grid_street_size = "", #3000
+    grid_street_size = "",
     model_dates_to_run = c("202411"),
     model_degree_of_neighbour = "first",
     model_bol_distance = FALSE,
     model_bol_border = FALSE,
-    model_covariates_title = "after_before_rv_battles",
+    model_covariates_title = "total_rv_battles_civilians",
     model_rho = NULL,
     model_logit_rho_prior_sd = 1,
     model_logit_rho_prior_mean = 0
   ),
-  streets_first_degree_no_dist_before_rv_battless_estimaterho = add_to_parameter_grid(
-    name = "streets_first_degree_no_dist_before_rv_battless_estimaterho",
+  streets_first_degree_no_dist_total_lead_battles_estimaterho = add_to_parameter_grid(
+    name = "streets_first_degree_no_dist_total_lead_battles_estimaterho",
     grid_add_streets = TRUE,
     grid_add_nationalparks = TRUE,
     grid_add_waterways = TRUE,
     grid_cell_size = 3000,
-    grid_street_size = "", #3000
+    grid_street_size = "",
     model_dates_to_run = c("202411"),
     model_degree_of_neighbour = "first",
     model_bol_distance = FALSE,
     model_bol_border = FALSE,
-    model_covariates_title = "before_rv_battles",
+    model_covariates_title = "total_lead_battles",
     model_rho = NULL,
     model_logit_rho_prior_sd = 1,
     model_logit_rho_prior_mean = 0
   ),
-  streets_first_degree_no_dist_lag_events_fatalities_estimaterho = add_to_parameter_grid(
-    name = "streets_first_degree_no_dist_lag_events_fatalities_estimaterho",
+  streets_first_degree_no_dist_total_lead_rv_battles_civilians_estimaterho = add_to_parameter_grid(
+    name = "streets_first_degree_no_dist_total_lead_rv_battles_civilians_estimaterho",
     grid_add_streets = TRUE,
     grid_add_nationalparks = TRUE,
     grid_add_waterways = TRUE,
     grid_cell_size = 3000,
-    grid_street_size = "", #3000
+    grid_street_size = "",
     model_dates_to_run = c("202411"),
     model_degree_of_neighbour = "first",
     model_bol_distance = FALSE,
     model_bol_border = FALSE,
-    model_covariates_title = "lag_events_fatalities",
+    model_covariates_title = "total_lead_rv_battles_civilians",
     model_rho = NULL,
     model_logit_rho_prior_sd = 1,
     model_logit_rho_prior_mean = 0
   ),
-  streets_6000_first_degree_no_dist_lag_lead_rv_battles_civilians_estimaterho = add_to_parameter_grid(
-    name = "streets_6000_first_degree_no_dist_lag_lead_rv_battles_civilians_estimaterho",
+  streets_first_degree_no_dist_lag_rv_battles_estimaterho = add_to_parameter_grid(
+    name = "streets_first_degree_no_dist_lag_rv_battles_estimaterho",
     grid_add_streets = TRUE,
     grid_add_nationalparks = TRUE,
     grid_add_waterways = TRUE,
     grid_cell_size = 3000,
-    grid_street_size = 6000,
-    model_dates_to_run = c("202411"),
-    model_degree_of_neighbour = "first",
-    model_bol_distance = FALSE,
-    model_bol_border = FALSE,
-    model_covariates_title = "lag_lead_rv_battles_civilians",
-    model_rho = NULL,
-    model_logit_rho_prior_sd = 1,
-    model_logit_rho_prior_mean = 0
-  ),
-  streets_6000_first_degree_no_dist_lag_lead_rv_battles_estimaterho = add_to_parameter_grid(
-    name = "streets_6000_first_degree_no_dist_lag_lead_rv_battles_estimaterho",
-    grid_add_streets = TRUE,
-    grid_add_nationalparks = TRUE,
-    grid_add_waterways = TRUE,
-    grid_cell_size = 3000,
-    grid_street_size = 6000,
-    model_dates_to_run = c("202411"),
-    model_degree_of_neighbour = "first",
-    model_bol_distance = FALSE,
-    model_bol_border = FALSE,
-    model_covariates_title = "lag_lead_rv_battles",
-    model_rho = NULL,
-    model_logit_rho_prior_sd = 1,
-    model_logit_rho_prior_mean = 0
-  ),
-  streets_6000_first_degree_no_dist_lead_rv_battles_estimaterho = add_to_parameter_grid(
-    name = "streets_6000_first_degree_no_dist_lead_rv_battles_estimaterho",
-    grid_add_streets = TRUE,
-    grid_add_nationalparks = TRUE,
-    grid_add_waterways = TRUE,
-    grid_cell_size = 3000,
-    grid_street_size = 6000,
-    model_dates_to_run = c("202411"),
-    model_degree_of_neighbour = "first",
-    model_bol_distance = FALSE,
-    model_bol_border = FALSE,
-    model_covariates_title = "lead_rv_battles",
-    model_rho = NULL,
-    model_logit_rho_prior_sd = 1,
-    model_logit_rho_prior_mean = 0
-  ),
-  streets_6000_first_degree_no_dist_lag_rv_battles_estimaterho = add_to_parameter_grid(
-    name = "streets_6000_first_degree_no_dist_lag_rv_battles_estimaterho",
-    grid_add_streets = TRUE,
-    grid_add_nationalparks = TRUE,
-    grid_add_waterways = TRUE,
-    grid_cell_size = 3000,
-    grid_street_size = 6000,
+    grid_street_size = "",
     model_dates_to_run = c("202411"),
     model_degree_of_neighbour = "first",
     model_bol_distance = FALSE,
@@ -244,12 +208,29 @@ parameter_grid <- list(
     model_logit_rho_prior_sd = 1,
     model_logit_rho_prior_mean = 0
   ),
-  # streets_first_degree_no_dist_lag_lead_rv_battles_civilians_estimaterho = add_to_parameter_grid(
-  #   name = "streets_first_degree_no_dist_lag_lead_rv_battles_civilians_estimaterho",
+  # streets_first_degree_no_dist_lag_events_fatalities_estimaterho = add_to_parameter_grid(
+  #   name = "streets_first_degree_no_dist_lag_events_fatalities_estimaterho",
   #   grid_add_streets = TRUE,
   #   grid_add_nationalparks = TRUE,
   #   grid_add_waterways = TRUE,
   #   grid_cell_size = 3000,
+  #   grid_street_size = "", #3000
+  #   model_dates_to_run = c("202411"),
+  #   model_degree_of_neighbour = "first",
+  #   model_bol_distance = FALSE,
+  #   model_bol_border = FALSE,
+  #   model_covariates_title = "lag_events_fatalities",
+  #   model_rho = NULL,
+  #   model_logit_rho_prior_sd = 1,
+  #   model_logit_rho_prior_mean = 0
+  # ),
+  # streets_6000_first_degree_no_dist_lag_lead_rv_battles_civilians_estimaterho = add_to_parameter_grid(
+  #   name = "streets_6000_first_degree_no_dist_lag_lead_rv_battles_civilians_estimaterho",
+  #   grid_add_streets = TRUE,
+  #   grid_add_nationalparks = TRUE,
+  #   grid_add_waterways = TRUE,
+  #   grid_cell_size = 3000,
+  #   grid_street_size = 6000,
   #   model_dates_to_run = c("202411"),
   #   model_degree_of_neighbour = "first",
   #   model_bol_distance = FALSE,
@@ -259,12 +240,13 @@ parameter_grid <- list(
   #   model_logit_rho_prior_sd = 1,
   #   model_logit_rho_prior_mean = 0
   # ),
-  # streets_first_degree_no_dist_lag_lead_rv_battles_estimaterho = add_to_parameter_grid(
-  #   name = "streets_first_degree_no_dist_lag_lead_rv_battles_estimaterho",
+  # streets_6000_first_degree_no_dist_lag_lead_rv_battles_estimaterho = add_to_parameter_grid(
+  #   name = "streets_6000_first_degree_no_dist_lag_lead_rv_battles_estimaterho",
   #   grid_add_streets = TRUE,
   #   grid_add_nationalparks = TRUE,
   #   grid_add_waterways = TRUE,
   #   grid_cell_size = 3000,
+  #   grid_street_size = 6000,
   #   model_dates_to_run = c("202411"),
   #   model_degree_of_neighbour = "first",
   #   model_bol_distance = FALSE,
@@ -274,12 +256,13 @@ parameter_grid <- list(
   #   model_logit_rho_prior_sd = 1,
   #   model_logit_rho_prior_mean = 0
   # ),
-  # streets_first_degree_no_dist_lead_rv_battles_estimaterho = add_to_parameter_grid(
-  #   name = "streets_first_degree_no_dist_lead_rv_battles_estimaterho",
+  # streets_6000_first_degree_no_dist_lead_rv_battles_estimaterho = add_to_parameter_grid(
+  #   name = "streets_6000_first_degree_no_dist_lead_rv_battles_estimaterho",
   #   grid_add_streets = TRUE,
   #   grid_add_nationalparks = TRUE,
   #   grid_add_waterways = TRUE,
   #   grid_cell_size = 3000,
+  #   grid_street_size = 6000,
   #   model_dates_to_run = c("202411"),
   #   model_degree_of_neighbour = "first",
   #   model_bol_distance = FALSE,
@@ -289,12 +272,13 @@ parameter_grid <- list(
   #   model_logit_rho_prior_sd = 1,
   #   model_logit_rho_prior_mean = 0
   # ),
-  # streets_first_degree_no_dist_lag_rv_battles_estimaterho = add_to_parameter_grid(
-  #   name = "streets_first_degree_no_dist_lag_rv_battles_estimaterho",
+  # streets_6000_first_degree_no_dist_lag_rv_battles_estimaterho = add_to_parameter_grid(
+  #   name = "streets_6000_first_degree_no_dist_lag_rv_battles_estimaterho",
   #   grid_add_streets = TRUE,
   #   grid_add_nationalparks = TRUE,
   #   grid_add_waterways = TRUE,
   #   grid_cell_size = 3000,
+  #   grid_street_size = 6000,
   #   model_dates_to_run = c("202411"),
   #   model_degree_of_neighbour = "first",
   #   model_bol_distance = FALSE,
@@ -303,195 +287,95 @@ parameter_grid <- list(
   #   model_rho = NULL,
   #   model_logit_rho_prior_sd = 1,
   #   model_logit_rho_prior_mean = 0
-  #),
-  # wostreets_first_degree_no_dist_fixedrho = add_to_parameter_grid(
-  #   name = "wostreets_first_degree_no_dist_fixedrho",
-  #   grid_add_streets = F,
-  #   grid_add_nationalparks = TRUE,
-  #   grid_add_waterways = TRUE,
-  #   grid_cell_size = 3000,
-  #   model_dates_to_run = c("202411"),
-  #   model_degree_of_neighbour = "first",
-  #   model_bol_distance = FALSE,
-  #   model_bol_border = FALSE,
-  #   model_covariates_title = "Intercept",
-  #   model_rho = 0.6,
-  #   model_logit_rho_prior_sd = NULL,
-  #   model_logit_rho_prior_mean = NULL
   # ),
-  # wostreets_first_degree_no_dist_cov_total_lag_lead_events_fatalities_fixedrho = add_to_parameter_grid(
-  #   name = "wostreets_first_degree_no_dist_cov_total_lag_lead_events_fatalities_fixedrho",
-  #   grid_add_streets = F,
-  #   grid_add_nationalparks = TRUE,
-  #   grid_add_waterways = TRUE,
-  #   grid_cell_size = 3000,
-  #   model_dates_to_run = c("202411"),
-  #   model_degree_of_neighbour = "first",
-  #   model_bol_distance = F,
-  #   model_bol_border = FALSE,
-  #   model_covariates_title = "total_lag_lead_events_fatalities",
-  #   model_rho = 0.6,
-  #   model_logit_rho_prior_sd = NULL,
-  #   model_logit_rho_prior_mean = NULL
-  # ),
-  # wostreets_first_degree_no_dist_cov_total_lag_lead_events_fatalities_distrwa_fixedrho = add_to_parameter_grid(
-  #   name = "wostreets_first_degree_no_dist_cov_total_lag_lead_events_fatalities_distrwa_fixedrho",
-  #   grid_add_streets = F,
-  #   grid_add_nationalparks = TRUE,
-  #   grid_add_waterways = TRUE,
-  #   grid_cell_size = 3000,
-  #   model_dates_to_run = c("202411"),
-  #   model_degree_of_neighbour = "first",
-  #   model_bol_distance = F,
-  #   model_bol_border = FALSE,
-  #   model_covariates_title = "total_lag_lead_events_fatalities_distrwa",
-  #   model_rho = 0.6,
-  #   model_logit_rho_prior_sd = NULL,
-  #   model_logit_rho_prior_mean = NULL
-  # ),
-  # wostreets_first_degree_no_dist_cov_lead_events_fatalities_fixedrho = add_to_parameter_grid(
-  #   name = "wostreets_first_degree_no_dist_cov_lead_events_fatalities_fixedrho",
-  #   grid_add_streets = F,
-  #   grid_add_nationalparks = TRUE,
-  #   grid_add_waterways = TRUE,
-  #   grid_cell_size = 3000,
-  #   model_dates_to_run = c("202411"),
-  #   model_degree_of_neighbour = "first",
-  #   model_bol_distance = F,
-  #   model_bol_border = FALSE,
-  #   model_covariates_title = "lead_events_fatalities",
-  #   model_rho = 0.6,
-  #   model_logit_rho_prior_sd = NULL,
-  #   model_logit_rho_prior_mean = NULL
-  # ),
-  # wostreets_first_degree_no_dist_cov_lead_events_fatalities_disrwa_fixedrho = add_to_parameter_grid(
-  #   name = "wostreets_first_degree_no_dist_cov_lead_events_fatalities_disrwa_fixedrho",
-  #   grid_add_streets = F,
-  #   grid_add_nationalparks = TRUE,
-  #   grid_add_waterways = TRUE,
-  #   grid_cell_size = 3000,
-  #   model_dates_to_run = c("202411"),
-  #   model_degree_of_neighbour = "first",
-  #   model_bol_distance = F,
-  #   model_bol_border = FALSE,
-  #   model_covariates_title = "lead_events_fatalities_distrwa",
-  #   model_rho = 0.6,
-  #   model_logit_rho_prior_sd = NULL,
-  #   model_logit_rho_prior_mean = NULL
-  # ),
-  # ###
-  # wostreets_first_degree_no_dist_estimaterho = add_to_parameter_grid(
-  #   name = "wostreets_first_degree_no_dist_estimaterho",
-  #   grid_add_streets = F,
-  #   grid_add_nationalparks = TRUE,
-  #   grid_add_waterways = TRUE,
-  #   grid_cell_size = 3000,
-  #   model_dates_to_run = c("202411"),
-  #   model_degree_of_neighbour = "first",
-  #   model_bol_distance = FALSE,
-  #   model_bol_border = FALSE,
-  #   model_covariates_title = "Intercept",
-  #   model_rho = NULL,
-  #   model_logit_rho_prior_sd = 1,
-  #   model_logit_rho_prior_mean = 0
-  # ),
-  # 
-  # wostreets_first_degree_no_dist_cov_total_lag_lead_events_fatalities_estimaterho = add_to_parameter_grid(
-  #   name = "wostreets_first_degree_no_dist_cov_total_lag_lead_events_fatalities_estimaterho",
-  #   grid_add_streets = F,
-  #   grid_add_nationalparks = TRUE,
-  #   grid_add_waterways = TRUE,
-  #   grid_cell_size = 3000,
-  #   model_dates_to_run = c("202411"),
-  #   model_degree_of_neighbour = "first",
-  #   model_bol_distance = F,
-  #   model_bol_border = FALSE,
-  #   model_covariates_title = "total_lag_lead_events_fatalities",
-  #   model_rho = NULL,
-  #   model_logit_rho_prior_sd = 1,
-  #   model_logit_rho_prior_mean = 0
-  # ),
-  # wostreets_first_degree_no_dist_cov_total_lag_lead_events_fatalities_distrwa_estimaterho = add_to_parameter_grid(
-  #   name = "wostreets_first_degree_no_dist_cov_total_lag_lead_events_fatalities_distrwa_estimaterho",
-  #   grid_add_streets = F,
-  #   grid_add_nationalparks = TRUE,
-  #   grid_add_waterways = TRUE,
-  #   grid_cell_size = 3000,
-  #   model_dates_to_run = c("202411"),
-  #   model_degree_of_neighbour = "first",
-  #   model_bol_distance = F,
-  #   model_bol_border = FALSE,
-  #   model_covariates_title = "total_lag_lead_events_fatalities_distrwa",
-  #   model_rho = NULL,
-  #   model_logit_rho_prior_sd = 1,
-  #   model_logit_rho_prior_mean = 0
-  # ),
-  # wostreets_first_degree_no_dist_cov_lead_events_fatalities_estimaterho = add_to_parameter_grid(
-  #   name = "wostreets_first_degree_no_dist_cov_lead_events_fatalities_estimaterho",
-  #   grid_add_streets = F,
-  #   grid_add_nationalparks = TRUE,
-  #   grid_add_waterways = TRUE,
-  #   grid_cell_size = 3000,
-  #   model_dates_to_run = c("202411"),
-  #   model_degree_of_neighbour = "first",
-  #   model_bol_distance = F,
-  #   model_bol_border = FALSE,
-  #   model_covariates_title = "lead_events_fatalities",
-  #   model_rho = NULL,
-  #   model_logit_rho_prior_sd = 1,
-  #   model_logit_rho_prior_mean = 0
-  # ),
-  # wostreets_first_degree_no_dist_cov_lead_events_fatalities_disrwa_estimaterho = add_to_parameter_grid(
-  #   name = "wostreets_first_degree_no_dist_cov_lead_events_fatalities_disrwa_estimaterho",
-  #   grid_add_streets = F,
-  #   grid_add_nationalparks = TRUE,
-  #   grid_add_waterways = TRUE,
-  #   grid_cell_size = 3000,
-  #   model_dates_to_run = c("202411"),
-  #   model_degree_of_neighbour = "first",
-  #   model_bol_distance = F,
-  #   model_bol_border = FALSE,
-  #   model_covariates_title = "lead_events_fatalities_distrwa",
-  #   model_rho = NULL,
-  #   model_logit_rho_prior_sd = 1,
-  #   model_logit_rho_prior_mean = 0
-  # )
-  # streets_first_degree_no_dist_noIntercept_estimaterho = add_to_parameter_grid(
-  #   name = "streets_first_degree_no_dist_noIntercept_estimaterho",
+  streets_first_degree_no_dist_lag_lead_rv_battles_civilians_estimaterho = add_to_parameter_grid(
+    name = "streets_first_degree_no_dist_lag_lead_rv_battles_civilians_estimaterho",
+    grid_add_streets = TRUE,
+    grid_add_nationalparks = TRUE,
+    grid_add_waterways = TRUE,
+    grid_cell_size = 3000,
+    grid_street_size = "",
+    model_dates_to_run = c("202411"),
+    model_degree_of_neighbour = "first",
+    model_bol_distance = FALSE,
+    model_bol_border = FALSE,
+    model_covariates_title = "lag_lead_rv_battles_civilians",
+    model_rho = NULL,
+    model_logit_rho_prior_sd = 1,
+    model_logit_rho_prior_mean = 0
+  ),
+  streets_first_degree_no_dist_lead_rv_battles_civilians_estimaterho = add_to_parameter_grid(
+    name = "streets_first_degree_no_dist_lead_rv_battles_civilians_estimaterho",
+    grid_add_streets = TRUE,
+    grid_add_nationalparks = TRUE,
+    grid_add_waterways = TRUE,
+    grid_cell_size = 3000,
+    grid_street_size = "",
+    model_dates_to_run = c("202411"),
+    model_degree_of_neighbour = "first",
+    model_bol_distance = FALSE,
+    model_bol_border = FALSE,
+    model_covariates_title = "lead_rv_battles_civilians",
+    model_rho = NULL,
+    model_logit_rho_prior_sd = 1,
+    model_logit_rho_prior_mean = 0
+  ),
+  streets_first_degree_no_dist_lag_lead_rv_battles_estimaterho = add_to_parameter_grid(
+    name = "streets_first_degree_no_dist_lag_lead_rv_battles_estimaterho",
+    grid_add_streets = TRUE,
+    grid_add_nationalparks = TRUE,
+    grid_add_waterways = TRUE,
+    grid_cell_size = 3000,
+
+    grid_street_size = "",
+    model_dates_to_run = c("202411"),
+    model_degree_of_neighbour = "first",
+    model_bol_distance = FALSE,
+    model_bol_border = FALSE,
+    model_covariates_title = "lag_lead_rv_battles",
+    model_rho = NULL,
+    model_logit_rho_prior_sd = 1,
+    model_logit_rho_prior_mean = 0
+  ),
+  streets_first_degree_no_dist_lead_rv_battles_estimaterho = add_to_parameter_grid(
+    name = "streets_first_degree_no_dist_lead_rv_battles_estimaterho",
+    grid_add_streets = TRUE,
+    grid_add_nationalparks = TRUE,
+    grid_add_waterways = TRUE,
+    grid_cell_size = 3000,
+    grid_street_size = "",
+    model_dates_to_run = c("202411"),
+    model_degree_of_neighbour = "first",
+    model_bol_distance = FALSE,
+    model_bol_border = FALSE,
+    model_covariates_title = "lead_rv_battles",
+    model_rho = NULL,
+    model_logit_rho_prior_sd = 1,
+    model_logit_rho_prior_mean = 0
+  ),
+  streets_first_degree_no_dist_lag_rv_battles_estimaterho = add_to_parameter_grid(
+    name = "streets_first_degree_no_dist_lag_rv_battles_estimaterho",
+    grid_add_streets = TRUE,
+    grid_add_nationalparks = TRUE,
+    grid_add_waterways = TRUE,
+    grid_cell_size = 3000,
+    grid_street_size = "",
+    model_dates_to_run = c("202411"),
+    model_degree_of_neighbour = "first",
+    model_bol_distance = FALSE,
+    model_bol_border = FALSE,
+    model_covariates_title = "lag_rv_battles",
+    model_rho = NULL,
+    model_logit_rho_prior_sd = 1,
+    model_logit_rho_prior_mean = 0
+  ),
+  # streets_6000_first_degree_no_dist = add_to_parameter_grid(
+  #   name = "streets_6000_first_degree_no_dist",
   #   grid_add_streets = TRUE,
   #   grid_add_nationalparks = TRUE,
   #   grid_add_waterways = TRUE,
   #   grid_cell_size = 3000,
-  #   model_dates_to_run = c("202411"),
-  #   model_degree_of_neighbour = "first",
-  #   model_bol_distance = FALSE,
-  #   model_bol_border = FALSE,
-  #   model_covariates_title = "noIntercept",
-  #   model_rho = NULL,
-  #   model_logit_rho_prior_sd = 1,
-  #   model_logit_rho_prior_mean = 0
-  # ),
-  # # streets_first_degree_no_dist_noIntercept_distrwa_estimaterho = add_to_parameter_grid(
-  # #   name = "streets_first_degree_no_dist_noIntercept_distrwa_estimaterho",
-  # #   grid_add_streets = TRUE,
-  # #   grid_add_nationalparks = TRUE,
-  # #   grid_add_waterways = TRUE,
-  # #   grid_cell_size = 3000,
-  # #   model_dates_to_run = c("202411"),
-  # #   model_degree_of_neighbour = "first",
-  # #   model_bol_distance = FALSE,
-  # #   model_bol_border = FALSE,
-  # #   model_covariates_title = "noIntercept_distrwa",
-  # #   model_rho = NULL,
-  # #   model_logit_rho_prior_sd = 1,
-  # #   model_logit_rho_prior_mean = 0
-  # # ),
-  # streets_first_degree_no_dist_estimaterho = add_to_parameter_grid(
-  #   name = "streets_first_degree_no_dist_estimaterho",
-  #   grid_add_streets = TRUE,
-  #   grid_add_nationalparks = TRUE,
-  #   grid_add_waterways = TRUE,
-  #   grid_cell_size = 3000,
+  #   grid_street_size = 6000,
   #   model_dates_to_run = c("202411"),
   #   model_degree_of_neighbour = "first",
   #   model_bol_distance = FALSE,
@@ -500,97 +384,6 @@ parameter_grid <- list(
   #   model_rho = NULL,
   #   model_logit_rho_prior_sd = 1,
   #   model_logit_rho_prior_mean = 0
-  # )#,
-  # # 
-  # streets_first_degree_no_dist_cov_total_lag_lead_events_fatalities_estimaterho = add_to_parameter_grid(
-  #   name = "streets_first_degree_no_dist_cov_total_lag_lead_events_fatalities_estimaterho",
-  #   grid_add_streets = TRUE,
-  #   grid_add_nationalparks = TRUE,
-  #   grid_add_waterways = TRUE,
-  #   grid_cell_size = 3000,
-  #   model_dates_to_run = c("202411"),
-  #   model_degree_of_neighbour = "first",
-  #   model_bol_distance = F,
-  #   model_bol_border = FALSE,
-  #   model_covariates_title = "total_lag_lead_events_fatalities",
-  #   model_rho = NULL,
-  #   model_logit_rho_prior_sd = 1,
-  #   model_logit_rho_prior_mean = 0
-  # ),
-  # streets_first_degree_no_dist_cov_total_lag_lead_events_fatalities_distrwa_estimaterho = add_to_parameter_grid(
-  #   name = "  streets_first_degree_no_dist_cov_total_lag_lead_events_fatalities_distrwa_estimaterho",
-  #   grid_add_streets = TRUE,
-  #   grid_add_nationalparks = TRUE,
-  #   grid_add_waterways = TRUE,
-  #   grid_cell_size = 3000,
-  #   model_dates_to_run = c("202411"),
-  #   model_degree_of_neighbour = "first",
-  #   model_bol_distance = F,
-  #   model_bol_border = FALSE,
-  #   model_covariates_title = "total_lag_lead_events_fatalities_distrwa",
-  #   model_rho = NULL,
-  #   model_logit_rho_prior_sd = 1,
-  #   model_logit_rho_prior_mean = 0
-  # ),
-  # streets_first_degree_no_dist_cov_lead_events_fatalities_estimaterho = add_to_parameter_grid(
-  #   name = "streets_first_degree_no_dist_cov_lead_events_fatalities_estimaterho",
-  #   grid_add_streets = TRUE,
-  #   grid_add_nationalparks = TRUE,
-  #   grid_add_waterways = TRUE,
-  #   grid_cell_size = 3000,
-  #   model_dates_to_run = c("202411"),
-  #   model_degree_of_neighbour = "first",
-  #   model_bol_distance = F,
-  #   model_bol_border = FALSE,
-  #   model_covariates_title = "lead_events_fatalities",
-  #   model_rho = NULL,
-  #   model_logit_rho_prior_sd = 1,
-  #   model_logit_rho_prior_mean = 0
-  # ),
-  # streets_first_degree_no_dist_cov_lead_events_fatalities_disrwa_estimaterho = add_to_parameter_grid(
-  #   name = "streets_first_degree_no_dist_cov_lead_events_fatalities_disrwa_estimaterho",
-  #   grid_add_streets = TRUE,
-  #   grid_add_nationalparks = TRUE,
-  #   grid_add_waterways = TRUE,
-  #   grid_cell_size = 3000,
-  #   model_dates_to_run = c("202411"),
-  #   model_degree_of_neighbour = "first",
-  #   model_bol_distance = F,
-  #   model_bol_border = FALSE,
-  #   model_covariates_title = "lead_events_fatalities_distrwa",
-  #   model_rho = NULL,
-  #   model_logit_rho_prior_sd = 1,
-  #   model_logit_rho_prior_mean = 0
-  # )
-  # streets_first_degree_no_dist_noIntercept = add_to_parameter_grid(
-  #   name = "streets_first_degree_no_dist",
-  #   grid_add_streets = TRUE,
-  #   grid_add_nationalparks = TRUE,
-  #   grid_add_waterways = TRUE,
-  #   grid_cell_size = 3000,
-  #   model_dates_to_run = c("202411"),
-  #   model_degree_of_neighbour = "first",
-  #   model_bol_distance = FALSE,
-  #   model_bol_border = FALSE,
-  #   model_covariates_title = "noIntercept",
-  #   model_rho = 0.6,
-  #   model_logit_rho_prior_sd = NULL,
-  #   model_logit_rho_prior_mean = NULL
-  # ),
-  # streets_first_degree_no_dist_noIntercept_distrwa = add_to_parameter_grid(
-  #   name = "streets_first_degree_no_dist_noIntercept_distrwa",
-  #   grid_add_streets = TRUE,
-  #   grid_add_nationalparks = TRUE,
-  #   grid_add_waterways = TRUE,
-  #   grid_cell_size = 3000,
-  #   model_dates_to_run = c("202411"),
-  #   model_degree_of_neighbour = "first",
-  #   model_bol_distance = FALSE,
-  #   model_bol_border = FALSE,
-  #   model_covariates_title = "noIntercept_distrwa",
-  #   model_rho = 0.6,
-  #   model_logit_rho_prior_sd = NULL,
-  #   model_logit_rho_prior_mean = NULL
   # ),
   streets_first_degree_no_dist = add_to_parameter_grid(
     name = "streets_first_degree_no_dist",
@@ -598,7 +391,7 @@ parameter_grid <- list(
     grid_add_nationalparks = TRUE,
     grid_add_waterways = TRUE,
     grid_cell_size = 3000,
-    grid_street_size = 6000,
+    grid_street_size = "",
     model_dates_to_run = c("202411"),
     model_degree_of_neighbour = "first",
     model_bol_distance = FALSE,
@@ -607,7 +400,55 @@ parameter_grid <- list(
     model_rho = NULL,
     model_logit_rho_prior_sd = 1,
     model_logit_rho_prior_mean = 0
-  )#,
+  )
+  # streets_first_degree_no_dist = add_to_parameter_grid(
+  #   name = "streets_first_degree_no_dist",
+  #   grid_add_streets = TRUE,
+  #   grid_add_nationalparks = TRUE,
+  #   grid_add_waterways = TRUE,
+  #   grid_cell_size = 3000,
+  #   grid_street_size = "",
+  #   model_dates_to_run = c("202411"),
+  #   model_degree_of_neighbour = "first",
+  #   model_bol_distance = FALSE,
+  #   model_bol_border = FALSE,
+  #   model_covariates_title = "Intercept",
+  #   model_rho = NULL,
+  #   model_logit_rho_prior_sd = 1,
+  #   model_logit_rho_prior_mean = 0
+  # ),
+  # streets_first_degree_no_dist_5000 = add_to_parameter_grid(
+  #   name = "streets_first_degree_no_dist_5000",
+  #   grid_add_streets = TRUE,
+  #   grid_add_nationalparks = TRUE,
+  #   grid_add_waterways = TRUE,
+  #   grid_cell_size = 5000,
+  #   grid_street_size = "",
+  #   model_dates_to_run = c("202411"),
+  #   model_degree_of_neighbour = "first",
+  #   model_bol_distance = FALSE,
+  #   model_bol_border = FALSE,
+  #   model_covariates_title = "Intercept",
+  #   model_rho = NULL,
+  #   model_logit_rho_prior_sd = 1,
+  #   model_logit_rho_prior_mean = 0
+  # ),
+  # streets_first_degree_no_dist_7000 = add_to_parameter_grid(
+  #   name = "streets_first_degree_no_dist_7000",
+  #   grid_add_streets = TRUE,
+  #   grid_add_nationalparks = TRUE,
+  #   grid_add_waterways = TRUE,
+  #   grid_cell_size = 7000,
+  #   grid_street_size = "",
+  #   model_dates_to_run = c("202411"),
+  #   model_degree_of_neighbour = "first",
+  #   model_bol_distance = FALSE,
+  #   model_bol_border = FALSE,
+  #   model_covariates_title = "Intercept",
+  #   model_rho = NULL,
+  #   model_logit_rho_prior_sd = 1,
+  #   model_logit_rho_prior_mean = 0
+  # )
   # # streets_scnd_degree_dist = add_to_parameter_grid(
   # #   name = "streets_scnd_degree_dist",
   # #   grid_add_streets = TRUE,
@@ -636,158 +477,8 @@ parameter_grid <- list(
   # #   
   # #   model_rho = 0.6
   # # ),
-  # # wo_streets_scnd_degree_dist = add_to_parameter_grid( # too much spread in weird directions.
-  # #   name = "wo_streets_scnd_degree_dist",
-  # #   grid_add_streets = F,
-  # #   grid_add_nationalparks = TRUE,
-  # #   grid_add_waterways = TRUE,
-  # #   grid_cell_size = 3000,
-  # #   model_dates_to_run = c("202411"),
-  # #   model_degree_of_neighbour = "second",
-  # #   model_bol_distance = TRUE,
-  # #   model_bol_border = FALSE,
-  # #   model_covariates_title = "Intercept",
-  # #   
-  # #   model_rho = 0.6
-  # # ),
-  # # wo_streets_first_degree_no_dist = add_to_parameter_grid( # is spreading too much, more spread than model with street with same settings.
-  # #   name = "wo_streets_first_degree_no_dist",
-  # #   grid_add_streets = F,
-  # #   grid_add_nationalparks = TRUE,
-  # #   grid_add_waterways = TRUE,
-  # #   grid_cell_size = 3000,
-  # #   model_dates_to_run = c("202411"),
-  # #   model_degree_of_neighbour = "first",
-  # #   model_bol_distance = FALSE,
-  # #   model_bol_border = FALSE,
-  # #   model_covariates_title = "Intercept",
-  # #   model_rho = 0.6
-  # # ),
-  # # wo_streets_first_degree_dist_cov_total_lag_lead_events_fatalities = add_to_parameter_grid(
-  # #   name = "wo_streets_first_degree_dist_cov_total_lag_lead_events_fatalities",
-  # #   grid_add_streets = F,
-  # #   grid_add_nationalparks = TRUE,
-  # #   grid_add_waterways = TRUE,
-  # #   grid_cell_size = 3000,
-  # #   model_dates_to_run = c("202411"),
-  # #   model_degree_of_neighbour = "first",
-  # #   model_bol_distance = TRUE,
-  # #   model_bol_border = FALSE,
-  # #   model_covariates_title = "total_lag_lead_events_fatalities",
-  # #   model_rho = 0.6
-  # # ),
-  # streets_first_degree_no_dist_cov_total_lag_lead_events_fatalities = add_to_parameter_grid(
-  #   name = "streets_first_degree_no_dist_cov_total_lag_lead_events_fatalities",
-  #   grid_add_streets = TRUE,
-  #   grid_add_nationalparks = TRUE,
-  #   grid_add_waterways = TRUE,
-  #   grid_cell_size = 3000,
-  #   model_dates_to_run = c("202411"),
-  #   model_degree_of_neighbour = "first",
-  #   model_bol_distance = F,
-  #   model_bol_border = FALSE,
-  #   model_covariates_title = "total_lag_lead_events_fatalities",
-  #   model_rho = 0.6,
-  #   model_logit_rho_prior_sd = NULL,
-  #   model_logit_rho_prior_mean = NULL
-  # ),
-  # streets_first_degree_no_dist_cov_total_lag_lead_events_fatalities_distrwa = add_to_parameter_grid(
-  #   name = "streets_first_degree_no_dist_cov_total_lag_lead_events_fatalities_distrwa",
-  #   grid_add_streets = TRUE,
-  #   grid_add_nationalparks = TRUE,
-  #   grid_add_waterways = TRUE,
-  #   grid_cell_size = 3000,
-  #   model_dates_to_run = c("202411"),
-  #   model_degree_of_neighbour = "first",
-  #   model_bol_distance = F,
-  #   model_bol_border = FALSE,
-  #   model_covariates_title = "total_lag_lead_events_fatalities_distrwa",
-  #   model_rho = 0.6,
-  #   model_logit_rho_prior_sd = NULL,
-  #   model_logit_rho_prior_mean = NULL
-  # ),
-  # # streets_first_degree_dist_cov_total_lag_lead_events_fatalities = add_to_parameter_grid(
-  # #   name = "streets_first_degree_dist_cov_total_lag_lead_events_fatalities",
-  # #   grid_add_streets = F,
-  # #   grid_add_nationalparks = TRUE,
-  # #   grid_add_waterways = TRUE,
-  # #   grid_cell_size = 3000,
-  # #   model_dates_to_run = c("202411"),
-  # #   model_degree_of_neighbour = "second",
-  # #   model_bol_distance = TRUE,
-  # #   model_bol_border = F,
-  # #   model_covariates_title = "total_lag_lead_events_fatalities",
-  # #   model_rho = 0.6
-  # # ),
-  # # wo_streets_first_degree_dist_cov_lead_events_fatalities = add_to_parameter_grid(
-  # #   name = "wo_streets_first_degree_dist_cov_lead_events_fatalities",
-  # #   grid_add_streets = F,
-  # #   grid_add_nationalparks = TRUE,
-  # #   grid_add_waterways = TRUE,
-  # #   grid_cell_size = 3000,
-  # #   model_dates_to_run = c("202411"),
-  # #   model_degree_of_neighbour = "first",
-  # #   model_bol_distance = TRUE,
-  # #   model_bol_border = FALSE,
-  # #   model_covariates_title = "lead_events_fatalities",
-  # #   model_rho = 0.6
-  # # ),
-  # streets_first_degree_no_dist_cov_lead_events_fatalities = add_to_parameter_grid(
-  #   name = "streets_first_degree_no_dist_cov_lead_events_fatalities",
-  #   grid_add_streets = TRUE,
-  #   grid_add_nationalparks = TRUE,
-  #   grid_add_waterways = TRUE,
-  #   grid_cell_size = 3000,
-  #   model_dates_to_run = c("202411"),
-  #   model_degree_of_neighbour = "first",
-  #   model_bol_distance = F,
-  #   model_bol_border = FALSE,
-  #   model_covariates_title = "lead_events_fatalities",
-  #   model_rho = 0.6,
-  #   model_logit_rho_prior_sd = NULL,
-  #   model_logit_rho_prior_mean = NULL
-  # ),
-  # streets_first_degree_no_dist_cov_lead_events_fatalities_disrwa = add_to_parameter_grid(
-  #   name = "streets_first_degree_no_dist_cov_lead_events_fatalities_disrwa",
-  #   grid_add_streets = TRUE,
-  #   grid_add_nationalparks = TRUE,
-  #   grid_add_waterways = TRUE,
-  #   grid_cell_size = 3000,
-  #   model_dates_to_run = c("202411"),
-  #   model_degree_of_neighbour = "first",
-  #   model_bol_distance = F,
-  #   model_bol_border = FALSE,
-  #   model_covariates_title = "lead_events_fatalities_distrwa",
-  #   model_rho = 0.6,
-  #   model_logit_rho_prior_sd = NULL,
-  #   model_logit_rho_prior_mean = NULL
-  # )#,
-  # # streets_first_degree_dist_cov_lead_events_fatalities = add_to_parameter_grid(
-  # #   name = "streets_first_degree_no_dist_cov_lead_events_fatalities",
-  # #   grid_add_streets = F,
-  # #   grid_add_nationalparks = TRUE,
-  # #   grid_add_waterways = TRUE,
-  # #   grid_cell_size = 3000,
-  # #   model_dates_to_run = c("202411"),
-  # #   model_degree_of_neighbour = "second",
-  # #   model_bol_distance = TRUE,
-  # #   model_bol_border = F,
-  # #   model_covariates_title = "lead_events_fatalities",
-  # #   model_rho = 0.6
-  # # # ) ,
-  # # streets_first_degree_dist_cov_total_lag_lead_battles_remotev_fatalities = add_to_parameter_grid(
-  # #   name = "streets_first_degree_dist_cov_total_lag_lead_battles_remotev_fatalities",
-  # #   grid_add_streets = F,
-  # #   grid_add_nationalparks = TRUE,
-  # #   grid_add_waterways = TRUE,
-  # #   grid_cell_size = 3000,
-  # #   model_dates_to_run = c("202411"),
-  # #   model_degree_of_neighbour = "second",
-  # #   model_bol_distance = TRUE,
-  # #   model_bol_border = F,
-  # #   model_covariates_title = "total_lag_lead_battles_remotev_fatalities",
-  # #   model_rho = 0.6
-  # # )
+
+
 )
 
 get_parameter_from_grid <- function(grid,name){

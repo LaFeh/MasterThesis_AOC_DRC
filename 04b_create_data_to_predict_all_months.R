@@ -30,6 +30,7 @@ mean(frontline_data$control_binom,na.rm =T)
 all_dates = unique(frontline_data$year_mnth)
 all_dates =  paste0(all_dates, "01")
 all_dates = as.Date(all_dates,format = "%Y%m%d")
+all_dates = all_dates[which(all_dates>as.Date("20231231",format = "%Y%m%d"))]
 # 11174 cellids
 
 
