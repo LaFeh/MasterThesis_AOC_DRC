@@ -62,113 +62,84 @@ gdf_territory <- gdf %>%
 
 
 # Solve problem with non state actors
+gdf_territory$actor1_gov = grepl("Democratic Republic of Congo",gdf_territory$actor1)
+gdf_territory$actor2_gov = grepl("Democratic Republic of Congo",gdf_territory$actor2)
 
-nonstate_actor_territory= gdf_territory%>%filter(sub_event =="Non-state actor overtakes territory")
-nonstate_actor_territory$id = 1:nrow(nonstate_actor_territory)
-nonstate_actor_territory$actor1_gov = grepl("Democratic Republic of Congo",nonstate_actor_territory$actor1)
-nonstate_actor_territory$actor2_gov = grepl("Democratic Republic of Congo",nonstate_actor_territory$actor2)
-nonstate_actor_territory_problematic = nonstate_actor_territory[which(!(nonstate_actor_territory$actor1_gov | nonstate_actor_territory$actor2_gov)),]
+gdf_territory$sub_event[(gdf_territory$sub_event=="Non-state actor overtakes territory" & (gdf_territory$actor1_gov | gdf_territory$actor2_gov))] = "M23 overtakes territory"
 
-M23_territory = nonstate_actor_territory[which((nonstate_actor_territory$actor1_gov | nonstate_actor_territory$actor2_gov)),]
-M23_territory$sub_event = "M23 overtakes territory"
-
-nonstate_actor_territory_problematic_input_file =st_drop_geometry(nonstate_actor_territory_problematic[,c("id","event_date","actor1", "actor2", "notes")])
-nonstate_actor_territory_problematic_input_file$actors = apply(nonstate_actor_territory_problematic_input_file[,c("actor1", "actor2")],1, function(x) paste(x,collapse =", "))
-involved_nonstate_actors = unique(c(nonstate_actor_territory_problematic_input_file$actor1,nonstate_actor_territory_problematic_input_file$actor2))
-
-nonstate_actor_territory_problematic_input_file[,c("actor1", "actor2")] = NULL
+inconclusive_territory= gdf_territory%>%filter(((sub_event=="Non-state actor overtakes territory" & !actor1_gov & !actor2_gov) | 
+                                                 (sub_event =="Non-violent transfer of territory")  ))
+conclusive_territory= gdf_territory%>%filter(!((sub_event=="Non-state actor overtakes territory" & !actor1_gov & !actor2_gov) | 
+                                                  (sub_event =="Non-violent transfer of territory")  ))
 
 
-openxlsx::write.xlsx(nonstate_actor_territory_problematic_input_file,file = "./data/nonstate_actor_territory_problematic.xlsx")
-writeLines(involved_nonstate_actors,con = "./data/involved_nonstate_actors.txt")
+#inconclusive_territory$id2 = 1:nrow(inconclusive_territory)
 
-if(file.exists("./data/nonstate_actor_territory_problematic_solved.csv")){
-  nonstate_actor_territory_problematic_solved = read.csv("./data/nonstate_actor_territory_problematic_solved.csv",sep =",")
-  nonstate_actor_territory_problematic_solved$sub_event = NA
+inconclusive_territory = inconclusive_territory[order(inconclusive_territory$event_date),]
+
+openxlsx::write.xlsx(st_drop_geometry(inconclusive_territory[c("id","notes")]), "./data/inconclusive_territories.xlsx")
+inconclusive_territories_solved = openxlsx::read.xlsx("./data/inconclusive_territories_solved.xlsx")
+
+testing = F
+if (testing){
   
-  if(any(!nonstate_actor_territory_problematic$id %in% nonstate_actor_territory_problematic_solved$Id)){
-    stop("LLM Output not confident everywhere or output is not complete")
-  }
+  source("./01e_a_rule_based_acled_attribution.R")
+  all_events = sum( table(inconclusive_territory$sub_event))
+  n_non_state = round(table(inconclusive_territory$sub_event)["Non-state actor overtakes territory"]/all_events*100,0)
+  n_non_violent = round(table(inconclusive_territory$sub_event)["Non-violent transfer of territory"]/all_events*100,0)
+  non_state_actor = gdf_territory%>%filter(((sub_event=="Non-state actor overtakes territory" & !actor1_gov & !actor2_gov)))
+  non_violent_transfer = gdf_territory%>%filter(sub_event =="Non-violent transfer of territory")
+  set.seed(123)
+  ids = c(sample(non_state_actor$id,n_non_state),sample(non_violent_transfer$id,n_non_violent))
   
-  if(any(nonstate_actor_territory_problematic_solved$Confidence =="Low")){
-    warning(paste0(sum(nonstate_actor_territory_problematic_solved$Confidence =="Low"), " notes were unclear. They are denoted unknown"))
-    nonstate_actor_territory_problematic_solved[which(nonstate_actor_territory_problematic_solved$Confidence=="Low"),]$sub_event = "Unknown"
-  }
-  other_non_state_actor = !grepl("M23",nonstate_actor_territory_problematic_solved$Actor.that.gained.territory) & nonstate_actor_territory_problematic_solved$Confidence!="Low"
-  nonstate_actor_territory_problematic_solved[which(other_non_state_actor),]$sub_event ="not M23 overtakes territory"
+  openxlsx::write.xlsx(st_drop_geometry(inconclusive_territory[inconclusive_territory$id %in% ids,c("id","notes")]), "./data/inconclusive_territories_manually.xlsx")
+ 
+  inconclusive_territories_manually_solved = openxlsx::read.xlsx("./data/inconclusive_territories_manually_solved.xlsx")
   
-  m23 = grepl("M23",nonstate_actor_territory_problematic_solved$Actor.that.gained.territory) & nonstate_actor_territory_problematic_solved$Confidence!="Low"
-  nonstate_actor_territory_problematic_solved[which(m23),]$sub_event ="M23 overtakes territory"
+  inconclusive_territories_solved = openxlsx::read.xlsx("./data/inconclusive_territories_solved.xlsx")
+  inconclusive_territories_solved = inconclusive_territories_solved[,-which(colnames(inconclusive_territories_solved)=="id")[1]]
+  inconclusive_territories_solved$Actor.that.gained.territory[grepl("M23",inconclusive_territories_solved$Actor.that.gained.territory)]  = "M23"
   
   
-  nonstate_actor_territory_problematic$sub_event = NULL
+  inconclusive_territories_solved$Actor.that.gained.territory[which(inconclusive_territories_solved$Actor.that.gained.territory=="Unclear" &
+                                                                      grepl("M23",inconclusive_territories_solved$Actor.that.lost.territory))] <- "not M23"
+  inconclusive_territories_solved$Actor.that.gained.territory[((!grepl("M23",inconclusive_territories_solved$Actor.that.gained.territory )) & 
+                                                                inconclusive_territories_solved$Actor.that.gained.territory !="Unclear")] <- "not M23"
   
-  nonstate_actor_territory_problematic_solved = left_join(nonstate_actor_territory_problematic,nonstate_actor_territory_problematic_solved[,c("Id","sub_event")], by=c("id" = "Id"))
-  nonstate_actor_territory = rbind(nonstate_actor_territory_problematic_solved,M23_territory)
+  test = left_join(inconclusive_territories_manually_solved,inconclusive_territories_solved , by = "id")
+  test$truth = test$manual_attribution ==test$Actor.that.gained.territory
+  sum(test$manual_attribution ==test$Actor.that.gained.territory)
   
-  nonstate_actor_territory[,c("actor1_gov", "actor2_gov")] = NULL
+  rule_based_attribution = rule_based_acled_attribution(inconclusive_territory)
+  rule_based_attribution$rule_based_actor_control = NA
+  rule_based_attribution$rule_based_actor_control[grepl("not M23",rule_based_attribution$sub_event)] = "not M23"
+  rule_based_attribution$rule_based_actor_control[!grepl("not M23",rule_based_attribution$sub_event)] = "M23"
+  test = left_join(test,rule_based_attribution , by = "id")
   
-}else{
-  stop("nonstate_actor_territory problematic not yet solved!")
-}
-
-
-
-gdf_territory <-  gdf_territory%>%filter(sub_event != "Non-state actor overtakes territory")
-gdf_territory <- rbind(gdf_territory,nonstate_actor_territory)
-
-
-non_violent_transfers = gdf_territory[which(gdf_territory$sub_event=="Non-violent transfer of territory"),]
-non_violent_transfers = non_violent_transfers[order(non_violent_transfers$event_date),]
-
-for(row_idx in 1:nrow(non_violent_transfers)){
-  instance = non_violent_transfers[row_idx,]
-  max_date = instance$event_date
+  sum(test$rule_based_actor_control == test$manual_attribution)/nrow(test)
   
-  past_instance = gdf_territory%>%filter((event_date<max_date) & (geometry ==instance$geometry))%>%
-    slice_max(order_by = event_date, with_ties =FALSE)
-  
-  if (nrow(past_instance)==0){
-    
-    non_violent_transfers[row_idx,]$sub_event ="M23 overtakes territory"
-    
-  }else if (past_instance$sub_event =="Government regains territory" | past_instance$sub_event =="not M23 overtakes territory"){# territory war before under gov controle
-    
-    non_violent_transfers[row_idx,]$sub_event ="M23 overtakes territory"
-    
-  } else if (past_instance$sub_event =="M23 overtakes territory"){
-    
-    non_violent_transfers[row_idx,]$sub_event ="not M23 overtakes territory"
-    
-    }
-  else {
-    
-    past_instance = non_violent_transfers%>%filter((event_date<max_date) & (geometry ==instance$geometry))%>%
-      slice_max(order_by = event_date, with_ties =FALSE)
-    
-    if (past_instance$sub_event =="Government regains territory"| past_instance$sub_event =="not M23 overtakes territory"){# territory war before under gov controle
-      
-      non_violent_transfers[row_idx,]$sub_event ="M23 overtakes territory"
-      
-    } else if (past_instance$sub_event =="M23 overtakes territory"){
-      
-      non_violent_transfers[row_idx,]$sub_event ="not M23 overtakes territory"}
-    
-    else{
-      warning(paste0(row_idx,": we need a double loop, two times after each other peaceful transition"))
-      
-    }
-    
-    
-  }
   
 }
 
-gdf_territory <-  gdf_territory%>%filter(sub_event != "Non-violent transfer of territory")
+inconclusive_territories_solved$Actor.that.gained.territory[grepl("M23",inconclusive_territories_solved$Actor.that.gained.territory)]  = "M23 overtakes territory"
 
 
+inconclusive_territories_solved$Actor.that.gained.territory[which(inconclusive_territories_solved$Actor.that.gained.territory=="Unclear" &
+                                  grepl("M23",inconclusive_territories_solved$Actor.that.lost.territory))] <- "not M23 overtakes territory"
 
-gdf_territory <- rbind(gdf_territory,non_violent_transfers)
+inconclusive_territories_solved = inconclusive_territories_solved[inconclusive_territories_solved$Actor.that.gained.territory!="Unclear",]
+inconclusive_territories_solved$Actor.that.gained.territory[!grepl("M23",inconclusive_territories_solved$Actor.that.gained.territory)] <- "not M23 overtakes territory"
+
+inconclusive_territories_solved$sub_event = inconclusive_territories_solved$Actor.that.gained.territory
+
+inconclusive_territories_solved = inconclusive_territories_solved[,c("id","sub_event")]
+inconclusive_territory$sub_event = NULL
+inconclusive_territories_solved = inner_join(inconclusive_territory,inconclusive_territories_solved,by = c("id"))
+
+gdf_territory = rbind(inconclusive_territories_solved,conclusive_territory)
+
+#### for testing 100 - ids ######
+
 
 
 acled_territory_mnth <- gdf_territory %>%
@@ -180,8 +151,6 @@ acled_territory_mnth <- gdf_territory %>%
       sub_event == "Government regains territory" ~ "not M23",
       sub_event == "not M23 overtakes territory" ~ "not M23",
       sub_event == "M23 overtakes territory" ~ "M23",
-      sub_event == "Non-violent transfer of territory" ~ "unknown",
-      sub_event == "Unknown" ~ "unknown"
     )
   )
 
