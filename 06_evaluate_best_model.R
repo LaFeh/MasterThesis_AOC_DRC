@@ -191,6 +191,6 @@ ggplot2::ggplot(df_overlap_uncontested) +
     )
   )
 
-df_overlap_uncontested%>%group_by(dir,dir_num)%>%summarise(mn_overlap_area = mean(overlap_area,na.rm =T))%>%arrange(mn_overlap_area)
+j = df_overlap_uncontested%>%group_by(dir,dir_num)%>%summarise(mn_overlap_area = mean(overlap_area,na.rm =T))%>%arrange(mn_overlap_area)
 
 #df_overlap%>%filter(dir_num==4)%>%select(dir)

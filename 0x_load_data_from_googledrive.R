@@ -32,3 +32,22 @@ drive_download("https://drive.google.com/file/d/1yU9sFFqCdWaRnFbnWVQZ6Ndzb4fEPla
 drive_download("https://drive.google.com/file/d/1ALlNgs-dIJjjVaXhyaYhWUdn10cn_7gw/")
 
 unzip("~/MasterThesis_AOC_DRC/data/cod_admin_boundaries.shp.zip")
+
+
+
+drive_download("https://drive.google.com/file/d/1ALlNgs-dIJjjVaXhyaYhWUdn10cn_7gw/")
+
+unzip("~/MasterThesis_AOC_DRC/data/cod_admin_boundaries.shp.zip")
+
+
+
+drive_download("https://drive.google.com/file/d/1iyd7MizwEPeh6i40tyr_byJJS3aTM4Ds/view?usp=drive_link")#
+
+unzip("~/MasterThesis_AOC_DRC/data/2020_motorized_friction_surface.zip")
+
+
+
+drive_download("https://drive.google.com/file/d/1vJs1oKGXn9crQrtDv8bthjOoq6SBFBM2/")#
+
+unzip("~/MasterThesis_AOC_DRC/data/DRC_GRUFS_mx_V1_1.zip")
+

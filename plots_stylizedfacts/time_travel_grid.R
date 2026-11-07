@@ -41,7 +41,7 @@ ggplot() +
     axis.ticks = element_blank(),
     legend.position = "right",
     strip.background = element_blank(),
-  ) + ggsave(filename = "~/MasterThesis_AOC_DRC/no_stream.png")
+  ) #+ ggsave(filename = "~/MasterThesis_AOC_DRC/no_stream.png")
 # time travel with streams:
 
 
@@ -60,7 +60,7 @@ library(terra)
 library(exactextractr)
 
 # Clean the streams away from surface friction dataset
-clean_stream = F
+clean_stream = T
 
 if(clean_stream){
   tif_path <-'./data/travel_time_friction_surface_removed_streams.tif' 
@@ -119,4 +119,11 @@ ggplot() +
     strip.background = element_blank(),
   ) + ggsave(filename="~/MasterThesis_AOC_DRC/stream.png")
 
+##
 
+
+grid_mix_time =data.table::fread("./data/grid_mix_time.csv")
+grid = left_join(grid,grid_mix_time,by ="cell_id")%>%filter(name =="Nord-Kivu")
+
+plot(grid[,c("lg_mix_time_mean.x")])
+plot(grid[,c("lg_mix_time_mean_weiss.y")])

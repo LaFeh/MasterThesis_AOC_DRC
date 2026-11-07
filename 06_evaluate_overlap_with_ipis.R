@@ -326,31 +326,31 @@ for(gridname in gridname_vec){
       # Prepare boundary
       # --------------------------------------------------
       
-      # unioned_data <- st_union(data)
-      # 
-      # total_boundary <- st_boundary(
-      #   unioned_data
-      # )
-      
+      unioned_data <- st_union(data)
+
+      total_boundary <- st_boundary(
+        unioned_data
+      )
+
       bounding_box_aoc <- st_bbox(
         aoc_wo_holes
       )
-      
+
       cropped_boundary <- st_crop(
         total_boundary,
         bounding_box_aoc
       )
-      
+
       buffered_cropped_boundary <- st_buffer(
         cropped_boundary,
         1
       )
-      
+
       aoc_and_boundary <- st_union(
         buffered_cropped_boundary,
         aoc
       )
-      
+
       aoc_without_holes <- nngeo::st_remove_holes(
         aoc_and_boundary
       )
