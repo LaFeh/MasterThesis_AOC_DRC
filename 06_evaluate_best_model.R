@@ -14,77 +14,8 @@ source("./04b_a_helper_functions.R")
 # ============================================================
 covariates_list = create_covariates_list()
 
-cell_size = 3000 
-gridname <- create_grid_name(
-  add_streets = T,
-  add_nationalparks = T,
-  add_waterways = T,
-  street_size = 6000,
-  cell_size = cell_size
-)
 
-gridname2 <- create_grid_name(
-  add_streets = T,
-  add_nationalparks = T,
-  add_waterways = T,
-  street_size = "",
-  cell_size = cell_size
-)
-
-gridname = c(gridname2)
-
-estimate_rho = T
-quality_strict = T
-
-
-if(quality_strict ==""){
-  model_dirs <- with(
-    expand.grid(
-      parameter = names(parameter_grid),
-      grid = gsub("\\.shp$", "", gridname)
-    ),
-    paste0(
-      "~/MasterThesis_AOC_DRC/05_model/model_",
-      parameter,
-      "_",
-      grid
-    )
-  )
-}else{
-  
-  model_dirs <- with(
-    expand.grid(
-      parameter = names(parameter_grid),
-      grid = gsub("\\.shp$", "", gridname)
-    ),
-    paste0(
-      "~/MasterThesis_AOC_DRC/05_model/model_quality_",quality_strict,"_",
-      parameter,
-      "_",
-      grid
-    )
-  )
-
-  
-}
-
-
-# if(estimate_rho){
-#   
-#   model_dirs = model_dirs[grepl("estimaterho",model_dirs)]
-#   parameter_grid = parameter_grid[grepl("estimaterho",parameter_grid)]
-#   
-# }else{
-#   model_dirs <- paste0(
-#     "~/MasterThesis_AOC_DRC/05_model/model_",
-#     names(parameter_grid),
-#     "_",
-#     gsub(".shp", "", gridname)
-#   )
-#   
-#   model_dirs = model_dirs[grepl("fixedrho",model_dirs)]
-#   parameter_grid = parameter_grid[grepl("fixedrho",parameter_grid)]
-# }
+model_dirs = file.path("~/MasterThesis_AOC_DRC/05_model",paste0("model_",names(parameter_grid)))
 
 
 all_months = c(paste0("0",1:9),10:12)

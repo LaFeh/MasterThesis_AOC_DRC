@@ -43,6 +43,14 @@ gridname1 <- create_grid_name(
   cell_size = cell_size
 )
 
+gridname1 <- create_grid_name(
+  add_streets = F,
+  add_nationalparks = F,
+  add_waterways = F,
+  street_size = "",
+  cell_size = cell_size
+)
+
 gridname2 <- create_grid_name(
   add_streets = T,
   add_nationalparks = T,
@@ -50,74 +58,39 @@ gridname2 <- create_grid_name(
   street_size = "",
   cell_size = cell_size
 )
-gridname_vec =c(gridname2)
 
-estimate_rho = T
-quality_strict = T
+gridname_vec =c(gridname1)
+
+quality = T
+
+final_gridname_vec1 = sapply(gridname_vec,function(x) create_final_data_name(x,quality))
+final_gridname_vec = c(final_gridname_vec1)
+
 all_months = c(paste0("0",1:9),10:12)
 all_years = c(2024,2025)
 all_dates= c(paste0(all_years[1], all_months),paste0(all_years[2], all_months))
 
 #date <- "202412"
 
-for(gridname in gridname_vec){
+
+
+for(final_gridname in final_gridname_vec){
   
   
+
+  bol_model = sapply(parameter_grid,function(x) {x$final_data_name==final_gridname})
+  model_dir = parameter_grid[which(bol_model)]
   
-  if(quality_strict ==""){
-    model_dirs <- with(
-      expand.grid(
-        parameter = names(parameter_grid),
-        grid = gsub("\\.shp$", "", gridname)
-      ),
-      paste0(
-        "~/MasterThesis_AOC_DRC/05_model/model_",
-        parameter,
-        "_",
-        grid
-      )
-    )
-  }else{
-    
-    model_dirs <- with(
-      expand.grid(
-        parameter = names(parameter_grid),
-        grid = gsub("\\.shp$", "", gridname)
-      ),
-      paste0(
-        "~/MasterThesis_AOC_DRC/05_model/model_quality_",quality_strict,"_",
-        parameter,
-        "_",
-        grid
-      )
-    )
-    
-    
-  }
-  
-  
-  if(estimate_rho){
-    
-    model_dirs = model_dirs[grepl("estimaterho",model_dirs)]
-    parameter_grid = parameter_grid[grepl("estimaterho",parameter_grid)]
-    
-  }else{
-    model_dirs <- paste0(
-      "~/MasterThesis_AOC_DRC/05_model/model_",
-      names(parameter_grid),
-      "_",
-      gsub(".shp", "", gridname)
-    )
-    
-    model_dirs = model_dirs[grepl("fixedrho",model_dirs)]
-    parameter_grid = parameter_grid[grepl("fixedrho",parameter_grid)]
-  }
-  
-  
+  model_dirs <- paste0(
+    "~/MasterThesis_AOC_DRC/05_model/model_",
+    names(model_dir)
+  )
+
+
   all_months = c(paste0("0",1:9),10:12)
   all_years = c(2024,2025)
   all_dates= c(paste0(all_years[1], all_months),paste0(all_years[2], all_months))
-  
+  datex = all_dates[1]
   
   # ============================================================
   # Find existing model directories
@@ -140,14 +113,9 @@ for(gridname in gridname_vec){
   data_date_df = data.frame(date=all_dates)
   data_date_df$data_geom = NA
   data_date_df$unioned_data_geom = NA
-  
-  datex= all_dates[1]
-  if(quality_strict==""){
-    load(paste0("./data/data_for_prediction/",gsub(".shp","",gridname),"/",datex,"_events.RData"))
-  }else{
-    load(paste0("./data/data_for_prediction/",gsub(".shp","",gridname),"_quality_", quality_strict,"/",datex,"_events.RData"))
-  }
-  
+
+  load(paste0("./data/data_for_prediction/",model_dir[[1]]$final_data_name,"/",datex,"_events.RData"))
+
   
   unioned_data <- st_union(data)
   
@@ -211,24 +179,17 @@ for(gridname in gridname_vec){
         envir = environment()
       )
       
-      if(quality_strict==""){
-        load(paste0("./data/data_for_prediction/",gsub(".shp","",gridname),"/",date,"_events.RData"))
-      }else{
-        load(paste0("./data/data_for_prediction/",gsub(".shp","",gridname),"_quality_", quality_strict,"/",date,"_events.RData"))
-      }
+
+      load(paste0("./data/data_for_prediction/",final_gridname,"/",date,"_events.RData"))
       
       
       # --------------------------------------------------
       # Extract parameters
       # --------------------------------------------------
-      
-      if (estimate_rho) {
+
         tau <- exp(rep$value["tau"])
         rho <- plogis(rep$value["rho"])
-      } else {
-        tau <- exp(rep$value["tau"])
-        rho <- plogis(rep$value["rho"])
-      }
+
       
       # --------------------------------------------------
       # Construct design matrix

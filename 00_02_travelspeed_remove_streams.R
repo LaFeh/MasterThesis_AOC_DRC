@@ -82,3 +82,60 @@ if (clean_stream){
 
 writeRaster(r_fill,"./data/travel_time_friction_surface_removed_streams.tif",overwrite = T)
 
+
+##### GRUFS traveltime
+# 
+# 
+# 
+# tif_path <-'./data/DRC_GRUFS_mx_V1_1.tif' 
+# mix_time=rast(tif_path)
+# 
+# grid = read_sf(paste0("./data/base_provinces.shp"))%>%filter(name=="Nord-Kivu")
+# grid = st_transform(grid,st_crs(mix_time))
+# 
+# # crop raster to grid bounding box
+# mix_time_crop <- crop(
+#   mix_time,
+#   vect(grid),
+#   filename = "./data/mix_crop_grufs.tif",
+#   overwrite = TRUE
+# )
+# 
+# rm(mix_time)
+# 
+# 
+# gpkg_path <- "./data/congo-democratic-republic-260530-free.gpkg/congo-democratic-republic.gpkg"
+# 
+# water2 <- st_read(gpkg_path, layer = "gis_osm_waterways_free") |>
+#   st_transform(st_crs(grid)) |>
+#   st_crop(st_bbox(grid)) #|> # only pick bigger rivers better, modelling throught the whole area
+#   #filter(fclass !="drain" & fclass != "stream")
+# 
+# water3 <- st_read(gpkg_path, layer = "gis_osm_water_a_free") |>
+#   st_transform(st_crs(grid)) |>  st_crop(st_bbox(grid))|>
+#   st_cast("MULTIPOLYGON") |>
+#   st_cast("POLYGON")
+# 
+# 
+# #st_crs(water2)$units
+# water2 <- st_buffer(water2,dist = 30/2)
+# #streams <- vect(water2)
+# 
+# library(exactextractr)
+# water2$time_val <- exact_extract(mix_time_crop, water2, 'mean')
+# 
+# h <- global(mix_time_crop, fun = "mean", na.rm = TRUE)
+# print(h)
+# st_drop_geometry(water2)%>%group_by(fclass)%>%summarise(mean(time_val,na.rm =T))
+# 
+# # Save where the original NAs are
+# orig_na <- is.na(mix_time_crop)
+# # Mask out polygons (set cells inside polygons to NA)
+# r_masked <- mask(mix_time_crop,streams, inverse = TRUE)
+# 
+# # Cells that became NA because of masking
+# masked_na <- is.na(r_masked) & !orig_na
+# 
+# 
+# r_fill <- r_masked
+# target <- which(values(masked_na))

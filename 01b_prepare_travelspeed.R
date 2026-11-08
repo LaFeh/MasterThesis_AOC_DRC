@@ -117,11 +117,11 @@ grid$mix_time_mean_grufs <- summary_grufs
 grid$lg_mix_time_mean_grufs = log(grid$mix_time_mean_grufs)
 
 
+# 
+# plot(grid[,c("lg_mix_time_mean_grufs")])
 
-plot(grid[,c("lg_mix_time_mean_grufs")])
-
-ggplot()+geom_sf(data = grid, aes(fill =lg_mix_time_mean_grufs),lwd = 0)+ggsave("grufs.png")
-ggplot()+geom_sf(data = grid, aes(fill =lg_mix_time_mean),lwd = 0)+ggsave("ciesing.png")
+# ggplot()+geom_sf(data = grid, aes(fill =lg_mix_time_mean_grufs),lwd = 0)+ggsave("grufs.png")
+# ggplot()+geom_sf(data = grid, aes(fill =lg_mix_time_mean),lwd = 0)+ggsave("ciesing.png")
 
 grid = st_drop_geometry(grid)
 
@@ -129,16 +129,16 @@ data.table::fwrite(grid[,c("cell_id","mix_time_mean","lg_mix_time_mean",
                            "mix_time_mean_weiss","lg_mix_time_mean_weiss",
                            "mix_time_mean_grufs","lg_mix_time_mean_grufs")],"./data/grid_mix_time.csv")
 
-ggplot()+geom_spatraster(data = lg_mix_time_crop_grufs)+ggsave("GRUFS_raw.png")
+# ggplot()+geom_spatraster(data = lg_mix_time_crop_grufs)+ggsave("GRUFS_raw.png")
 #grid$diff = grid$mix_time_mean_weiss-grid$mix_time_mean
 #grid$lg_diff = log(grid$mix_time_mean_weiss-grid$mix_time_mean)
 #grid = grid%>%left_join(grid2,by=c("cell_id"))
 #plot(grid[,c("lg_diff")])
 
-boxplot(grid$mix_time_mean, grid$mix_time_mean_weiss)
-
-ggplot(grid)+
-  geom_sf(aes(fill=lg_mix_time_mean_weiss),lwd = 0)
-
-ggplot(grid)+
-  geom_sf(aes(fill=lg_mix_time_mean),lwd = 0)
+# boxplot(grid$mix_time_mean, grid$mix_time_mean_weiss)
+# 
+# ggplot(grid)+
+#   geom_sf(aes(fill=lg_mix_time_mean_weiss),lwd = 0)
+# 
+# ggplot(grid)+
+#   geom_sf(aes(fill=lg_mix_time_mean),lwd = 0)

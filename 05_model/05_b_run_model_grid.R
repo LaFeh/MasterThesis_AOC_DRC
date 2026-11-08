@@ -27,7 +27,6 @@ source("./04b_a_helper_functions.R")
 grid_cv_summary <- list()
 
 
-
 all_months = c(paste0("0",1:9),10:12)
 # all_years = c(2023,2024,2025)
 # all_dates= c(paste0(all_years[1], all_months),paste0(all_years[2], all_months),paste0(all_years[3], all_months))
@@ -36,8 +35,7 @@ all_years = c(2024,2025)
 all_dates= c(paste0(all_years[1], all_months),paste0(all_years[2], all_months))
 
 
-#all_dates = "202411"
-quality_strict = F
+quality = T
 parameter_grid = lapply(parameter_grid, function(x){x$model$dates_to_run = all_dates; return(x)})
 
 
@@ -56,42 +54,35 @@ for (model_name in names(parameter_grid)){
   name_parameter_grid = model_name
   get_parameter_from_grid(parameter_grid,name_parameter_grid)
   
-  
   covariates_list = create_covariates_list()
   model_covariates = covariates_list[[model_covariates_title]]
-  
   
   model_other_name = ""
   #directory for saving all the output
 
-  
-  
   
   name_of_grid = create_grid_name(add_waterways = grid_add_waterways,
                                   add_nationalparks = grid_add_nationalparks,
                                   add_streets = grid_add_streets,
                                   cell_size = grid_cell_size,
                                   street_size = grid_street_size)
-  
   name_of_grid_clean = gsub(".shp","",name_of_grid)
   
+  name_of_final_data = create_final_data_name(name_of_grid,quality)
   
-  output_path = paste0("./05_model/model_quality_",quality_strict,"_",name_parameter_grid,"_",name_of_grid_clean)
+  name_of_final_data_clean = gsub(".shp","",name_of_final_data)
+  
+  
+  output_path = paste0("./05_model/model_",name_parameter_grid)
   dir.create(output_path)
   dir.create(paste0(output_path,"/plots"))
   
 
   
-  path_of_adjacency_matrix = paste0("./data/data_for_prediction/mat_w_mixedtime_neighbour",
-                                    model_degree_of_neighbour,
-                                    "_distance_", model_bol_distance,
-                                    "_",model_bol_border,"_",name_of_grid_clean,".RData")
+  path_of_adjacency_matrix = paste0("./data/data_for_prediction/mat_w_mixedtime_",adjacency_name,"_",name_of_grid_clean,".RData")
   
   
-  path_of_eigenvalue = paste0("./05_model/eigvalues_mat_w_mixedtime_",
-                              model_degree_of_neighbour,
-                              "_distance_", model_bol_distance,
-                              "_",name_of_grid_clean,".RData")
+  path_of_eigenvalue = paste0("./05_model/eigvalues_mat_w_mixedtime_",path_of_adjacency_matrix,".RData")
   
   
   
@@ -100,13 +91,13 @@ for (model_name in names(parameter_grid)){
   ##########################################
   
   name_of_grid_file_name = gsub(".shp","",name_of_grid)
-  data_file_name  = paste0("./data/data_for_prediction/",name_of_grid_file_name,"_quality_",quality_strict,"/",model_dates_to_run,"_events.RData")
+  data_file_name  = paste0("./data/data_for_prediction/",name_of_final_data,"/",model_dates_to_run,"_events.RData")
   
   
   if (!any(file.exists(data_file_name))){
     
     
-    data_path_to_be_read = paste0("./data/frontline_data_all_mnths_quality",quality_strict,"_",name_of_grid_file_name,".RData")
+    data_path_to_be_read = paste0("./data/frontline_data_all_mnths_",name_of_final_data,".RData")
     load(data_path_to_be_read)
     
     frontline_data = frontline_data_controle_num_all_previous_time
@@ -139,15 +130,19 @@ for (model_name in names(parameter_grid)){
                                       bol_distance = model_bol_distance,
                                       border_distance = model_bol_border,
                                       FUN = dist_in_km,
-                                      name_of_grid)
+                                      name_of_grid,
+                                      name_of_adjacency = name_of_adjacency)
     
     message("adjacency matris was successfully calculated!")
   }
   
   #n_cores <- detectCores()
 
-  
-  cpp_estimate <- "./05_model/leroux_with_priors_wo_constraint_all_data_estimate_rho_no_eigenvalues"
+  if(model_estimation_strategy=="free"){
+    
+    cpp_estimate <- "./05_model/leroux_with_priors_wo_constraint_all_data_estimate_rho_no_eigenvalues"
+    
+  }
   
   
   TMB::compile(paste0(cpp_estimate, ".cpp"))
@@ -173,7 +168,7 @@ for (model_name in names(parameter_grid)){
       print(date)
       print("\n")
       
-      data_file_name_one_date  = paste0("./data/data_for_prediction/",name_of_grid_file_name,"_quality_",quality_strict,"/",date,"_events.RData")
+      data_file_name_one_date  = paste0("./data/data_for_prediction/",name_of_final_data,"/",date,"_events.RData")
       load(data_file_name_one_date)
       
       
@@ -193,13 +188,6 @@ for (model_name in names(parameter_grid)){
                         output_path = output_path,
                         path_of_eigenvalue = path_of_eigenvalue,
                         run_if_exists = run_if_exists)
-      
-      
-      
-      # fileConn <- file(paste0(output_path, "/settings.txt"), open = "a")
-      # writeLines("\n\n\n", fileConn)
-      # writeLines(as.character(parameter_grid[name_parameter_grid]), fileConn)
-      # close(fileConn)
     
     }
 

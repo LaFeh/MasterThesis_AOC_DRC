@@ -12,7 +12,7 @@ load(file="./data/acled_territory_mnth.RData")
 grid = st_transform(grid,st_crs(acled_territory_mnth))
 acled_conflict_mnth = st_transform(acled_conflict_mnth,st_crs(acled_territory_mnth))
 
-if(quality_strict){
+if(quality){
   acled_conflict_mnth = acled_conflict_mnth %>%filter((!poor_quality))
   acled_territory_mnth = acled_territory_mnth %>%filter((!poor_quality))
 }
@@ -71,8 +71,8 @@ acled_territory_grid = st_join(acled_territory_mnth,grid[,"cell_id"],join = st_w
 
 aoc_per_cell = acled_territory_grid%>%
   dplyr::group_by(year_mnth,cell_id)%>%
-  dplyr::summarise(non_state_actor = sum(controle == "non-state actor"),
-                   government = sum(controle == "government"),
+  dplyr::summarise(non_state_actor = sum(control == "M23"),
+                   government = sum(control == "not M23"),
                    control_num = mean(control_num),
                    across(
                      c(starts_with("events_"), starts_with("fatalities_")),
@@ -212,23 +212,6 @@ date_combinations$year_mnth_date = as.yearmon(as.character(date_combinations$yea
 # 
 frontline_data_control_num_all_previous_time = data.frame()
 
-# for (d in 1:nrow(date_combinations)){
-#   tm = date_combinations$year_mnth_date[d]
-#   print(tm)
-# 
-# 
-#   frnt_data_control_num_all_previous_time = grid_cntrl_mnth%>%filter(year_mnth_date <= tm )%>%# & name =="Nord-Kivu") %>%
-#     group_by(cell_id)%>%
-#     filter(!(is.na(control_num) & any(!is.na(control_num)))) %>%
-#     slice_max(year_mnth_date, n = 1, with_ties = FALSE) %>%
-#     ungroup()%>%mutate(time = tm)
-# 
-#   frontline_data_control_num_all_previous_time = rbind(frontline_data_control_num_all_previous_time,frnt_data_control_num_all_previous_time)
-# 
-# 
-# 
-# }
-
 
 library(future.apply)
 library(dplyr)
@@ -292,7 +275,7 @@ plan(sequential)
 
 
 name_of_grid_file_name = gsub(".shp","",name_of_grid)
-data_to_be_saved_to = paste0("./data/frontline_data_all_mnths_quality_",quality_strict,"_",name_of_grid_file_name,".RData")
+data_to_be_saved_to = paste0("./data/frontline_data_all_mnths_",name_of_final_data,".RData")
 
 save(frontline_data_control_num_all_previous_time,file = data_to_be_saved_to,compress = "xz")
-message(paste0("./data/frontline_data_all_mnths_quality_",quality_strict,"_",name_of_grid_file_name,".RData is saved!"))
+message(paste0("./data/frontline_data_all_mnths_",name_of_final_data,".RData is saved!"))

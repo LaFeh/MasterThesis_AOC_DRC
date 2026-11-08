@@ -11,7 +11,7 @@ source("./04b_a_helper_functions.R")
 
 name_of_grid_file_name = gsub(".shp","",name_of_grid)
 
-data_path_to_be_read = paste0("./data/frontline_data_all_mnths_quality_",quality_strict,"_",name_of_grid_file_name,".RData")
+data_path_to_be_read = paste0("./data/frontline_data_all_mnths_",name_of_final_data,".RData")
 
 
 
@@ -43,7 +43,7 @@ for(date in all_dates){
                               date,
                               N,
                               quality_strict,
-                              grid_file_name = name_of_grid_file_name)
+                              grid_file_name = name_of_final_data)
 }
 
 
@@ -53,14 +53,23 @@ for(date in all_dates){
 # frontline_data = frontline_data[which(frontline_data$time == time),]
 gc()
 # needs to be done only once because grid stays the same for the whole time span
+
+if(adjacency_params$adj_neighbour_degree=="first"){
+  bol_second_degree_neighbours = F
+} else{
+  bol_second_degree_neighbours = T
+}
+
 prepare_adj_matrix_for_prediction(frontline_data,N,
                                   date = NULL,
                                   snap = 10,
-                                  bol_second_degree_neighbours = F,
-                                  bol_distance = F,
-                                  border_distance = F,
+                                  bol_second_degree_neighbours = bol_second_degree_neighbours,
+                                  bol_distance = adjacency_params$adj_distance,
+                                  border_distance =  adjacency_params$adj_border,
                                   FUN = dist_in_km,
-                                  name_of_grid)
+                                  name_of_grid,
+                                  name_of_adjacency,
+                                  time_travel_dataset = adjacency_params$adj_traveltime)
 
 
  

@@ -359,7 +359,10 @@ grid_final = grid_final[which(grid_final$area>as_units(10,"m^2")),]
 equal_grids = st_equals(grid_final,retain_unique =T)
 equal_bol = sapply(equal_grids, function(x) length(x)>0)
 equal_rows = which(equal_bol)
-grid_final = grid_final[-equal_rows,]
+if(length(equal_rows)!=0){
+  grid_final = grid_final[-equal_rows,]
+  
+}
 
 #plot(st_boundary(st_union(grid_final)))
 

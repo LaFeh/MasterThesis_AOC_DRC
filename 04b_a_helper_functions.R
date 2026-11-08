@@ -16,7 +16,7 @@ prepare_data_for_prediction <- function(frontline_data,
   date = substr(as.Date(date_to_predict),1,7)
   date = as.character(gsub("-","",date))
 
-  dir_name = paste0("./data/data_for_prediction/",grid_file_name,"_quality_",quality_strict,"/")
+  dir_name = paste0("./data/data_for_prediction/",name_of_final_data,"/")
   if (!dir.exists(dir_name)){
     dir.create(dir_name)
   }
@@ -98,7 +98,9 @@ prepare_adj_matrix_for_prediction <- function(frontline_data,
                                               bol_distance = TRUE,
                                               border_distance = FALSE,
                                               FUN = dist_in_km,
-                                              name_of_grid = name_of_grid){
+                                              name_of_grid = name_of_grid,
+                                              name_of_adjacency = name_of_adjacency,
+                                              time_travel_dataset = "ciesin"){
   
   
   library(units)
@@ -118,11 +120,19 @@ prepare_adj_matrix_for_prediction <- function(frontline_data,
   stopifnot(nrow(data) == N)
   
   data <- cbind(data, st_coordinates(st_centroid(data$geometry)))
-  data$mix_time_mean_decay <- log(data$mix_time_mean) - min(log(data$mix_time_mean))
   data <- data[order(data$cell_id), ]
   
   # Plain vectors -> no sf/data.frame dispatch overhead inside loops
 
+  if(time_travel_dataset == "ciesin"){
+    data$mix_time_mean_decay <- log(data$mix_time_mean) - min(log(data$mix_time_mean))
+  }else if(time_travel_dataset == "grufs"){
+    data$mix_time_mean_decay <- log(data$mix_time_mean_grufs) - min(log(data$mix_time_mean_grufs))
+  }else if(time_travel_dataset == "weiss"){
+    data$mix_time_mean_decay <- log(data$mix_time_mean_weiss) - min(log(data$mix_time_mean_weiss))
+  }
+
+  
   decay  <- data$mix_time_mean_decay
   data = st_as_sf(data)
   data_adj <- poly2nb(data, queen = TRUE, snap = snap)
@@ -259,7 +269,7 @@ prepare_adj_matrix_for_prediction <- function(frontline_data,
   grid_name = gsub(".shp","",name_of_grid)
   
   saveRDS(data_mat_w_decay,
-          paste0("./data/data_for_prediction/mat_w_mixedtime_neighbour",degree,"_distance_", bol_distance,"_",border_distance,"_",grid_name,".RData"))
+          paste0("./data/data_for_prediction/mat_w_mixedtime_",name_of_adjacency,"_",grid_name,".RData"))
 
 }
 

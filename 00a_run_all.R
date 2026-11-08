@@ -14,11 +14,14 @@ add_waterways = F
 cell_size     <- 3000
 street_size = ""
 
-quality_strict = F
-if(quality_strict){
+quality = T
+if(quality){
   poor_quality = F
   outlier =F
 }
+
+
+
 
 source("./00b_helper_create_grid_name.R")
 name_of_grid = create_grid_name(add_waterways = add_waterways,
@@ -26,6 +29,19 @@ name_of_grid = create_grid_name(add_waterways = add_waterways,
                  add_streets = add_streets,
                  cell_size = cell_size,
                  street_size)
+
+name_of_final_data = create_final_data_name(name_of_grid,quality)
+
+adjacency_params = list(adj_traveltime = "grufs",
+                        adj_border = F,
+                        adj_distance = F,
+                        adj_neighbour_degree = "first")
+
+name_of_adjacency <- do.call(
+  create_adjacency_name,
+  adjacency_params
+)
+
 
 
 # ============================================================
@@ -40,8 +56,6 @@ if(do_preparational_calculations){
   
   source("./00_01_create_base_provinces.R")
   source("./00_02_travelspeed_remove_streams.R")
-
-  
 }
 
 if(add_streets_preparation){
@@ -54,12 +68,16 @@ if(add_streets_preparation){
 rm(list = setdiff(ls(), c("name_of_grid",
                           "add_nationalparks",
                           "add_waterways",
-                          "add_streets","cell_size","quality_strict","poor_quality")))
+                          "add_streets",
+                          "cell_size","quality_strict","poor_quality",
+                          "name_of_adjacency","adjacency_params",
+                          "name_of_final_data","quality")))
 
 
 gc()
 source("./01_create_data.R")
-rm(list = setdiff(ls(), c("name_of_grid","cell_size","quality_strict","poor_quality")))
+rm(list = setdiff(ls(), c("name_of_grid","cell_size","quality","poor_quality",
+                          "name_of_adjacency","adjacency_params","name_of_final_data")))
 gc()
 
 # source("./01a_prepare_settlements.R")
@@ -67,22 +85,25 @@ gc()
 # gc()
 
 source("./01b_prepare_travelspeed.R")
-rm(list = setdiff(ls(),c("name_of_grid","cell_size","quality_strict","poor_quality")))
+rm(list = setdiff(ls(),c("name_of_grid","cell_size","quality","poor_quality",
+                         "name_of_adjacency","adjacency_params","name_of_final_data")))
 gc()
 
 # source("./01c_prepare_distance_to_rwa.R")
-# rm(list = setdiff(ls(), c("name_of_grid","cell_size","quality_strict")))
+# rm(list = setdiff(ls(), c("name_of_grid","cell_size","quality")))
 # gc()
 
 source("./01e_prepare_acled.R")
-rm(list = setdiff(ls(), c("name_of_grid","cell_size","quality_strict","poor_quality")))
+rm(list = setdiff(ls(), c("name_of_grid","cell_size","quality","poor_quality",
+                          "name_of_adjacency","adjacency_params","name_of_final_data")))
 gc()
 # source("./01f_prepare_rain.R")
 # rm(list = ls())
 # gc()
 
 source("./02_combine_data.R")
-rm(list = setdiff(ls(), c("name_of_grid","quality_strict","poor_quality")))
+rm(list = setdiff(ls(), c("name_of_grid","quality","poor_quality",
+                          "name_of_adjacency","adjacency_params","name_of_final_data")))
 gc()
 
 source("./04b_create_data_to_predict_all_months.R")
