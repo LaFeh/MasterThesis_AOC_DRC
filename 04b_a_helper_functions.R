@@ -59,7 +59,7 @@ calculate_weight <- function(start_point, #
 
   # average of traveltime distance
   m <- sapply(seq_along(end_point),function(x) base::sum(travel_time[start_point],
-                                                         travel_time[start_point],
+                                                         travel_time[end_point[[x]]],
                                                          travel_time[intermediaries[[x]]],na.rm =T) / (length(travel_time[intermediaries[[x]]]) + 2))  
   
   
@@ -79,7 +79,7 @@ calculate_weight <- function(start_point, #
     
   }else{
 
-    w <- 1 / m
+    w <- 1 / (1+m)
     
   }
   
@@ -134,6 +134,7 @@ prepare_adj_matrix_for_prediction <- function(frontline_data,
 
   
   decay  <- data$mix_time_mean_decay
+  
   data = st_as_sf(data)
   data_adj <- poly2nb(data, queen = TRUE, snap = snap)
   stopifnot(dim(data_adj)[1] == N)
