@@ -7,12 +7,12 @@ do_preparational_calculations = F
 add_streets_preparation =F
 # settings for grid
 
-add_streets = F
-add_nationalparks =F
-add_waterways = F
+add_streets = T
+add_nationalparks =T
+add_waterways = T
 
 cell_size     <- 3000
-street_size = ""
+street_size = 3000
 
 quality = T
 if(quality){

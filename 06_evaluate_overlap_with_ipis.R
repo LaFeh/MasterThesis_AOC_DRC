@@ -1,19 +1,42 @@
 # evaluate based on ipis map:
 
 
-calculate_overlapping_area_percentage<- function(x,y){
+dice_coefficient<- function(overlap,x_area,y_area){
   
-  overlap = st_intersection(st_simplify(x),st_simplify(y))
-  area_overlap = st_area(overlap)
-  
-  x_area = st_area(x)
-  y_area = st_area(y)
+  # overlap = st_intersection(st_simplify(x),st_simplify(y))
+  # area_overlap = st_area(overlap)
+  # 
+  # x_area = st_area(x)
+  # y_area = st_area(y)
    
   percentage_overlap = area_overlap*2/(x_area+y_area)*100
   
   return(percentage_overlap)
 }
 
+precision<- function(overlap,x_area){
+  
+  # overlap = st_intersection(st_simplify(x),st_simplify(ipis))
+  # area_overlap = st_area(overlap)
+  # 
+  # x_area = st_area(x)
+  
+  percentage_overlap = area_overlap/(x_area)*100
+  
+  return(percentage_overlap)
+}
+
+recall<- function(overlap,ipis_area){
+  
+  # overlap = st_intersection(st_simplify(x),st_simplify(ipis))
+  # area_overlap = st_area(overlap)
+  # 
+  # ipis_area = st_area(ipis)
+  
+  percentage_overlap = area_overlap/(ipis_area)*100
+  
+  return(percentage_overlap)
+}
 
 library(Matrix)
 library(grid)
@@ -55,11 +78,11 @@ gridname2 <- create_grid_name(
   add_streets = T,
   add_nationalparks = T,
   add_waterways = T,
-  street_size = "",
+  street_size = 3000,
   cell_size = cell_size
 )
 
-gridname_vec =c(gridname1)
+gridname_vec =c(gridname2)
 
 quality = T
 
@@ -372,20 +395,99 @@ for(final_gridname in final_gridname_vec){
       
       
       tryCatch({
-        overlap_area_percentage <-
-          calculate_overlapping_area_percentage(
-            st_simplify(ipis_map),
-            st_simplify(aoc_without_holes)
+        
+        
+        
+        overlap = st_intersection(st_simplify(aoc_without_holes),st_simplify(ipis_map))
+        area_overlap = st_area(overlap)
+        
+        overlap_pure = st_intersection(st_simplify(aoc),st_simplify(ipis_map_uncontested))
+        area_overlap_pure = st_area(overlap_pure)
+        
+        overlap_uncontested = st_intersection(st_simplify(aoc_wo_holes),st_simplify(ipis_map_uncontested))
+        area_overlap_uncontested = st_area(overlap_uncontested)
+        
+        prediction_area_pure = st_area(aoc)
+        prediction_area = st_area(aoc_without_holes)
+        prediction_area_uncontested = st_area(aoc_wo_holes)
+        
+        ipis_area = st_area(ipis_map)
+        ipis_area_uncontested = st_area(ipis_map_uncontested)
+        
+        dice_coefficient_pure <-
+          dice_coefficient(
+            area_overlap_pure,
+            ipis_area_unconstested,
+            prediction_area_pure
           )
         
-        overlap_area_percentage_uncontested <-
-          calculate_overlapping_area_percentage(
-            st_simplify(ipis_map_uncontested),
-            st_simplify(aoc_wo_holes)
+        dice_coefficient <-
+          dice_coefficient(
+            area_overlap,
+            ipis_area,
+            prediction_area
+          )
+        
+        dice_coefficient_uncontested <-
+          dice_coefficient(
+            area_overlap_uncontested,
+            ipis_area_uncontested,
+            prediction_area_uncontested
           )
 
-        saveRDS(overlap_area_percentage, file = file.path(model_dir,paste0(date,"_overlap_area_percentage.rds")))
-        saveRDS(overlap_area_percentage_uncontested, file = file.path(model_dir,paste0(date,"_overlap_area_percentage_unconstested.rds")))
+        saveRDS(dice_coefficient_pure, file = file.path(model_dir,paste0(date,"_dice_coef_pure.rds")))
+        saveRDS(dice_coefficient, file = file.path(model_dir,paste0(date,"_dice_coef.rds")))
+        saveRDS(dice_coefficient_uncontested, file = file.path(model_dir,paste0(date,"_dice_coef_unconstested.rds")))
+        
+        # precision
+        
+        precision_pure <-
+          precision(
+            area_overlap_pure,
+            prediction_area_pure
+          )
+        
+        precision <-
+          precision(
+            overlap_area,
+            prediction_area
+          )
+        
+        precision_uncontested <-
+          precision(
+            area_overlap_uncontested,
+            prediction_area_uncontested
+            
+          )
+        
+        saveRDS(precision_pure, file = file.path(model_dir,paste0(date,"_precision_pure.rds")))
+        saveRDS(precision, file = file.path(model_dir,paste0(date,"_precision.rds")))
+        saveRDS(precision_uncontested, file = file.path(model_dir,paste0(date,"_precision_unconstested.rds")))
+        
+        # recall
+        
+        recall_pure <-
+          recall(
+            area_overlap_pure,
+            ipis_area_uncontested
+          )
+        
+        recall <-
+          recall(
+            area_overlap,
+            ipis_area
+          )
+        
+        recall_uncontested <-
+          recall(
+            area_overlap_uncontested,
+            ipis_area_uncontested
+          )
+        
+        saveRDS(recall_pure, file = file.path(model_dir,paste0(date,"_recall_pure.rds")))
+        saveRDS(recall, file = file.path(model_dir,paste0(date,"_recall.rds")))
+        saveRDS(recall_uncontested, file = file.path(model_dir,paste0(date,"_recall_unconstested.rds")))
+        
         
         
         # --------------------------------------------------

@@ -169,49 +169,49 @@ get_parameter_from_grid <- function(grid,name){
 
 parameter_grid <- list()
 
-new_parameter <- add_to_parameter_grid(
-  grid_add_streets = FALSE,
-  grid_add_nationalparks = FALSE,
-  grid_add_waterways = FALSE,
-  grid_cell_size = 3000,
-  grid_street_size = "",
-  
-  adj_traveltime = "ciesin",
-  adj_degree_of_neighbour = "first",
-  adj_bol_distance = FALSE,
-  adj_bol_border = FALSE,
-  
-  model_dates_to_run = c("202411"),
-  quality = TRUE,
-  model_covariates_title = "Intercept",
-  model_rho = NULL,
-  model_tau = NULL,
-  model_logit_rho_prior_sd = 1,
-  model_logit_rho_prior_mean = 0,
-  model_estimation_strategy = "free",
-)
-parameter_grid[[new_parameter$full_name]] <- new_parameter
-
-new_parameter <- add_to_parameter_grid(
-  grid_add_streets = T,
-  grid_add_nationalparks = T,
-  grid_add_waterways = T,
-  grid_cell_size = 3000,
-  grid_street_size = 3000,
-  model_dates_to_run = c("202411"),
-  adj_traveltime = "ciesin",
-  adj_degree_of_neighbour = "first",
-  adj_bol_distance = FALSE,
-  adj_bol_border = FALSE,
-  quality = TRUE,
-  model_covariates_title = "Intercept",
-  model_rho = NULL,
-  model_tau = NULL,
-  model_logit_rho_prior_sd = 1,
-  model_logit_rho_prior_mean = 0,
-  model_estimation_strategy = "free",
-)
-parameter_grid[[new_parameter$full_name]] <- new_parameter
+# new_parameter <- add_to_parameter_grid(
+#   grid_add_streets = FALSE,
+#   grid_add_nationalparks = FALSE,
+#   grid_add_waterways = FALSE,
+#   grid_cell_size = 3000,
+#   grid_street_size = "",
+#   
+#   adj_traveltime = "ciesin",
+#   adj_degree_of_neighbour = "first",
+#   adj_bol_distance = FALSE,
+#   adj_bol_border = FALSE,
+#   
+#   model_dates_to_run = c("202411"),
+#   quality = TRUE,
+#   model_covariates_title = "Intercept",
+#   model_rho = NULL,
+#   model_tau = NULL,
+#   model_logit_rho_prior_sd = 1,
+#   model_logit_rho_prior_mean = 0,
+#   model_estimation_strategy = "free",
+# )
+# parameter_grid[[new_parameter$full_name]] <- new_parameter
+# 
+# new_parameter <- add_to_parameter_grid(
+#   grid_add_streets = T,
+#   grid_add_nationalparks = T,
+#   grid_add_waterways = T,
+#   grid_cell_size = 3000,
+#   grid_street_size = 3000,
+#   model_dates_to_run = c("202411"),
+#   adj_traveltime = "ciesin",
+#   adj_degree_of_neighbour = "first",
+#   adj_bol_distance = FALSE,
+#   adj_bol_border = FALSE,
+#   quality = TRUE,
+#   model_covariates_title = "Intercept",
+#   model_rho = NULL,
+#   model_tau = NULL,
+#   model_logit_rho_prior_sd = 1,
+#   model_logit_rho_prior_mean = 0,
+#   model_estimation_strategy = "free",
+# )
+# parameter_grid[[new_parameter$full_name]] <- new_parameter
 
 
 new_parameter <- add_to_parameter_grid(
@@ -227,6 +227,114 @@ new_parameter <- add_to_parameter_grid(
   adj_bol_border = FALSE,
   quality = TRUE,
   model_covariates_title = "Intercept",
+  model_rho = NULL,
+  model_tau = NULL,
+  model_logit_rho_prior_sd = 1,
+  model_logit_rho_prior_mean = 0,
+  model_estimation_strategy = "free",
+)
+parameter_grid[[new_parameter$full_name]] <- new_parameter
+
+
+# new_parameter <- add_to_parameter_grid(
+#   grid_add_streets = T,
+#   grid_add_nationalparks =T,
+#   grid_add_waterways = T,
+#   grid_cell_size = 3000,
+#   grid_street_size = 3000,
+#   model_dates_to_run = c("202411"),
+#   adj_traveltime = "ciesin",
+#   adj_degree_of_neighbour = "first",
+#   adj_bol_distance = FALSE,
+#   adj_bol_border = FALSE,
+#   quality = TRUE,
+#   model_covariates_title = "Intercept",
+#   model_rho = NULL,
+#   model_tau = NULL,
+#   model_logit_rho_prior_sd = 1,
+#   model_logit_rho_prior_mean = 0,
+#   model_estimation_strategy = "free",
+# )
+# parameter_grid[[new_parameter$full_name]] <- new_parameter
+
+
+new_parameter <- add_to_parameter_grid(
+  grid_add_streets = T,
+  grid_add_nationalparks =T,
+  grid_add_waterways = T,
+  grid_cell_size = 3000,
+  grid_street_size = 3000,
+  model_dates_to_run = c("202411"),
+  adj_traveltime = "grufs",
+  adj_degree_of_neighbour = "first",
+  adj_bol_distance = FALSE,
+  adj_bol_border = FALSE,
+  quality = TRUE,
+  model_covariates_title = "Intercept",
+  model_rho = NULL,
+  model_tau = NULL,
+  model_logit_rho_prior_sd = 1,
+  model_logit_rho_prior_mean = 0,
+  model_estimation_strategy = "free",
+)
+parameter_grid[[new_parameter$full_name]] <- new_parameter
+
+
+new_parameter <- add_to_parameter_grid(
+  grid_add_streets = T,
+  grid_add_nationalparks =T,
+  grid_add_waterways = T,
+  grid_cell_size = 3000,
+  grid_street_size = 3000,
+  model_dates_to_run = c("202411"),
+  adj_traveltime = "grufs",
+  adj_degree_of_neighbour = "first",
+  adj_bol_distance = FALSE,
+  adj_bol_border = FALSE,
+  quality = TRUE,
+  model_covariates_title = "lead_rv_battles",
+  model_rho = NULL,
+  model_tau = NULL,
+  model_logit_rho_prior_sd = 1,
+  model_logit_rho_prior_mean = 0,
+  model_estimation_strategy = "free",
+)
+parameter_grid[[new_parameter$full_name]] <- new_parameter
+
+new_parameter <- add_to_parameter_grid(
+  grid_add_streets = T,
+  grid_add_nationalparks =T,
+  grid_add_waterways = T,
+  grid_cell_size = 3000,
+  grid_street_size = 3000,
+  model_dates_to_run = c("202411"),
+  adj_traveltime = "grufs",
+  adj_degree_of_neighbour = "first",
+  adj_bol_distance = FALSE,
+  adj_bol_border = FALSE,
+  quality = TRUE,
+  model_covariates_title = "total_lead_rv_battles",
+  model_rho = NULL,
+  model_tau = NULL,
+  model_logit_rho_prior_sd = 1,
+  model_logit_rho_prior_mean = 0,
+  model_estimation_strategy = "free",
+)
+parameter_grid[[new_parameter$full_name]] <- new_parameter
+
+new_parameter <- add_to_parameter_grid(
+  grid_add_streets = T,
+  grid_add_nationalparks =T,
+  grid_add_waterways = T,
+  grid_cell_size = 3000,
+  grid_street_size = 3000,
+  model_dates_to_run = c("202411"),
+  adj_traveltime = "grufs",
+  adj_degree_of_neighbour = "first",
+  adj_bol_distance = FALSE,
+  adj_bol_border = FALSE,
+  quality = TRUE,
+  model_covariates_title = "lead_civilians",
   model_rho = NULL,
   model_tau = NULL,
   model_logit_rho_prior_sd = 1,

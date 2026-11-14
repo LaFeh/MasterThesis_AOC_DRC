@@ -127,7 +127,7 @@ prepare_adj_matrix_for_prediction <- function(frontline_data,
   if(time_travel_dataset == "ciesin"){
     data$mix_time_mean_decay <- log(data$mix_time_mean) - min(log(data$mix_time_mean))
   }else if(time_travel_dataset == "grufs"){
-    data$mix_time_mean_decay <- log(data$mix_time_mean_grufs) - min(log(data$mix_time_mean_grufs))
+    data$mix_time_mean_decay <- log(data$mix_time_mean_grufs) - min(log(data$mix_time_mean_grufs),na.rm = T)
   }else if(time_travel_dataset == "weiss"){
     data$mix_time_mean_decay <- log(data$mix_time_mean_weiss) - min(log(data$mix_time_mean_weiss))
   }
@@ -270,7 +270,7 @@ prepare_adj_matrix_for_prediction <- function(frontline_data,
   grid_name = gsub(".shp","",name_of_grid)
   
   saveRDS(data_mat_w_decay,
-          paste0("./data/data_for_prediction/mat_w_mixedtime_",name_of_adjacency,"_",grid_name,".RData"))
+          paste0("./data/data_for_prediction/mat_w_mixedtime_",name_of_adjacency,"_",grid_name,".rds"))
 
 }
 

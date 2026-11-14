@@ -84,10 +84,12 @@ aoc_per_cell = acled_territory_grid%>%
   mutate(control = if_else((non_state_actor+government)!=0, non_state_actor/(non_state_actor+government), 0.5))
 
 aoc_per_cell = aoc_per_cell[,!colnames(aoc_per_cell) %in% c("non_state_actor","government")]
+
 aoc_per_cell = st_drop_geometry(aoc_per_cell)
 
 
 warning("following are NA ", which(is.na(aoc_per_cell$cell_id)))
+
 aoc_per_cell = aoc_per_cell[which(!is.na(aoc_per_cell$cell_id)),]
 
 grid_cntrl_mnth = full_join(grid_yr_mnth,aoc_per_cell, by =c("cell_id","year_mnth"))

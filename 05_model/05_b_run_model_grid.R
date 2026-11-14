@@ -38,12 +38,12 @@ all_dates= c(paste0(all_years[1], all_months),paste0(all_years[2], all_months))
 quality = T
 parameter_grid = lapply(parameter_grid, function(x){x$model$dates_to_run = all_dates; return(x)})
 
-
+names(parameter_grid)
 run_if_exists = F
-
 
 #parameter_grid = parameter_grid[grepl("estimaterho",names(parameter_grid))]
 #parameter_grid = parameter_grid[names(parameter_grid) != "wostreets_first_degree_no_dist_cov_lead_events_fatalities_estimaterho"]
+
 for (model_name in names(parameter_grid)){
   
   
@@ -79,7 +79,7 @@ for (model_name in names(parameter_grid)){
   
 
   
-  path_of_adjacency_matrix = paste0("./data/data_for_prediction/mat_w_mixedtime_",adjacency_name,"_",name_of_grid_clean,".RData")
+  path_of_adjacency_matrix = paste0("./data/data_for_prediction/mat_w_mixedtime_",adjacency_name,"_",name_of_grid_clean,".rds")
   
   
   path_of_eigenvalue = paste0("./05_model/eigvalues_mat_w_mixedtime_",path_of_adjacency_matrix,".RData")
@@ -148,7 +148,7 @@ for (model_name in names(parameter_grid)){
   TMB::compile(paste0(cpp_estimate, ".cpp"))
   
 
-  n_cores = 7
+  n_cores = 6
   cluster <- makeCluster(n_cores - 1)
   registerDoParallel(cluster)
   

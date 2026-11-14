@@ -37,7 +37,8 @@ model_dirs <- model_dirs[
   which(model_dirs %in% files)
 ]
 
-
+model_dirs = c(model_dirs,"~/MasterThesis_AOC_DRC/05_model/model_grid_surface_3000_TRUE_grufs_first_FALSE_FALSE_free_Intercept_old",
+               "~/MasterThesis_AOC_DRC/05_model/model_grid_surface_3000_TRUE_ciesin_first_FALSE_FALSE_free_Intercept_old")
 
 
 df_overlap = expand.grid(model_dirs,all_dates)
@@ -99,6 +100,8 @@ ggplot2::ggplot(df_overlap) +
       color = dir_num
     )
   )
+
+
 df_overlap%>%group_by(dir,dir_num)%>%summarise(mn_overlap_area = mean(overlap_area,na.rm =T))%>%arrange(mn_overlap_area)
 
 ggplot2::ggplot(df_overlap%>%filter(dir_num %in%c(4,6))) +
@@ -112,7 +115,7 @@ ggplot2::ggplot(df_overlap%>%filter(dir_num %in%c(4,6))) +
   )
 
 
-ggplot2::ggplot(df_overlap_uncontested) +
+ggplot2::ggplot(df_overlap_uncontested%>%filter(dir_num != 4)) +
   ggplot2::geom_line(
     ggplot2::aes(
       x = date,
@@ -123,5 +126,5 @@ ggplot2::ggplot(df_overlap_uncontested) +
   )
 
 j = df_overlap_uncontested%>%group_by(dir,dir_num)%>%summarise(mn_overlap_area = mean(overlap_area,na.rm =T))%>%arrange(mn_overlap_area)
-
+unique(df_overlap[,c("dir_num","dir")])
 #df_overlap%>%filter(dir_num==4)%>%select(dir)
